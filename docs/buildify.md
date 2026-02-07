@@ -31,3 +31,5 @@ Cozon RQ is a gamified rewards app where users earn coins through various activi
   - [x] Add ways to earn spins (watch ads, complete tasks, daily bonuses)
   - [x] Remove possible rewards section from spin wheel page
   - [x] Convert wheel to circular SVG form with 5-second spin duration
+  - [x] Separate watch ads for coins and watch ads for spins
+

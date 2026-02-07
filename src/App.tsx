@@ -8,6 +8,7 @@ import { SpinWheel } from '@/pages/SpinWheel';
 import { Tasks } from '@/pages/Tasks';
 import { MemeFeed } from '@/pages/MemeFeed';
 import { WatchAds } from '@/pages/WatchAds';
+import { WatchAdsSpins } from '@/pages/WatchAdsSpins';
 import { Wallet } from '@/pages/Wallet';
 import { Premium } from '@/pages/Premium';
 
@@ -65,6 +66,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <WatchAds />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/watch-ads-spins"
+            element={
+              <ProtectedRoute>
+                <WatchAdsSpins />
               </ProtectedRoute>
             }
           />

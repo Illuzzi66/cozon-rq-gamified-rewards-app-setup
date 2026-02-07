@@ -9,23 +9,20 @@ import { useToast } from '@/hooks/use-toast';
 import { 
   ArrowLeft, 
   Video, 
-  Coins,
   Play,
   CheckCircle,
   Clock,
-  TrendingUp,
   Sparkles,
   AlertCircle
 } from 'lucide-react';
 
 interface AdStats {
   daily_count: number;
-  daily_earnings: number;
   daily_limit: number;
   remaining: number;
 }
 
-export const WatchAds: React.FC = () => {
+export const WatchAdsSpins: React.FC = () => {
   const navigate = useNavigate();
   const { profile, refreshProfile } = useAuth();
   const { toast } = useToast();
@@ -44,7 +41,7 @@ export const WatchAds: React.FC = () => {
 
     try {
       setLoading(true);
-      const { data, error } = await supabase.rpc('get_daily_ad_stats', {
+      const { data, error } = await supabase.rpc('get_daily_spin_ad_stats', {
         p_user_id: profile.user_id,
       });
 
@@ -85,9 +82,9 @@ export const WatchAds: React.FC = () => {
     if (!profile || !adCompleted) return;
 
     try {
-      const { data, error } = await supabase.rpc('record_ad_view', {
+      const { data, error } = await supabase.rpc('record_spin_ad_view', {
         p_user_id: profile.user_id,
-        p_ad_type: 'video',
+        p_ad_type: 'spin_video',
         p_view_duration: 30,
       });
 
@@ -96,7 +93,7 @@ export const WatchAds: React.FC = () => {
       if (data.success) {
         toast({
           title: '🎉 Reward Claimed!',
-          description: `You earned ${data.coins_earned} coins!`,
+          description: `You earned ${data.spins_awarded} spins!`,
         });
 
         await refreshProfile();
@@ -126,12 +123,8 @@ export const WatchAds: React.FC = () => {
 
   if (!profile) return null;
 
-  const baseReward = 5;
-  const premiumReward = Math.floor(baseReward * 2.5);
-  const rewardAmount = profile.is_premium ? premiumReward : baseReward;
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-destructive/10 via-background to-primary/10">
+    <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10">
       <div className="max-w-2xl mx-auto p-4 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -140,27 +133,27 @@ export const WatchAds: React.FC = () => {
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
-              <h1 className="text-2xl font-bold">Watch Ads</h1>
-              <p className="text-sm text-muted-foreground">Earn coins by watching videos</p>
+              <h1 className="text-2xl font-bold">Watch Ad for Spins</h1>
+              <p className="text-sm text-muted-foreground">Earn spins by watching videos</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 bg-gold/10 px-3 py-2 rounded-full">
-            <Coins className="w-5 h-5 text-gold" />
-            <span className="font-bold text-gold">{profile.coin_balance.toLocaleString()}</span>
+          <div className="flex items-center gap-2 bg-primary/10 px-3 py-2 rounded-full">
+            <Sparkles className="w-5 h-5 text-primary" />
+            <span className="font-bold text-primary">{profile.spins_available}</span>
           </div>
         </div>
 
         {/* Daily Stats */}
         {!loading && stats && (
-          <Card className="p-6 bg-gradient-to-r from-destructive/10 to-primary/10">
+          <Card className="p-6 bg-gradient-to-r from-primary/10 to-secondary/10">
             <div className="grid grid-cols-3 gap-4 text-center">
               <div>
                 <p className="text-2xl font-bold text-foreground">{stats.daily_count}</p>
                 <p className="text-xs text-muted-foreground">Watched Today</p>
               </div>
               <div>
-                <p className="text-2xl font-bold text-gold">{stats.daily_earnings}</p>
-                <p className="text-xs text-muted-foreground">Coins Earned</p>
+                <p className="text-2xl font-bold text-primary">{stats.daily_count * 3}</p>
+                <p className="text-xs text-muted-foreground">Spins Earned</p>
               </div>
               <div>
                 <p className="text-2xl font-bold text-accent">{stats.remaining}</p>
@@ -185,28 +178,21 @@ export const WatchAds: React.FC = () => {
         {/* Ad Player */}
         {!watching ? (
           <Card className="p-8 text-center space-y-6">
-            <div className="w-24 h-24 mx-auto bg-gradient-to-br from-destructive to-primary rounded-full flex items-center justify-center">
+            <div className="w-24 h-24 mx-auto bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center">
               <Video className="w-12 h-12 text-white" />
             </div>
             
             <div>
-              <h2 className="text-2xl font-bold mb-2">Watch & Earn</h2>
+              <h2 className="text-2xl font-bold mb-2">Watch & Spin</h2>
               <p className="text-muted-foreground">
-                Watch a 30-second video and earn {rewardAmount} coins
+                Watch a 30-second video and earn 3 spins
               </p>
             </div>
 
-            <div className="flex items-center justify-center gap-2 text-gold">
-              <Coins className="w-6 h-6" />
-              <span className="text-3xl font-bold">+{rewardAmount}</span>
+            <div className="flex items-center justify-center gap-2 text-primary">
+              <span className="text-5xl font-bold">+3</span>
+              <span className="text-4xl">🎰</span>
             </div>
-
-            {profile.is_premium && (
-              <div className="flex items-center justify-center gap-2 text-premium">
-                <Sparkles className="w-5 h-5" />
-                <span className="text-sm font-semibold">Premium 2.5× Bonus Active!</span>
-              </div>
-            )}
 
             <Button
               size="lg"
@@ -274,8 +260,8 @@ export const WatchAds: React.FC = () => {
                 onClick={claimReward}
                 className="w-full bg-gradient-to-r from-success to-accent"
               >
-                <Coins className="w-5 h-5 mr-2" />
-                Claim {rewardAmount} Coins
+                <Sparkles className="w-5 h-5 mr-2" />
+                Claim 3 Spins
               </Button>
             )}
 
@@ -310,7 +296,7 @@ export const WatchAds: React.FC = () => {
               <div>
                 <p className="font-semibold">Claim Your Reward</p>
                 <p className="text-sm text-muted-foreground">
-                  Earn {rewardAmount} coins instantly after completion
+                  Earn 3 spins instantly after completion
                 </p>
               </div>
             </div>
@@ -321,33 +307,12 @@ export const WatchAds: React.FC = () => {
               <div>
                 <p className="font-semibold">Daily Limit</p>
                 <p className="text-sm text-muted-foreground">
-                  Watch up to 20 ads per day to maximize earnings
+                  Watch up to 10 ads per day to earn spins
                 </p>
               </div>
             </div>
           </div>
         </Card>
-
-        {/* Premium Upsell */}
-        {!profile.is_premium && (
-          <Card className="p-6 bg-gradient-to-r from-premium/20 to-secondary/20 border-premium/30">
-            <div className="text-center space-y-3">
-              <TrendingUp className="w-12 h-12 text-premium mx-auto" />
-              <h3 className="text-xl font-bold">Earn 2.5× More!</h3>
-              <p className="text-muted-foreground">
-                Premium members earn {premiumReward} coins per ad instead of {baseReward} coins
-              </p>
-              <Button
-                onClick={() => navigate('/premium')}
-                variant="premium"
-                size="lg"
-                className="mt-2"
-              >
-                Upgrade to Premium - $2
-              </Button>
-            </div>
-          </Card>
-        )}
       </div>
     </div>
   );
