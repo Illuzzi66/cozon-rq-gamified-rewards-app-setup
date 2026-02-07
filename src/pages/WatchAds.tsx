@@ -96,7 +96,7 @@ export const WatchAds: React.FC = () => {
       if (data.success) {
         toast({
           title: '🎉 Reward Claimed!',
-          description: `You earned ${data.coins_earned} coins${data.spins_awarded ? ` and ${data.spins_awarded} spins` : ''}!`,
+          description: `You earned ${data.coins_earned} coins!`,
         });
 
         await refreshProfile();
@@ -192,15 +192,13 @@ export const WatchAds: React.FC = () => {
             <div>
               <h2 className="text-2xl font-bold mb-2">Watch & Earn</h2>
               <p className="text-muted-foreground">
-                Watch a 30-second video and earn {rewardAmount} coins + 3 spins
+                Watch a 30-second video and earn {rewardAmount} coins
               </p>
             </div>
 
             <div className="flex items-center justify-center gap-2 text-gold">
               <Coins className="w-6 h-6" />
               <span className="text-3xl font-bold">+{rewardAmount}</span>
-              <span className="text-2xl mx-2">&</span>
-              <span className="text-3xl font-bold">+3 🎰</span>
             </div>
 
             {profile.is_premium && (
@@ -277,7 +275,7 @@ export const WatchAds: React.FC = () => {
                 className="w-full bg-gradient-to-r from-success to-accent"
               >
                 <Coins className="w-5 h-5 mr-2" />
-                Claim {rewardAmount} Coins + 3 Spins
+                Claim {rewardAmount} Coins
               </Button>
             )}
 
@@ -312,7 +310,7 @@ export const WatchAds: React.FC = () => {
               <div>
                 <p className="font-semibold">Claim Your Reward</p>
                 <p className="text-sm text-muted-foreground">
-                  Earn {rewardAmount} coins + 3 spins instantly after completion
+                  Earn {rewardAmount} coins instantly after completion
                 </p>
               </div>
             </div>
