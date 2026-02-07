@@ -11,6 +11,7 @@ import { WatchAds } from '@/pages/WatchAds';
 import { Wallet } from '@/pages/Wallet';
 import { Premium } from '@/pages/Premium';
 import { Profile } from '@/pages/Profile';
+import { ActivityLog } from '@/pages/ActivityLog';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
@@ -90,6 +91,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/activity"
+            element={
+              <ProtectedRoute>
+                <ActivityLog />
               </ProtectedRoute>
             }
           />

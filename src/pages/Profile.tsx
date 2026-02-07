@@ -21,6 +21,7 @@ import {
   Share2,
   Copy,
   Gift,
+  History,
 } from 'lucide-react';
 import {
   Dialog,
@@ -507,6 +508,24 @@ export const Profile: React.FC = () => {
                 Share Referral Code
               </Button>
             </div>
+          </div>
+        </Card>
+
+        {/* Activity History */}
+        <Card className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-semibold flex items-center gap-2">
+                <History className="w-5 h-5" />
+                Activity History
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                View all your earnings and actions
+              </p>
+            </div>
+            <Button variant="outline" onClick={() => navigate('/activity')}>
+              View All
+            </Button>
           </div>
         </Card>
 
