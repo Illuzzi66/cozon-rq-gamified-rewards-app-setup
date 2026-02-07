@@ -23,6 +23,7 @@ import {
   TrendingUp,
   Calendar,
   X,
+  Wallet,
 } from 'lucide-react';
 import { format, isToday, isYesterday, formatDistanceToNow, subDays, startOfDay, endOfDay, isWithinInterval } from 'date-fns';
 
@@ -183,6 +184,15 @@ export const ActivityLog: React.FC = () => {
     withdrawals: activities.filter(a => a.activity_type === 'withdrawal').length,
   };
 
+  // Calculate total earnings for filtered activities
+  const totalEarnings = filteredActivities
+    .filter(a => a.activity_type !== 'withdrawal')
+    .reduce((sum, activity) => sum + activity.amount, 0);
+
+  const totalWithdrawals = filteredActivities
+    .filter(a => a.activity_type === 'withdrawal')
+    .reduce((sum, activity) => sum + Math.abs(activity.amount), 0);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10">
       <div className="max-w-4xl mx-auto p-4 space-y-6">
@@ -201,6 +211,42 @@ export const ActivityLog: React.FC = () => {
             </p>
           </div>
         </div>
+
+        {/* Earnings Summary */}
+        <Card className="p-6 bg-gradient-to-br from-success/10 to-success/5 border-success/20">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="bg-success/20 p-3 rounded-full">
+                <Wallet className="w-6 h-6 text-success" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">
+                  {dateRange.from && dateRange.to 
+                    ? `Earnings (${format(dateRange.from, 'MMM d')} - ${format(dateRange.to, 'MMM d')})`
+                    : 'Total Earnings (All Time)'}
+                </p>
+                <div className="flex items-center gap-4 mt-1">
+                  <div className="flex items-center gap-1">
+                    <Coins className="w-5 h-5 text-success" />
+                    <span className="text-3xl font-bold text-foreground">{totalEarnings}</span>
+                    <span className="text-sm text-muted-foreground ml-1">coins</span>
+                  </div>
+                  {totalWithdrawals > 0 && (
+                    <>
+                      <Separator orientation="vertical" className="h-8" />
+                      <div className="flex items-center gap-1">
+                        <DollarSign className="w-4 h-4 text-blue-500" />
+                        <span className="text-lg font-semibold text-foreground">{totalWithdrawals}</span>
+                        <span className="text-xs text-muted-foreground ml-1">withdrawn</span>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+            <TrendingUp className="w-8 h-8 text-success opacity-50" />
+          </div>
+        </Card>
 
         {/* Stats Overview */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
