@@ -46,6 +46,12 @@
   }
 }
 
+@layer utilities {
+  .premium-glow {
+    box-shadow: 0 0 20px var(--premium-glow);
+  }
+}
+
 @layer base {
   * {
     @apply border-border;
