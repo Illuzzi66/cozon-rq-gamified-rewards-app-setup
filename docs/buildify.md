@@ -1,4 +1,5 @@
 
+
 ### Requirements
 Cozon RQ is a gamified rewards app where users earn coins through various activities:
 - Complete tasks (Simple, Medium, Weekly)
@@ -36,6 +37,7 @@ Cozon RQ is a gamified rewards app where users earn coins through various activi
   - [x] Remove standalone watch-ads-spins page and route
   - [x] Add 24-hour countdown for daily bonus spins (2 spins)
   - [x] Create daily bonus system with spin rewards
-  - [ ] Add spin purchase option with coins
-  - [ ] Add profile page with notifications, sign out, picture upload, password change, name edit
+  - [x] Add spin purchase option with coins (50 coins per spin)
+  - [x] Enhanced countdown timer display with visual improvements
+- [ ] Add profile page with notifications, sign out, picture upload, password change, name edit
 

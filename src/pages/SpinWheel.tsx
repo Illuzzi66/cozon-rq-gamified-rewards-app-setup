@@ -6,7 +6,17 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Coins, Sparkles, Video, Play, CheckCircle, Clock } from 'lucide-react';
+import { ArrowLeft, Coins, Sparkles, Video, Play, CheckCircle, Clock, ShoppingCart } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 interface WheelSegment {
   id: number;
@@ -48,6 +58,8 @@ export const SpinWheel: React.FC = () => {
   const [dailyBonusAvailable, setDailyBonusAvailable] = useState(false);
   const [nextClaimTime, setNextClaimTime] = useState<Date | null>(null);
   const [timeRemaining, setTimeRemaining] = useState<string>('');
+  const [showPurchaseDialog, setShowPurchaseDialog] = useState(false);
+  const [purchaseAmount, setPurchaseAmount] = useState(1);
 
   useEffect(() => {
     loadSpinData();
@@ -332,6 +344,47 @@ export const SpinWheel: React.FC = () => {
     }
   };
 
+  const handlePurchaseSpins = async () => {
+    if (!profile || purchaseAmount < 1) return;
+
+    try {
+      const { data, error } = await supabase.rpc('purchase_spins_with_coins', {
+        p_user_id: profile.user_id,
+        p_spin_count: purchaseAmount,
+      });
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        const result = data[0];
+        if (result.success) {
+          toast({
+            title: '🎉 Purchase Successful!',
+            description: `You bought ${result.spins_purchased} spins for ${result.coins_spent} coins!`,
+          });
+
+          await refreshProfile();
+          await loadSpinData();
+          setShowPurchaseDialog(false);
+          setPurchaseAmount(1);
+        } else {
+          toast({
+            title: 'Purchase Failed',
+            description: result.error,
+            variant: 'destructive',
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error purchasing spins:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to purchase spins',
+        variant: 'destructive',
+      });
+    }
+  };
+
   if (!profile) return null;
 
   return (
@@ -380,26 +433,43 @@ export const SpinWheel: React.FC = () => {
         </Card>
 
         {/* Daily Bonus Card */}
-        <Card className="p-4 bg-gradient-to-r from-primary/20 to-secondary/20 border-primary/30">
+        <Card className="p-5 bg-gradient-to-r from-primary/20 to-secondary/20 border-primary/30 shadow-lg">
           <div className="flex items-center justify-between">
             <div className="flex-1">
-              <p className="text-sm font-semibold flex items-center gap-2">
-                <Sparkles className="w-4 h-4" />
+              <p className="text-base font-bold flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-primary animate-pulse" />
                 Daily Bonus
               </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {dailyBonusAvailable 
-                  ? 'Claim your 2 free spins!' 
-                  : `Next claim in ${timeRemaining}`}
-              </p>
+              {dailyBonusAvailable ? (
+                <p className="text-sm text-success font-semibold mt-1">
+                  🎁 Claim your 2 free spins now!
+                </p>
+              ) : (
+                <div className="mt-2 space-y-1">
+                  <p className="text-xs text-muted-foreground">Next claim available in:</p>
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-primary" />
+                    <span className="text-lg font-mono font-bold text-foreground tabular-nums">
+                      {timeRemaining}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
             <Button
               onClick={claimDailyBonus}
               disabled={!dailyBonusAvailable}
-              size="sm"
-              className="bg-gradient-to-r from-primary to-secondary"
+              size="lg"
+              className="bg-gradient-to-r from-primary to-secondary disabled:opacity-50 min-w-[120px]"
             >
-              {dailyBonusAvailable ? 'Claim 2 Spins' : <Clock className="w-4 h-4" />}
+              {dailyBonusAvailable ? (
+                <>
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Claim Now
+                </>
+              ) : (
+                <Clock className="w-5 h-5" />
+              )}
             </Button>
           </div>
         </Card>
@@ -501,14 +571,24 @@ export const SpinWheel: React.FC = () => {
                 </Button>
 
                 {spinsAvailable < 1 && (
-                  <Button
-                    onClick={handleWatchAdForSpin}
-                    variant="outline"
-                    className="w-full h-12"
-                  >
-                    <Video className="w-5 h-5 mr-2" />
-                    Watch Ad for 3 Spins
-                  </Button>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Button
+                      onClick={handleWatchAdForSpin}
+                      variant="outline"
+                      className="h-12"
+                    >
+                      <Video className="w-5 h-5 mr-2" />
+                      Watch Ad
+                    </Button>
+                    <Button
+                      onClick={() => setShowPurchaseDialog(true)}
+                      variant="outline"
+                      className="h-12"
+                    >
+                      <ShoppingCart className="w-5 h-5 mr-2" />
+                      Buy Spins
+                    </Button>
+                  </div>
                 )}
               </div>
             </div>
@@ -656,6 +736,71 @@ export const SpinWheel: React.FC = () => {
           </Card>
         )}
       </div>
+
+      {/* Purchase Dialog */}
+      <Dialog open={showPurchaseDialog} onOpenChange={setShowPurchaseDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Purchase Spins</DialogTitle>
+            <DialogDescription>
+              Buy spins with your coins. Each spin costs 50 coins.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="spin-amount">Number of Spins</Label>
+              <Input
+                id="spin-amount"
+                type="number"
+                min="1"
+                max="20"
+                value={purchaseAmount}
+                onChange={(e) => setPurchaseAmount(Math.max(1, Math.min(20, parseInt(e.target.value) || 1)))}
+              />
+            </div>
+            
+            <div className="p-4 bg-muted rounded-lg space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Spins:</span>
+                <span className="font-semibold">{purchaseAmount}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Cost per spin:</span>
+                <span className="font-semibold">50 coins</span>
+              </div>
+              <div className="h-px bg-border my-2" />
+              <div className="flex justify-between">
+                <span className="font-semibold">Total Cost:</span>
+                <span className="text-lg font-bold text-primary flex items-center gap-1">
+                  <Coins className="w-5 h-5" />
+                  {purchaseAmount * 50}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Your Balance:</span>
+                <span className={`font-semibold ${profile && profile.coin_balance >= purchaseAmount * 50 ? 'text-success' : 'text-destructive'}`}>
+                  {profile?.coin_balance.toLocaleString()} coins
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowPurchaseDialog(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handlePurchaseSpins}
+              disabled={!profile || profile.coin_balance < purchaseAmount * 50}
+              className="bg-gradient-to-r from-primary to-secondary"
+            >
+              <ShoppingCart className="w-4 h-4 mr-2" />
+              Purchase
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
