@@ -8,6 +8,7 @@ import { SpinWheel } from '@/pages/SpinWheel';
 import { Tasks } from '@/pages/Tasks';
 import { MemeFeed } from '@/pages/MemeFeed';
 import { WatchAds } from '@/pages/WatchAds';
+import { Wallet } from '@/pages/Wallet';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
@@ -63,6 +64,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <WatchAds />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/wallet"
+            element={
+              <ProtectedRoute>
+                <Wallet />
               </ProtectedRoute>
             }
           />
