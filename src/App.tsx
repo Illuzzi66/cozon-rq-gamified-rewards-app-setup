@@ -6,6 +6,7 @@ import { Login } from '@/pages/Login';
 import { Dashboard } from '@/pages/Dashboard';
 import { SpinWheel } from '@/pages/SpinWheel';
 import { Tasks } from '@/pages/Tasks';
+import { MemeFeed } from '@/pages/MemeFeed';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
@@ -45,6 +46,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Tasks />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/memes"
+            element={
+              <ProtectedRoute>
+                <MemeFeed />
               </ProtectedRoute>
             }
           />
