@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { formatCoins } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
-import { Coins, Gift, Image, Video, Wallet, Crown } from 'lucide-react';
+import { Coins, Gift, Image, Video, Wallet, Crown, User as UserIcon } from 'lucide-react';
 
 export const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -70,12 +70,22 @@ export const Dashboard: React.FC = () => {
               <h1 className="text-2xl font-bold">Welcome, {profile.full_name}!</h1>
               <p className="text-muted-foreground">@{profile.username}</p>
             </div>
-            {profile.is_premium && (
-              <div className="flex items-center gap-2 bg-premium/10 text-premium px-4 py-2 rounded-full premium-glow">
-                <Crown className="w-5 h-5" />
-                <span className="font-semibold">Premium</span>
-              </div>
-            )}
+            <div className="flex items-center gap-2">
+              {profile.is_premium && (
+                <div className="flex items-center gap-2 bg-premium/10 text-premium px-4 py-2 rounded-full premium-glow">
+                  <Crown className="w-5 h-5" />
+                  <span className="font-semibold">Premium</span>
+                </div>
+              )}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate('/profile')}
+                className="rounded-full"
+              >
+                <UserIcon className="w-5 h-5" />
+              </Button>
+            </div>
           </div>
 
           <div className="bg-gradient-to-r from-gold/20 to-gold/10 rounded-lg p-6 border-2 border-gold/30">

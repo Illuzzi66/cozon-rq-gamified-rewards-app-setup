@@ -39,5 +39,11 @@ Cozon RQ is a gamified rewards app where users earn coins through various activi
   - [x] Create daily bonus system with spin rewards
   - [x] Add spin purchase option with coins (50 coins per spin)
   - [x] Enhanced countdown timer display with visual improvements
-- [ ] Add profile page with notifications, sign out, picture upload, password change, name edit
+- [x] Profile page with user settings
+  - [x] Create profile page layout with user info display
+  - [x] Add profile picture upload functionality
+  - [x] Implement name/username edit feature
+  - [x] Add password change functionality
+  - [x] Add notification preferences
+  - [x] Implement sign out functionality
 

@@ -13,6 +13,8 @@ interface Profile {
   coin_balance: number;
   locked_coins: number;
   referral_code: string | null;
+  avatar_url?: string;
+  last_daily_login?: string;
 }
 
 interface AuthContextType {

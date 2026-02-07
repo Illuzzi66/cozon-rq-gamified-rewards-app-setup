@@ -10,6 +10,7 @@ import { MemeFeed } from '@/pages/MemeFeed';
 import { WatchAds } from '@/pages/WatchAds';
 import { Wallet } from '@/pages/Wallet';
 import { Premium } from '@/pages/Premium';
+import { Profile } from '@/pages/Profile';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
@@ -81,6 +82,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Premium />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
               </ProtectedRoute>
             }
           />
