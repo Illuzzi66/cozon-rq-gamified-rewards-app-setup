@@ -18,6 +18,9 @@ import {
   Save,
   Crown,
   Bell,
+  Share2,
+  Copy,
+  Gift,
 } from 'lucide-react';
 import {
   Dialog,
@@ -55,6 +58,58 @@ export const Profile: React.FC = () => {
     rewardAlerts: true,
     promotions: false,
   });
+
+  const handleCopyReferralCode = async () => {
+    if (!profile?.referral_code) return;
+    
+    try {
+      await navigator.clipboard.writeText(profile.referral_code);
+      toast({
+        title: 'Copied!',
+        description: 'Referral code copied to clipboard',
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to copy referral code',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleShareReferral = async () => {
+    if (!profile?.referral_code) return;
+    
+    const shareText = `Join Cozon RQ and earn rewards! Use my referral code: ${profile.referral_code}`;
+    const shareUrl = `${window.location.origin}/signup?ref=${profile.referral_code}`;
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Join Cozon RQ',
+          text: shareText,
+          url: shareUrl,
+        });
+      } catch (error) {
+        // User cancelled share
+      }
+    } else {
+      // Fallback: copy to clipboard
+      try {
+        await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+        toast({
+          title: 'Copied!',
+          description: 'Referral link copied to clipboard',
+        });
+      } catch (error) {
+        toast({
+          title: 'Error',
+          description: 'Failed to share referral code',
+          variant: 'destructive',
+        });
+      }
+    }
+  };
 
   const handleSaveName = async () => {
     if (!profile || !fullName.trim() || !username.trim()) {
@@ -404,6 +459,52 @@ export const Profile: React.FC = () => {
               </div>
               <Button variant="outline" onClick={() => setShowPasswordDialog(true)}>
                 Change
+              </Button>
+            </div>
+          </div>
+        </Card>
+
+        {/* Referral Section */}
+        <Card className="p-6 space-y-4">
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            <Gift className="w-5 h-5" />
+            Referral Program
+          </h2>
+
+          <Separator />
+
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm text-muted-foreground mb-3">
+                Share your referral code and earn bonus coins when friends join!
+              </p>
+              
+              <div className="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-lg p-4 border-2 border-primary/20">
+                <Label className="text-xs text-muted-foreground mb-2 block">
+                  Your Referral Code
+                </Label>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 bg-background rounded-md px-4 py-3 font-mono text-xl font-bold text-primary border border-border">
+                    {profile.referral_code || 'Loading...'}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handleCopyReferralCode}
+                    className="h-12 w-12"
+                  >
+                    <Copy className="w-5 h-5" />
+                  </Button>
+                </div>
+              </div>
+
+              <Button
+                onClick={handleShareReferral}
+                className="w-full mt-4"
+                variant="default"
+              >
+                <Share2 className="w-4 h-4 mr-2" />
+                Share Referral Code
               </Button>
             </div>
           </div>
