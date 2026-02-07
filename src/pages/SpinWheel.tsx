@@ -298,26 +298,29 @@ export const SpinWheel: React.FC = () => {
 
       if (error) throw error;
 
-      if (data.success) {
-        toast({
-          title: '🎉 Reward Claimed!',
-          description: `You earned ${data.spins_awarded} spins!`,
-        });
+      if (data && data.length > 0) {
+        const result = data[0];
+        if (result.success) {
+          toast({
+            title: '🎉 Reward Claimed!',
+            description: `You earned ${result.spins_awarded} spins!`,
+          });
 
-        await refreshProfile();
-        await loadSpinData();
-        setWatchingAd(false);
-        setAdProgress(0);
-        setAdCompleted(false);
-      } else {
-        toast({
-          title: 'Limit Reached',
-          description: data.error,
-          variant: 'destructive',
-        });
-        setWatchingAd(false);
-        setAdProgress(0);
-        setAdCompleted(false);
+          await refreshProfile();
+          await loadSpinData();
+          setWatchingAd(false);
+          setAdProgress(0);
+          setAdCompleted(false);
+        } else {
+          toast({
+            title: 'Limit Reached',
+            description: result.error,
+            variant: 'destructive',
+          });
+          setWatchingAd(false);
+          setAdProgress(0);
+          setAdCompleted(false);
+        }
       }
     } catch (error) {
       console.error('Error claiming reward:', error);
