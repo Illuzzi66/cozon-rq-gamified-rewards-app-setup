@@ -45,10 +45,23 @@ export const SpinWheel: React.FC = () => {
   const [watchingAd, setWatchingAd] = useState(false);
   const [adProgress, setAdProgress] = useState(0);
   const [adCompleted, setAdCompleted] = useState(false);
+  const [dailyBonusAvailable, setDailyBonusAvailable] = useState(false);
+  const [nextClaimTime, setNextClaimTime] = useState<Date | null>(null);
+  const [timeRemaining, setTimeRemaining] = useState<string>('');
 
   useEffect(() => {
     loadSpinData();
+    checkDailyBonus();
   }, [profile]);
+
+  useEffect(() => {
+    if (!dailyBonusAvailable && nextClaimTime) {
+      const interval = setInterval(() => {
+        updateTimeRemaining();
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [dailyBonusAvailable, nextClaimTime]);
 
   const loadSpinData = async () => {
     if (!profile) return;
@@ -67,6 +80,87 @@ export const SpinWheel: React.FC = () => {
       setSpinHistory(data || []);
     } catch (error) {
       console.error('Error loading spin data:', error);
+    }
+  };
+
+  const checkDailyBonus = async () => {
+    if (!profile) return;
+
+    try {
+      const { data, error } = await supabase.rpc('check_daily_bonus_status', {
+        p_user_id: profile.user_id,
+      });
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        const status = data[0];
+        setDailyBonusAvailable(status.available);
+        if (!status.available) {
+          setNextClaimTime(new Date(status.next_claim_time));
+          updateTimeRemaining();
+        }
+      }
+    } catch (error) {
+      console.error('Error checking daily bonus:', error);
+    }
+  };
+
+  const updateTimeRemaining = () => {
+    if (!nextClaimTime) return;
+
+    const now = new Date();
+    const diff = nextClaimTime.getTime() - now.getTime();
+
+    if (diff <= 0) {
+      setDailyBonusAvailable(true);
+      setTimeRemaining('');
+      return;
+    }
+
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+    setTimeRemaining(`${hours}h ${minutes}m ${seconds}s`);
+  };
+
+  const claimDailyBonus = async () => {
+    if (!profile || !dailyBonusAvailable) return;
+
+    try {
+      const { data, error } = await supabase.rpc('claim_daily_bonus_spins', {
+        p_user_id: profile.user_id,
+      });
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        const result = data[0];
+        if (result.success) {
+          toast({
+            title: '🎉 Daily Bonus Claimed!',
+            description: `You received ${result.spins_awarded} spins!`,
+          });
+
+          await refreshProfile();
+          await loadSpinData();
+          await checkDailyBonus();
+        } else {
+          toast({
+            title: 'Already Claimed',
+            description: result.error,
+            variant: 'destructive',
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error claiming daily bonus:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to claim daily bonus',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -279,6 +373,31 @@ export const SpinWheel: React.FC = () => {
                 {profile.coin_balance.toLocaleString()}
               </p>
             </div>
+          </div>
+        </Card>
+
+        {/* Daily Bonus Card */}
+        <Card className="p-4 bg-gradient-to-r from-primary/20 to-secondary/20 border-primary/30">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <p className="text-sm font-semibold flex items-center gap-2">
+                <Sparkles className="w-4 h-4" />
+                Daily Bonus
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {dailyBonusAvailable 
+                  ? 'Claim your 2 free spins!' 
+                  : `Next claim in ${timeRemaining}`}
+              </p>
+            </div>
+            <Button
+              onClick={claimDailyBonus}
+              disabled={!dailyBonusAvailable}
+              size="sm"
+              className="bg-gradient-to-r from-primary to-secondary"
+            >
+              {dailyBonusAvailable ? 'Claim 2 Spins' : <Clock className="w-4 h-4" />}
+            </Button>
           </div>
         </Card>
 
