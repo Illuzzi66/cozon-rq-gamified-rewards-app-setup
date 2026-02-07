@@ -23,6 +23,7 @@ Cozon RQ is a gamified rewards app where users earn coins through various activi
 - [x] Premium upgrade system
 - [ ] Enhanced spin wheel system
   - [x] Update database schema for spins_available and new reward types
-  - [ ] Modify wheel segments with monetary rewards ($0.50, $2) and loss outcomes
-  - [ ] Create spin history display component
-  - [ ] Update spin logic to handle spins as currency and mixed reward types
+  - [x] Modify wheel segments with monetary rewards ($0.50, $2) and loss outcomes
+  - [x] Create spin history display component
+  - [x] Update spin logic to handle spins as currency and mixed reward types
+  - [x] Add visual indicators for different reward types

@@ -11,18 +11,24 @@ import { ArrowLeft, Coins, Sparkles, Video } from 'lucide-react';
 interface WheelSegment {
   id: number;
   label: string;
-  coins: number;
+  rewardType: 'coins' | 'money' | 'spins' | 'loss';
+  rewardAmount: number;
+  moneyAmount?: number;
+  rewardSubtype?: string;
   color: string;
   probability: number;
+  icon: string;
 }
 
 const wheelSegments: WheelSegment[] = [
-  { id: 0, label: '10 Coins', coins: 10, color: 'hsl(262 83% 58%)', probability: 30 },
-  { id: 1, label: '25 Coins', coins: 25, color: 'hsl(217 91% 60%)', probability: 25 },
-  { id: 2, label: '50 Coins', coins: 50, color: 'hsl(142 76% 36%)', probability: 20 },
-  { id: 3, label: '5 Coins', coins: 5, color: 'hsl(38 92% 50%)', probability: 15 },
-  { id: 4, label: '100 Coins', coins: 100, color: 'hsl(45 93% 47%)', probability: 8 },
-  { id: 5, label: '15 Coins', coins: 15, color: 'hsl(0 84% 60%)', probability: 2 },
+  { id: 0, label: '10 Coins', rewardType: 'coins', rewardAmount: 10, color: 'hsl(262 83% 58%)', probability: 25, icon: '🪙' },
+  { id: 1, label: '$0.50', rewardType: 'money', rewardAmount: 0, moneyAmount: 0.50, color: 'hsl(142 76% 36%)', probability: 15, icon: '💵' },
+  { id: 2, label: '25 Coins', rewardType: 'coins', rewardAmount: 25, color: 'hsl(217 91% 60%)', probability: 20, icon: '🪙' },
+  { id: 3, label: 'Try Again', rewardType: 'loss', rewardAmount: 0, rewardSubtype: 'try_again', color: 'hsl(0 84% 60%)', probability: 15, icon: '😢' },
+  { id: 4, label: '+2 Spins', rewardType: 'spins', rewardAmount: 2, rewardSubtype: 'extra_spins', color: 'hsl(280 100% 70%)', probability: 10, icon: '🎰' },
+  { id: 5, label: '$2.00', rewardType: 'money', rewardAmount: 0, moneyAmount: 2.00, color: 'hsl(45 93% 47%)', probability: 8, icon: '💰' },
+  { id: 6, label: '50 Coins', rewardType: 'coins', rewardAmount: 50, color: 'hsl(38 92% 50%)', probability: 5, icon: '🪙' },
+  { id: 7, label: 'Better Luck', rewardType: 'loss', rewardAmount: 0, rewardSubtype: 'better_luck', color: 'hsl(0 72% 51%)', probability: 2, icon: '💔' },
 ];
 
 export const SpinWheel: React.FC = () => {
@@ -31,31 +37,33 @@ export const SpinWheel: React.FC = () => {
   const { toast } = useToast();
   const [spinning, setSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
-  const [canSpin, setCanSpin] = useState(false);
-  const [spinsToday, setSpinsToday] = useState(0);
+  const [spinsAvailable, setSpinsAvailable] = useState(0);
   const [showReward, setShowReward] = useState(false);
-  const [rewardAmount, setRewardAmount] = useState(0);
+  const [lastReward, setLastReward] = useState<WheelSegment | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [spinHistory, setSpinHistory] = useState<any[]>([]);
 
   useEffect(() => {
-    checkSpinEligibility();
+    loadSpinData();
   }, [profile]);
 
-  const checkSpinEligibility = async () => {
+  const loadSpinData = async () => {
     if (!profile) return;
 
     try {
-      const { data, error } = await supabase.rpc('get_spin_count_today', {
+      // Get spins available from profile
+      setSpinsAvailable(profile.spins_available || 0);
+
+      // Load spin history
+      const { data, error } = await supabase.rpc('get_spin_history', {
         p_user_id: profile.user_id,
+        p_limit: 5,
       });
 
       if (error) throw error;
-
-      const count = data || 0;
-      setSpinsToday(count);
-      setCanSpin(count < 1);
+      setSpinHistory(data || []);
     } catch (error) {
-      console.error('Error checking spin eligibility:', error);
+      console.error('Error loading spin data:', error);
     }
   };
 
@@ -74,64 +82,92 @@ export const SpinWheel: React.FC = () => {
   };
 
   const handleSpin = async () => {
-    if (!profile || !canSpin || spinning) return;
+    if (!profile || spinsAvailable < 1 || spinning) return;
 
     setSpinning(true);
 
-    const reward = selectReward();
-    const segmentAngle = 360 / wheelSegments.length;
-    const targetRotation = 360 * 5 + (reward.id * segmentAngle) + segmentAngle / 2;
+    try {
+      // Deduct one spin
+      const { data: deductData, error: deductError } = await supabase.rpc('deduct_spin', {
+        p_user_id: profile.user_id,
+      });
 
-    setRotation(targetRotation);
+      if (deductError) throw deductError;
+      if (!deductData.success) {
+        throw new Error(deductData.error || 'Failed to deduct spin');
+      }
 
-    setTimeout(async () => {
-      try {
-        // Record spin history
-        const { error: historyError } = await supabase
-          .from('spin_history')
-          .insert({
-            user_id: profile.user_id,
-            reward_type: 'coins',
-            reward_amount: reward.coins,
+      const reward = selectReward();
+      const segmentAngle = 360 / wheelSegments.length;
+      const targetRotation = 360 * 5 + (reward.id * segmentAngle) + segmentAngle / 2;
+
+      setRotation(targetRotation);
+
+      setTimeout(async () => {
+        try {
+          // Record spin result
+          const { data: recordData, error: recordError } = await supabase.rpc('record_spin_result', {
+            p_user_id: profile.user_id,
+            p_reward_type: reward.rewardType,
+            p_reward_amount: reward.rewardAmount,
+            p_reward_subtype: reward.rewardSubtype || null,
+            p_money_amount: reward.moneyAmount || 0,
           });
 
-        if (historyError) throw historyError;
+          if (recordError) throw recordError;
+          if (!recordData.success) {
+            throw new Error('Failed to record spin result');
+          }
 
-        // Add coins to balance
-        const { error: coinsError } = await supabase.rpc('add_coins', {
-          p_user_id: profile.user_id,
-          p_amount: reward.coins,
-        });
+          setLastReward(reward);
+          setShowReward(true);
+          
+          if (reward.rewardType !== 'loss') {
+            setShowConfetti(true);
+            setTimeout(() => setShowConfetti(false), 3000);
+          }
 
-        if (coinsError) throw coinsError;
+          setSpinsAvailable(deductData.spins_available);
+          await refreshProfile();
+          await loadSpinData();
 
-        setRewardAmount(reward.coins);
-        setShowReward(true);
-        setShowConfetti(true);
-        setCanSpin(false);
-        setSpinsToday(spinsToday + 1);
+          // Show appropriate toast
+          let toastMessage = '';
+          if (reward.rewardType === 'coins') {
+            toastMessage = `You won ${reward.rewardAmount} coins!`;
+          } else if (reward.rewardType === 'money') {
+            toastMessage = `You won $${reward.moneyAmount?.toFixed(2)}!`;
+          } else if (reward.rewardType === 'spins') {
+            toastMessage = `You won ${reward.rewardAmount} extra spins!`;
+          } else {
+            toastMessage = 'Better luck next time!';
+          }
 
-        await refreshProfile();
-
-        setTimeout(() => {
-          setShowConfetti(false);
-        }, 3000);
-
-        toast({
-          title: '🎉 Congratulations!',
-          description: `You won ${reward.coins} coins!`,
-        });
-      } catch (error) {
-        console.error('Error processing spin:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to process spin. Please try again.',
-          variant: 'destructive',
-        });
-      } finally {
-        setSpinning(false);
-      }
-    }, 4000);
+          toast({
+            title: reward.rewardType === 'loss' ? '😢 Oh no!' : '🎉 Congratulations!',
+            description: toastMessage,
+            variant: reward.rewardType === 'loss' ? 'destructive' : 'default',
+          });
+        } catch (error) {
+          console.error('Error processing spin:', error);
+          toast({
+            title: 'Error',
+            description: 'Failed to process spin. Please try again.',
+            variant: 'destructive',
+          });
+        } finally {
+          setSpinning(false);
+        }
+      }, 4000);
+    } catch (error) {
+      console.error('Error deducting spin:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to start spin. Please try again.',
+        variant: 'destructive',
+      });
+      setSpinning(false);
+    }
   };
 
   const handleWatchAdForSpin = () => {
@@ -168,9 +204,9 @@ export const SpinWheel: React.FC = () => {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold">Daily Spin Wheel</h1>
+            <h1 className="text-2xl font-bold">Spin Wheel</h1>
             <p className="text-sm text-muted-foreground">
-              Spins today: {spinsToday}/1 {!canSpin && '(Come back tomorrow!)'}
+              Available Spins: {spinsAvailable}
             </p>
           </div>
         </div>
@@ -221,12 +257,13 @@ export const SpinWheel: React.FC = () => {
                       }}
                     >
                       <div
-                        className="absolute top-[20%] left-[60%] text-white font-bold text-sm"
+                        className="absolute top-[20%] left-[60%] text-white font-bold text-xs flex flex-col items-center"
                         style={{
                           transform: `rotate(${360 / wheelSegments.length / 2}deg)`,
                         }}
                       >
-                        {segment.label}
+                        <span className="text-lg">{segment.icon}</span>
+                        <span className="text-[10px] whitespace-nowrap">{segment.label}</span>
                       </div>
                     </div>
                   );
@@ -243,14 +280,14 @@ export const SpinWheel: React.FC = () => {
             <div className="mt-8 space-y-4">
               <Button
                 onClick={handleSpin}
-                disabled={!canSpin || spinning}
+                disabled={spinsAvailable < 1 || spinning}
                 className="w-full h-14 text-lg font-bold"
                 size="lg"
               >
-                {spinning ? 'Spinning...' : canSpin ? 'SPIN NOW!' : 'No Spins Left'}
+                {spinning ? 'Spinning...' : spinsAvailable > 0 ? 'SPIN NOW!' : 'No Spins Left'}
               </Button>
 
-              {!canSpin && spinsToday >= 1 && (
+              {spinsAvailable < 1 && (
                 <Button
                   onClick={handleWatchAdForSpin}
                   variant="outline"
@@ -265,12 +302,68 @@ export const SpinWheel: React.FC = () => {
         </Card>
 
         {/* Reward Display */}
-        {showReward && (
-          <Card className="p-6 bg-gradient-to-r from-gold/20 to-gold/10 border-2 border-gold animate-pulse">
+        {showReward && lastReward && (
+          <Card className={`p-6 border-2 animate-pulse ${
+            lastReward.rewardType === 'loss' 
+              ? 'bg-gradient-to-r from-destructive/20 to-destructive/10 border-destructive' 
+              : 'bg-gradient-to-r from-gold/20 to-gold/10 border-gold'
+          }`}>
             <div className="text-center space-y-2">
-              <Sparkles className="w-12 h-12 text-gold mx-auto" />
-              <h2 className="text-2xl font-bold text-gold">You Won!</h2>
-              <p className="text-4xl font-bold text-gold">{rewardAmount} Coins</p>
+              <div className="text-6xl">{lastReward.icon}</div>
+              <h2 className={`text-2xl font-bold ${lastReward.rewardType === 'loss' ? 'text-destructive' : 'text-gold'}`}>
+                {lastReward.rewardType === 'loss' ? 'Better Luck Next Time!' : 'You Won!'}
+              </h2>
+              <p className={`text-3xl font-bold ${lastReward.rewardType === 'loss' ? 'text-destructive' : 'text-gold'}`}>
+                {lastReward.rewardType === 'coins' && `${lastReward.rewardAmount} Coins`}
+                {lastReward.rewardType === 'money' && `$${lastReward.moneyAmount?.toFixed(2)}`}
+                {lastReward.rewardType === 'spins' && `+${lastReward.rewardAmount} Spins`}
+                {lastReward.rewardType === 'loss' && lastReward.label}
+              </p>
+            </div>
+          </Card>
+        )}
+
+        {/* Spin History */}
+        {spinHistory.length > 0 && (
+          <Card className="p-6">
+            <h3 className="font-bold mb-4 flex items-center gap-2">
+              <Sparkles className="w-5 h-5" />
+              Recent Spins
+            </h3>
+            <div className="space-y-2">
+              {spinHistory.map((spin) => (
+                <div
+                  key={spin.id}
+                  className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">
+                      {spin.reward_type === 'coins' && '🪙'}
+                      {spin.reward_type === 'money' && '💰'}
+                      {spin.reward_type === 'spins' && '🎰'}
+                      {spin.reward_type === 'loss' && '😢'}
+                    </span>
+                    <div>
+                      <p className="font-semibold">
+                        {spin.reward_type === 'coins' && `${spin.reward_amount} Coins`}
+                        {spin.reward_type === 'money' && `$${spin.money_amount.toFixed(2)}`}
+                        {spin.reward_type === 'spins' && `+${spin.reward_amount} Spins`}
+                        {spin.reward_type === 'loss' && 'No Win'}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(spin.created_at).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                  <span className={`text-xs px-2 py-1 rounded ${
+                    spin.reward_type === 'loss' 
+                      ? 'bg-destructive/20 text-destructive' 
+                      : 'bg-primary/20 text-primary'
+                  }`}>
+                    {spin.reward_type}
+                  </span>
+                </div>
+              ))}
             </div>
           </Card>
         )}
@@ -285,7 +378,10 @@ export const SpinWheel: React.FC = () => {
                 className="flex items-center justify-between p-3 rounded-lg"
                 style={{ backgroundColor: `${segment.color}20` }}
               >
-                <span className="font-semibold">{segment.label}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">{segment.icon}</span>
+                  <span className="font-semibold">{segment.label}</span>
+                </div>
                 <span className="text-sm text-muted-foreground">
                   {segment.probability}% chance
                 </span>
