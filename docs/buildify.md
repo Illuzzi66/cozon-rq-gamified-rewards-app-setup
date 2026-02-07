@@ -56,4 +56,5 @@ Cozon RQ is a gamified rewards app where users earn coins through various activi
     - [x] Create activity history database view/query
     - [x] Build activity log page component
     - [x] Add navigation to activity log from profile
+    - [x] Add date range filtering for activities
 

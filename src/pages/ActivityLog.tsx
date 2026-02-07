@@ -6,6 +6,8 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -19,8 +21,10 @@ import {
   DollarSign,
   Clock,
   TrendingUp,
+  Calendar,
+  X,
 } from 'lucide-react';
-import { format, isToday, isYesterday, formatDistanceToNow } from 'date-fns';
+import { format, isToday, isYesterday, formatDistanceToNow, subDays, startOfDay, endOfDay, isWithinInterval } from 'date-fns';
 
 interface ActivityItem {
   user_id: string;
@@ -58,6 +62,11 @@ export const ActivityLog: React.FC = () => {
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'spin' | 'task' | 'meme' | 'withdrawal'>('all');
+  const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
+    from: undefined,
+    to: undefined,
+  });
+  const [datePreset, setDatePreset] = useState<'all' | 'today' | 'week' | 'month' | 'custom'>('all');
 
   useEffect(() => {
     if (profile) {
@@ -121,9 +130,48 @@ export const ActivityLog: React.FC = () => {
     return grouped;
   };
 
-  const filteredActivities = filter === 'all' 
-    ? activities 
-    : activities.filter(a => a.activity_type === filter);
+  const applyDatePreset = (preset: 'all' | 'today' | 'week' | 'month' | 'custom') => {
+    setDatePreset(preset);
+    const now = new Date();
+    
+    switch (preset) {
+      case 'today':
+        setDateRange({ from: startOfDay(now), to: endOfDay(now) });
+        break;
+      case 'week':
+        setDateRange({ from: startOfDay(subDays(now, 7)), to: endOfDay(now) });
+        break;
+      case 'month':
+        setDateRange({ from: startOfDay(subDays(now, 30)), to: endOfDay(now) });
+        break;
+      case 'all':
+        setDateRange({ from: undefined, to: undefined });
+        break;
+      case 'custom':
+        // Keep current date range
+        break;
+    }
+  };
+
+  const clearDateFilter = () => {
+    setDateRange({ from: undefined, to: undefined });
+    setDatePreset('all');
+  };
+
+  const filterByDateRange = (activities: ActivityItem[]) => {
+    if (!dateRange.from || !dateRange.to) {
+      return activities;
+    }
+
+    return activities.filter((activity) => {
+      const activityDate = new Date(activity.activity_date);
+      return isWithinInterval(activityDate, { start: dateRange.from!, end: dateRange.to! });
+    });
+  };
+
+  const filteredActivities = filterByDateRange(
+    filter === 'all' ? activities : activities.filter(a => a.activity_type === filter)
+  );
 
   const groupedActivities = groupActivitiesByDate(filteredActivities);
 
@@ -179,51 +227,148 @@ export const ActivityLog: React.FC = () => {
         </div>
 
         {/* Filter Buttons */}
-        <Card className="p-4">
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant={filter === 'all' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setFilter('all')}
-            >
-              All Activities
-            </Button>
-            <Button
-              variant={filter === 'spin' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setFilter('spin')}
-              className={filter === 'spin' ? '' : 'hover:bg-purple-500/10'}
-            >
-              <CircleDot className="w-4 h-4 mr-1" />
-              Spins
-            </Button>
-            <Button
-              variant={filter === 'task' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setFilter('task')}
-              className={filter === 'task' ? '' : 'hover:bg-green-500/10'}
-            >
-              <CheckCircle2 className="w-4 h-4 mr-1" />
-              Tasks
-            </Button>
-            <Button
-              variant={filter === 'meme' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setFilter('meme')}
-              className={filter === 'meme' ? '' : 'hover:bg-pink-500/10'}
-            >
-              <Heart className="w-4 h-4 mr-1" />
-              Memes
-            </Button>
-            <Button
-              variant={filter === 'withdrawal' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setFilter('withdrawal')}
-              className={filter === 'withdrawal' ? '' : 'hover:bg-blue-500/10'}
-            >
-              <DollarSign className="w-4 h-4 mr-1" />
-              Withdrawals
-            </Button>
+        <Card className="p-4 space-y-4">
+          <div>
+            <h3 className="text-sm font-semibold mb-2">Activity Type</h3>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant={filter === 'all' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilter('all')}
+              >
+                All Activities
+              </Button>
+              <Button
+                variant={filter === 'spin' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilter('spin')}
+                className={filter === 'spin' ? '' : 'hover:bg-purple-500/10'}
+              >
+                <CircleDot className="w-4 h-4 mr-1" />
+                Spins
+              </Button>
+              <Button
+                variant={filter === 'task' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilter('task')}
+                className={filter === 'task' ? '' : 'hover:bg-green-500/10'}
+              >
+                <CheckCircle2 className="w-4 h-4 mr-1" />
+                Tasks
+              </Button>
+              <Button
+                variant={filter === 'meme' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilter('meme')}
+                className={filter === 'meme' ? '' : 'hover:bg-pink-500/10'}
+              >
+                <Heart className="w-4 h-4 mr-1" />
+                Memes
+              </Button>
+              <Button
+                variant={filter === 'withdrawal' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilter('withdrawal')}
+                className={filter === 'withdrawal' ? '' : 'hover:bg-blue-500/10'}
+              >
+                <DollarSign className="w-4 h-4 mr-1" />
+                Withdrawals
+              </Button>
+            </div>
+          </div>
+
+          <Separator />
+
+          <div>
+            <h3 className="text-sm font-semibold mb-2">Date Range</h3>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant={datePreset === 'all' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => applyDatePreset('all')}
+              >
+                All Time
+              </Button>
+              <Button
+                variant={datePreset === 'today' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => applyDatePreset('today')}
+              >
+                Today
+              </Button>
+              <Button
+                variant={datePreset === 'week' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => applyDatePreset('week')}
+              >
+                Last 7 Days
+              </Button>
+              <Button
+                variant={datePreset === 'month' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => applyDatePreset('month')}
+              >
+                Last 30 Days
+              </Button>
+              
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={datePreset === 'custom' ? 'default' : 'outline'}
+                    size="sm"
+                  >
+                    <Calendar className="w-4 h-4 mr-1" />
+                    Custom Range
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <div className="p-3 space-y-3">
+                    <div>
+                      <p className="text-sm font-medium mb-2">From Date</p>
+                      <CalendarComponent
+                        mode="single"
+                        selected={dateRange.from}
+                        onSelect={(date) => {
+                          setDateRange({ ...dateRange, from: date ? startOfDay(date) : undefined });
+                          setDatePreset('custom');
+                        }}
+                        disabled={(date) => date > new Date()}
+                      />
+                    </div>
+                    <Separator />
+                    <div>
+                      <p className="text-sm font-medium mb-2">To Date</p>
+                      <CalendarComponent
+                        mode="single"
+                        selected={dateRange.to}
+                        onSelect={(date) => {
+                          setDateRange({ ...dateRange, to: date ? endOfDay(date) : undefined });
+                          setDatePreset('custom');
+                        }}
+                        disabled={(date) => date > new Date() || (dateRange.from ? date < dateRange.from : false)}
+                      />
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+
+              {(dateRange.from || dateRange.to) && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearDateFilter}
+                >
+                  <X className="w-4 h-4 mr-1" />
+                  Clear
+                </Button>
+              )}
+            </div>
+
+            {dateRange.from && dateRange.to && (
+              <div className="mt-2 text-sm text-muted-foreground">
+                Showing activities from {format(dateRange.from, 'MMM d, yyyy')} to {format(dateRange.to, 'MMM d, yyyy')}
+              </div>
+            )}
           </div>
         </Card>
 
