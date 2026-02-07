@@ -22,6 +22,7 @@ export type Database = {
           is_premium: boolean;
           coin_balance: number;
           locked_coins: number;
+          spins_available: number;
           last_daily_login: string | null;
           created_at: string;
           updated_at: string;
@@ -33,8 +34,10 @@ export type Database = {
         Row: {
           id: string;
           user_id: string;
-          reward_type: string;
+          reward_type: 'coins' | 'money' | 'spins' | 'loss';
           reward_amount: number;
+          reward_subtype: string | null;
+          money_amount: number;
           created_at: string;
         };
       };
