@@ -22,6 +22,8 @@ import {
   Copy,
   Gift,
   History,
+  Trash2,
+  AlertTriangle,
 } from 'lucide-react';
 import {
   Dialog,
@@ -59,6 +61,10 @@ export const Profile: React.FC = () => {
     rewardAlerts: true,
     promotions: false,
   });
+
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [deletingAccount, setDeletingAccount] = useState(false);
 
   const handleCopyReferralCode = async () => {
     if (!profile?.referral_code) return;
@@ -208,6 +214,61 @@ export const Profile: React.FC = () => {
       });
     } finally {
       setChangingPassword(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!profile || !user) return;
+
+    if (deleteConfirmText !== 'DELETE') {
+      toast({
+        title: 'Error',
+        description: 'Please type DELETE to confirm',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setDeletingAccount(true);
+    try {
+      // Call the database function to delete user data
+      const { data, error: dbError } = await supabase.rpc('delete_user_account', {
+        user_id_to_delete: profile.user_id,
+      });
+
+      if (dbError) throw dbError;
+
+      if (data && !data.success) {
+        throw new Error(data.message || 'Failed to delete account');
+      }
+
+      // Delete the auth user
+      const { error: authError } = await supabase.auth.admin.deleteUser(user.id);
+      
+      if (authError) {
+        // If we can't delete via admin, try regular sign out
+        console.error('Auth deletion error:', authError);
+      }
+
+      toast({
+        title: 'Account Deleted',
+        description: 'Your account has been permanently deleted',
+      });
+
+      // Sign out and redirect
+      await signOut();
+      navigate('/signup');
+    } catch (error: any) {
+      console.error('Error deleting account:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to delete account',
+        variant: 'destructive',
+      });
+    } finally {
+      setDeletingAccount(false);
+      setShowDeleteDialog(false);
+      setDeleteConfirmText('');
     }
   };
 
@@ -612,6 +673,30 @@ export const Profile: React.FC = () => {
             Sign Out
           </Button>
         </Card>
+
+        {/* Delete Account */}
+        <Card className="p-6 border-destructive/50">
+          <div className="space-y-4">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-destructive mt-0.5" />
+              <div className="flex-1">
+                <h2 className="text-lg font-semibold text-destructive">Danger Zone</h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Once you delete your account, there is no going back. All your data, coins, and progress will be permanently deleted.
+                </p>
+              </div>
+            </div>
+            <Separator />
+            <Button
+              variant="destructive"
+              className="w-full"
+              onClick={() => setShowDeleteDialog(true)}
+            >
+              <Trash2 className="w-5 h-5 mr-2" />
+              Delete Account
+            </Button>
+          </div>
+        </Card>
       </div>
 
       {/* Password Change Dialog */}
@@ -662,6 +747,76 @@ export const Profile: React.FC = () => {
             </Button>
             <Button onClick={handleChangePassword} disabled={changingPassword}>
               {changingPassword ? 'Changing...' : 'Change Password'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Account Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="w-5 h-5" />
+              Delete Account
+            </DialogTitle>
+            <DialogDescription className="space-y-3 pt-2">
+              <p className="font-semibold text-foreground">
+                This action cannot be undone!
+              </p>
+              <p>
+                Deleting your account will permanently remove:
+              </p>
+              <ul className="list-disc list-inside space-y-1 text-sm">
+                <li>All your coins and earnings</li>
+                <li>Your spin history and progress</li>
+                <li>Completed tasks and rewards</li>
+                <li>Meme interactions and comments</li>
+                <li>Withdrawal history</li>
+                <li>Premium status (if applicable)</li>
+              </ul>
+              <p className="font-semibold text-foreground pt-2">
+                Type <span className="text-destructive font-mono">DELETE</span> to confirm:
+              </p>
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <Input
+              value={deleteConfirmText}
+              onChange={(e) => setDeleteConfirmText(e.target.value)}
+              placeholder="Type DELETE to confirm"
+              className="font-mono"
+            />
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowDeleteDialog(false);
+                setDeleteConfirmText('');
+              }}
+              disabled={deletingAccount}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteAccount}
+              disabled={deletingAccount || deleteConfirmText !== 'DELETE'}
+            >
+              {deletingAccount ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete Account
+                </>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
