@@ -67,8 +67,8 @@ export const Dashboard: React.FC = () => {
         <div className="bg-card rounded-lg shadow-lg p-6">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-2xl font-bold">Welcome, {profile.full_name}!</h1>
-              <p className="text-muted-foreground">@{profile.username}</p>
+              <h1 className="text-lg font-bold">Welcome, {profile.full_name}!</h1>
+              <p className="text-sm text-muted-foreground">@{profile.username}</p>
             </div>
             <div className="flex items-center gap-2">
               {profile.is_premium && (
@@ -77,14 +77,12 @@ export const Dashboard: React.FC = () => {
                   <span className="font-semibold">Premium</span>
                 </div>
               )}
-              <Button
-                variant="ghost"
-                size="icon"
+              <button
                 onClick={() => navigate('/profile')}
-                className="rounded-full"
+                className="w-14 h-14 rounded-full bg-blue-500 hover:bg-blue-600 transition-colors flex items-center justify-center shadow-lg"
               >
-                <UserIcon className="w-5 h-5" />
-              </Button>
+                <UserIcon className="w-7 h-7 text-white" />
+              </button>
             </div>
           </div>
 
