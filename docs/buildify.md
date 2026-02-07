@@ -14,8 +14,8 @@ Cozon RQ is a gamified rewards app where users earn coins through various activi
 - Mobile-first responsive design
 
 ### Tasks
-- [ ] Database setup and authentication
-- [ ] Spin Wheel with daily limits and rewards
+- [x] Database setup and authentication
+- [x] Spin Wheel with daily limits and rewards
 - [ ] Tasks system (Simple/Medium/Weekly)
 - [ ] Meme Feed with interactions
 - [ ] Video ads integration
