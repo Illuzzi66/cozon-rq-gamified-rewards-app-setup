@@ -134,20 +134,11 @@ export const Dashboard: React.FC = () => {
           <Button
             onClick={() => navigate('/watch-ads')}
             variant="outline"
-            className="h-32 flex-col gap-3 text-lg"
+            className="h-32 flex-col gap-3 text-lg bg-success/5 hover:bg-success/10 border-success/20"
           >
-            <Video className="w-8 h-8 text-destructive" />
+            <Video className="w-8 h-8 text-success" />
             <span>Watch Ads</span>
             <span className="text-xs text-muted-foreground">Earn Coins</span>
-          </Button>
-
-          <Button
-            onClick={() => navigate('/watch-ads-spins')}
-            variant="outline"
-            className="h-32 flex-col gap-3 text-lg"
-          >
-            <Video className="w-8 h-8 text-primary" />
-            <span className="text-center">Watch Ad<br/>for 3 Spins</span>
           </Button>
 
           <Button
