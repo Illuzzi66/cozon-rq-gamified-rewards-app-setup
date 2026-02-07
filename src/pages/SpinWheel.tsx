@@ -99,7 +99,7 @@ export const SpinWheel: React.FC = () => {
 
       const reward = selectReward();
       const segmentAngle = 360 / wheelSegments.length;
-      const targetRotation = 360 * 5 + (reward.id * segmentAngle) + segmentAngle / 2;
+      const targetRotation = 360 * 8 + (reward.id * segmentAngle) + segmentAngle / 2;
 
       setRotation(targetRotation);
 
@@ -158,7 +158,7 @@ export const SpinWheel: React.FC = () => {
         } finally {
           setSpinning(false);
         }
-      }, 4000);
+      }, 5000);
     } catch (error) {
       console.error('Error deducting spin:', error);
       toast({
@@ -233,44 +233,76 @@ export const SpinWheel: React.FC = () => {
 
             {/* Wheel */}
             <div className="relative w-full max-w-sm mx-auto aspect-square">
-              <div
-                className="w-full h-full rounded-full relative transition-transform duration-[4000ms] ease-out"
+              <svg
+                className="w-full h-full transition-transform duration-[5000ms] ease-out"
+                viewBox="0 0 400 400"
                 style={{
                   transform: `rotate(${rotation}deg)`,
-                  boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
+                  filter: 'drop-shadow(0 10px 40px rgba(0,0,0,0.2))',
                 }}
               >
                 {wheelSegments.map((segment, index) => {
-                  const angle = (360 / wheelSegments.length) * index;
+                  const segmentAngle = 360 / wheelSegments.length;
+                  const startAngle = index * segmentAngle - 90;
+                  const endAngle = startAngle + segmentAngle;
+                  
+                  const startRad = (startAngle * Math.PI) / 180;
+                  const endRad = (endAngle * Math.PI) / 180;
+                  
+                  const x1 = 200 + 200 * Math.cos(startRad);
+                  const y1 = 200 + 200 * Math.sin(startRad);
+                  const x2 = 200 + 200 * Math.cos(endRad);
+                  const y2 = 200 + 200 * Math.sin(endRad);
+                  
+                  const largeArcFlag = segmentAngle > 180 ? 1 : 0;
+                  
+                  const pathData = `M 200 200 L ${x1} ${y1} A 200 200 0 ${largeArcFlag} 1 ${x2} ${y2} Z`;
+                  
+                  const textAngle = startAngle + segmentAngle / 2;
+                  const textRad = (textAngle * Math.PI) / 180;
+                  const textX = 200 + 130 * Math.cos(textRad);
+                  const textY = 200 + 130 * Math.sin(textRad);
+                  
                   return (
-                    <div
-                      key={segment.id}
-                      className="absolute w-full h-full"
-                      style={{
-                        transform: `rotate(${angle}deg)`,
-                        clipPath: 'polygon(50% 50%, 50% 0%, 100% 0%)',
-                        backgroundColor: segment.color,
-                        transformOrigin: 'center',
-                      }}
-                    >
-                      <div
-                        className="absolute top-[20%] left-[60%] text-white font-bold text-xs flex flex-col items-center"
-                        style={{
-                          transform: `rotate(${360 / wheelSegments.length / 2}deg)`,
-                        }}
+                    <g key={segment.id}>
+                      <path
+                        d={pathData}
+                        fill={segment.color}
+                        stroke="white"
+                        strokeWidth="2"
+                      />
+                      <text
+                        x={textX}
+                        y={textY}
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                        fill="white"
+                        fontSize="28"
+                        fontWeight="bold"
+                        transform={`rotate(${textAngle + 90}, ${textX}, ${textY})`}
                       >
-                        <span className="text-lg">{segment.icon}</span>
-                        <span className="text-[10px] whitespace-nowrap">{segment.label}</span>
-                      </div>
-                    </div>
+                        {segment.icon}
+                      </text>
+                      <text
+                        x={textX}
+                        y={textY + 20}
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                        fill="white"
+                        fontSize="11"
+                        fontWeight="bold"
+                        transform={`rotate(${textAngle + 90}, ${textX}, ${textY + 20})`}
+                      >
+                        {segment.label}
+                      </text>
+                    </g>
                   );
                 })}
-
+                
                 {/* Center Circle */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-background rounded-full border-4 border-gold flex items-center justify-center">
-                  <Sparkles className="w-8 h-8 text-gold" />
-                </div>
-              </div>
+                <circle cx="200" cy="200" r="40" fill="white" stroke="#FFD700" strokeWidth="4" />
+                <text x="200" y="210" textAnchor="middle" fontSize="30" fill="#FFD700">✨</text>
+              </svg>
             </div>
 
             {/* Spin Button */}
