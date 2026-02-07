@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Coins, Sparkles, Video } from 'lucide-react';
+import { ArrowLeft, Coins, Sparkles, Video, Play, CheckCircle, Clock } from 'lucide-react';
 
 interface WheelSegment {
   id: number;
@@ -42,6 +42,9 @@ export const SpinWheel: React.FC = () => {
   const [lastReward, setLastReward] = useState<WheelSegment | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const [spinHistory, setSpinHistory] = useState<any[]>([]);
+  const [watchingAd, setWatchingAd] = useState(false);
+  const [adProgress, setAdProgress] = useState(0);
+  const [adCompleted, setAdCompleted] = useState(false);
 
   useEffect(() => {
     loadSpinData();
@@ -171,7 +174,65 @@ export const SpinWheel: React.FC = () => {
   };
 
   const handleWatchAdForSpin = () => {
-    navigate('/watch-ads');
+    setWatchingAd(true);
+    setAdProgress(0);
+    setAdCompleted(false);
+
+    // Simulate 30-second ad
+    const duration = 30;
+    const interval = setInterval(() => {
+      setAdProgress((prev) => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          setAdCompleted(true);
+          return 100;
+        }
+        return prev + (100 / duration);
+      });
+    }, 1000);
+  };
+
+  const claimAdReward = async () => {
+    if (!profile || !adCompleted) return;
+
+    try {
+      const { data, error } = await supabase.rpc('record_spin_ad_view', {
+        p_user_id: profile.user_id,
+        p_ad_type: 'spin_video',
+        p_view_duration: 30,
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        toast({
+          title: '🎉 Reward Claimed!',
+          description: `You earned ${data.spins_awarded} spins!`,
+        });
+
+        await refreshProfile();
+        await loadSpinData();
+        setWatchingAd(false);
+        setAdProgress(0);
+        setAdCompleted(false);
+      } else {
+        toast({
+          title: 'Limit Reached',
+          description: data.error,
+          variant: 'destructive',
+        });
+        setWatchingAd(false);
+        setAdProgress(0);
+        setAdCompleted(false);
+      }
+    } catch (error) {
+      console.error('Error claiming reward:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to claim reward',
+        variant: 'destructive',
+      });
+    }
   };
 
   if (!profile) return null;
@@ -225,109 +286,185 @@ export const SpinWheel: React.FC = () => {
         <Card className="p-8 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5" />
           
-          <div className="relative">
-            {/* Pointer */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-4 z-10">
-              <div className="w-0 h-0 border-l-[20px] border-l-transparent border-r-[20px] border-r-transparent border-t-[30px] border-t-destructive drop-shadow-lg" />
-            </div>
+          {!watchingAd ? (
+            <div className="relative">
+              {/* Pointer */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-4 z-10">
+                <div className="w-0 h-0 border-l-[20px] border-l-transparent border-r-[20px] border-r-transparent border-t-[30px] border-t-destructive drop-shadow-lg" />
+              </div>
 
-            {/* Wheel */}
-            <div className="relative w-full max-w-sm mx-auto aspect-square">
-              <svg
-                className="w-full h-full transition-transform duration-[5000ms] ease-out"
-                viewBox="0 0 400 400"
-                style={{
-                  transform: `rotate(${rotation}deg)`,
-                  filter: 'drop-shadow(0 10px 40px rgba(0,0,0,0.2))',
-                }}
-              >
-                {wheelSegments.map((segment, index) => {
-                  const segmentAngle = 360 / wheelSegments.length;
-                  const startAngle = index * segmentAngle - 90;
-                  const endAngle = startAngle + segmentAngle;
-                  
-                  const startRad = (startAngle * Math.PI) / 180;
-                  const endRad = (endAngle * Math.PI) / 180;
-                  
-                  const x1 = 200 + 200 * Math.cos(startRad);
-                  const y1 = 200 + 200 * Math.sin(startRad);
-                  const x2 = 200 + 200 * Math.cos(endRad);
-                  const y2 = 200 + 200 * Math.sin(endRad);
-                  
-                  const largeArcFlag = segmentAngle > 180 ? 1 : 0;
-                  
-                  const pathData = `M 200 200 L ${x1} ${y1} A 200 200 0 ${largeArcFlag} 1 ${x2} ${y2} Z`;
-                  
-                  const textAngle = startAngle + segmentAngle / 2;
-                  const textRad = (textAngle * Math.PI) / 180;
-                  const textX = 200 + 130 * Math.cos(textRad);
-                  const textY = 200 + 130 * Math.sin(textRad);
-                  
-                  return (
-                    <g key={segment.id}>
-                      <path
-                        d={pathData}
-                        fill={segment.color}
-                        stroke="white"
-                        strokeWidth="2"
-                      />
-                      <text
-                        x={textX}
-                        y={textY}
-                        textAnchor="middle"
-                        dominantBaseline="middle"
-                        fill="white"
-                        fontSize="28"
-                        fontWeight="bold"
-                        transform={`rotate(${textAngle + 90}, ${textX}, ${textY})`}
-                      >
-                        {segment.icon}
-                      </text>
-                      <text
-                        x={textX}
-                        y={textY + 20}
-                        textAnchor="middle"
-                        dominantBaseline="middle"
-                        fill="white"
-                        fontSize="11"
-                        fontWeight="bold"
-                        transform={`rotate(${textAngle + 90}, ${textX}, ${textY + 20})`}
-                      >
-                        {segment.label}
-                      </text>
-                    </g>
-                  );
-                })}
-                
-                {/* Center Circle */}
-                <circle cx="200" cy="200" r="40" fill="white" stroke="#FFD700" strokeWidth="4" />
-                <text x="200" y="210" textAnchor="middle" fontSize="30" fill="#FFD700">✨</text>
-              </svg>
-            </div>
-
-            {/* Spin Button */}
-            <div className="mt-8 space-y-4">
-              <Button
-                onClick={handleSpin}
-                disabled={spinsAvailable < 1 || spinning}
-                className="w-full h-14 text-lg font-bold"
-                size="lg"
-              >
-                {spinning ? 'Spinning...' : spinsAvailable > 0 ? 'SPIN NOW!' : 'No Spins Left'}
-              </Button>
-
-              {spinsAvailable < 1 && (
-                <Button
-                  onClick={handleWatchAdForSpin}
-                  variant="outline"
-                  className="w-full h-12"
+              {/* Wheel */}
+              <div className="relative w-full max-w-sm mx-auto aspect-square">
+                <svg
+                  className="w-full h-full transition-transform duration-[5000ms] ease-out"
+                  viewBox="0 0 400 400"
+                  style={{
+                    transform: `rotate(${rotation}deg)`,
+                    filter: 'drop-shadow(0 10px 40px rgba(0,0,0,0.2))',
+                  }}
                 >
-                  <Video className="w-5 h-5 mr-2" />
-                  Watch Ad for 3 Spins
+                  {wheelSegments.map((segment, index) => {
+                    const segmentAngle = 360 / wheelSegments.length;
+                    const startAngle = index * segmentAngle - 90;
+                    const endAngle = startAngle + segmentAngle;
+                    
+                    const startRad = (startAngle * Math.PI) / 180;
+                    const endRad = (endAngle * Math.PI) / 180;
+                    
+                    const x1 = 200 + 200 * Math.cos(startRad);
+                    const y1 = 200 + 200 * Math.sin(startRad);
+                    const x2 = 200 + 200 * Math.cos(endRad);
+                    const y2 = 200 + 200 * Math.sin(endRad);
+                    
+                    const largeArcFlag = segmentAngle > 180 ? 1 : 0;
+                    
+                    const pathData = `M 200 200 L ${x1} ${y1} A 200 200 0 ${largeArcFlag} 1 ${x2} ${y2} Z`;
+                    
+                    const textAngle = startAngle + segmentAngle / 2;
+                    const textRad = (textAngle * Math.PI) / 180;
+                    const textX = 200 + 130 * Math.cos(textRad);
+                    const textY = 200 + 130 * Math.sin(textRad);
+                    
+                    return (
+                      <g key={segment.id}>
+                        <path
+                          d={pathData}
+                          fill={segment.color}
+                          stroke="white"
+                          strokeWidth="2"
+                        />
+                        <text
+                          x={textX}
+                          y={textY}
+                          textAnchor="middle"
+                          dominantBaseline="middle"
+                          fill="white"
+                          fontSize="28"
+                          fontWeight="bold"
+                          transform={`rotate(${textAngle + 90}, ${textX}, ${textY})`}
+                        >
+                          {segment.icon}
+                        </text>
+                        <text
+                          x={textX}
+                          y={textY + 20}
+                          textAnchor="middle"
+                          dominantBaseline="middle"
+                          fill="white"
+                          fontSize="11"
+                          fontWeight="bold"
+                          transform={`rotate(${textAngle + 90}, ${textX}, ${textY + 20})`}
+                        >
+                          {segment.label}
+                        </text>
+                      </g>
+                    );
+                  })}
+                  
+                  {/* Center Circle */}
+                  <circle cx="200" cy="200" r="40" fill="white" stroke="#FFD700" strokeWidth="4" />
+                  <text x="200" y="210" textAnchor="middle" fontSize="30" fill="#FFD700">✨</text>
+                </svg>
+              </div>
+
+              {/* Spin Button */}
+              <div className="mt-8 space-y-4">
+                <Button
+                  onClick={handleSpin}
+                  disabled={spinsAvailable < 1 || spinning}
+                  className="w-full h-14 text-lg font-bold"
+                  size="lg"
+                >
+                  {spinning ? 'Spinning...' : spinsAvailable > 0 ? 'SPIN NOW!' : 'No Spins Left'}
+                </Button>
+
+                {spinsAvailable < 1 && (
+                  <Button
+                    onClick={handleWatchAdForSpin}
+                    variant="outline"
+                    className="w-full h-12"
+                  >
+                    <Video className="w-5 h-5 mr-2" />
+                    Watch Ad for 3 Spins
+                  </Button>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="relative space-y-6">
+              {/* Ad Video Simulation */}
+              <div className="aspect-video bg-gradient-to-br from-muted to-muted-foreground/20 rounded-lg flex items-center justify-center relative overflow-hidden">
+                {!adCompleted ? (
+                  <>
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-secondary/20 animate-pulse" />
+                    <div className="relative z-10 text-center">
+                      <Video className="w-16 h-16 text-foreground/50 mx-auto mb-4 animate-bounce" />
+                      <p className="text-lg font-semibold text-foreground/70">
+                        Ad Playing...
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        {Math.ceil(30 - (adProgress / 100) * 30)}s remaining
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-center">
+                    <CheckCircle className="w-16 h-16 text-success mx-auto mb-4" />
+                    <p className="text-xl font-bold text-success">Ad Complete!</p>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Claim your reward below
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Progress Bar */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Progress</span>
+                  <span className="font-semibold">{Math.floor(adProgress)}%</span>
+                </div>
+                <div className="h-3 bg-muted rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-primary via-secondary to-accent transition-all duration-1000"
+                    style={{ width: `${adProgress}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Claim Button */}
+              {adCompleted ? (
+                <Button
+                  size="lg"
+                  onClick={claimAdReward}
+                  className="w-full bg-gradient-to-r from-success to-accent"
+                >
+                  <Sparkles className="w-5 h-5 mr-2" />
+                  Claim 3 Spins
+                </Button>
+              ) : (
+                <div className="flex items-center justify-center gap-2 text-muted-foreground py-3">
+                  <Clock className="w-5 h-5" />
+                  <span className="text-sm">Please watch the entire ad</span>
+                </div>
+              )}
+
+              {/* Cancel Button */}
+              {!adCompleted && (
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setWatchingAd(false);
+                    setAdProgress(0);
+                    setAdCompleted(false);
+                  }}
+                  className="w-full"
+                >
+                  Cancel
                 </Button>
               )}
             </div>
-          </div>
+          )}
         </Card>
 
         {/* Reward Display */}
