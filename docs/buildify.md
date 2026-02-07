@@ -61,10 +61,13 @@ Cozon RQ is a gamified rewards app where users earn coins through various activi
     - [x] Add navigation to activity log from profile
     - [x] Add date range filtering for activities
     - [x] Show total earnings summary for filtered date range
-- [ ] Premium-only meme posting with earnings
-  - [ ] Update meme posting to require premium status
-  - [ ] Add watch ad requirement before meme upload
-  - [ ] Award 5¢ per successful meme post
-  - [ ] Update meme feed UI to show post button only for premium users
-  - [ ] Add premium upgrade prompt for free users attempting to post
+- [x] Premium-only meme posting with earnings
+  - [x] Update meme posting to require premium status
+  - [x] Add watch ad requirement before meme upload
+  - [x] Award 5¢ per successful meme post
+  - [x] Update meme feed UI to show post button only for premium users
+  - [x] Add premium upgrade prompt for free users attempting to post
+  - [x] Display meme author usernames in feed
+  - [x] Add meme moderation/reporting system
+  - [x] Show user's posted memes in profile
 

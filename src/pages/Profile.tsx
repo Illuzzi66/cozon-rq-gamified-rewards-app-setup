@@ -26,6 +26,7 @@ import {
   AlertTriangle,
   Users,
   TrendingUp,
+  Image as ImageIcon,
 } from 'lucide-react';
 import {
   Dialog,
@@ -74,9 +75,13 @@ export const Profile: React.FC = () => {
   } | null>(null);
   const [loadingStats, setLoadingStats] = useState(true);
 
+  const [userMemes, setUserMemes] = useState<any[]>([]);
+  const [loadingMemes, setLoadingMemes] = useState(true);
+
   useEffect(() => {
     if (profile) {
       fetchReferralStats();
+      fetchUserMemes();
     }
   }, [profile]);
 
@@ -111,6 +116,35 @@ export const Profile: React.FC = () => {
       });
     } finally {
       setLoadingStats(false);
+    }
+  };
+
+  const fetchUserMemes = async () => {
+    if (!profile) return;
+
+    setLoadingMemes(true);
+    try {
+      const { data, error } = await supabase
+        .from('memes')
+        .select(`
+          id,
+          image_url,
+          caption,
+          category,
+          created_at,
+          is_active
+        `)
+        .eq('user_id', profile.user_id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      setUserMemes(data || []);
+    } catch (error: any) {
+      console.error('Error fetching user memes:', error);
+      setUserMemes([]);
+    } finally {
+      setLoadingMemes(false);
     }
   };
 
@@ -650,6 +684,78 @@ export const Profile: React.FC = () => {
             </div>
           </div>
         </Card>
+
+        {/* My Memes Section */}
+        {profile.is_premium && (
+          <Card className="p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold flex items-center gap-2">
+                  <ImageIcon className="w-5 h-5" />
+                  My Memes
+                </h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {userMemes.length} meme{userMemes.length !== 1 ? 's' : ''} posted
+                </p>
+              </div>
+              <Button variant="outline" onClick={() => navigate('/post-meme')}>
+                Post New
+              </Button>
+            </div>
+
+            <Separator />
+
+            {loadingMemes ? (
+              <div className="text-center py-8">
+                <p className="text-sm text-muted-foreground">Loading your memes...</p>
+              </div>
+            ) : userMemes.length === 0 ? (
+              <div className="text-center py-8">
+                <ImageIcon className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-50" />
+                <p className="text-sm text-muted-foreground">You haven't posted any memes yet</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-3"
+                  onClick={() => navigate('/post-meme')}
+                >
+                  Post Your First Meme
+                </Button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 gap-2">
+                {userMemes.slice(0, 6).map((meme) => (
+                  <div
+                    key={meme.id}
+                    className="relative aspect-square rounded-lg overflow-hidden bg-muted cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={() => navigate('/meme-feed')}
+                  >
+                    <img
+                      src={meme.image_url}
+                      alt={meme.caption}
+                      className="w-full h-full object-cover"
+                    />
+                    {!meme.is_active && (
+                      <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                        <p className="text-xs text-white font-semibold">Inactive</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {userMemes.length > 6 && (
+              <Button
+                variant="ghost"
+                className="w-full"
+                onClick={() => navigate('/meme-feed')}
+              >
+                View All {userMemes.length} Memes
+              </Button>
+            )}
+          </Card>
+        )}
 
         {/* Activity History */}
         <Card className="p-6">

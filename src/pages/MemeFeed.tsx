@@ -7,6 +7,22 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 import { 
   ArrowLeft, 
   Heart, 
@@ -15,7 +31,9 @@ import {
   Send,
   Sparkles,
   TrendingUp,
-  Plus
+  Plus,
+  Flag,
+  MoreVertical
 } from 'lucide-react';
 
 interface Meme {
@@ -24,12 +42,15 @@ interface Meme {
   caption: string;
   category: string;
   created_at: string;
+  user_id: string;
 }
 
 interface MemeWithStats extends Meme {
   likes_count: number;
   comments_count: number;
   user_liked: boolean;
+  author_username: string;
+  author_avatar: string | null;
 }
 
 interface Comment {
@@ -51,6 +72,9 @@ export const MemeFeed: React.FC = () => {
   const [commentText, setCommentText] = useState<Record<string, string>>({});
   const [processingLike, setProcessingLike] = useState<string | null>(null);
   const [processingComment, setProcessingComment] = useState<string | null>(null);
+  const [reportingMeme, setReportingMeme] = useState<string | null>(null);
+  const [reportReason, setReportReason] = useState('');
+  const [submittingReport, setSubmittingReport] = useState(false);
 
   useEffect(() => {
     fetchMemes();
@@ -62,10 +86,13 @@ export const MemeFeed: React.FC = () => {
     try {
       setLoading(true);
       
-      // Fetch memes
+      // Fetch memes with author info
       const { data: memesData, error: memesError } = await supabase
         .from('memes')
-        .select('*')
+        .select(`
+          *,
+          profiles!memes_user_id_fkey(username, avatar_url)
+        `)
         .eq('is_active', true)
         .order('created_at', { ascending: false });
 
@@ -86,11 +113,18 @@ export const MemeFeed: React.FC = () => {
       if (commentsError) throw commentsError;
 
       // Combine data
-      const memesWithStats: MemeWithStats[] = (memesData || []).map((meme) => ({
-        ...meme,
+      const memesWithStats: MemeWithStats[] = (memesData || []).map((meme: any) => ({
+        id: meme.id,
+        image_url: meme.image_url,
+        caption: meme.caption,
+        category: meme.category,
+        created_at: meme.created_at,
+        user_id: meme.user_id,
         likes_count: likesData?.filter((like) => like.meme_id === meme.id).length || 0,
         comments_count: commentsData?.filter((comment) => comment.meme_id === meme.id).length || 0,
         user_liked: likesData?.some((like) => like.meme_id === meme.id && like.user_id === profile.user_id) || false,
+        author_username: meme.profiles?.username || 'Unknown',
+        author_avatar: meme.profiles?.avatar_url || null,
       }));
 
       setMemes(memesWithStats);
@@ -264,6 +298,45 @@ export const MemeFeed: React.FC = () => {
     }
   };
 
+  const handleReportMeme = async () => {
+    if (!profile || !reportingMeme || !reportReason.trim()) {
+      toast({
+        title: 'Error',
+        description: 'Please provide a reason for reporting',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setSubmittingReport(true);
+    try {
+      const { error } = await supabase.from('meme_reports').insert({
+        meme_id: reportingMeme,
+        reporter_user_id: profile.user_id,
+        reason: reportReason.trim(),
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Report Submitted',
+        description: 'Thank you for helping keep our community safe',
+      });
+
+      setReportingMeme(null);
+      setReportReason('');
+    } catch (error) {
+      console.error('Error reporting meme:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to submit report',
+        variant: 'destructive',
+      });
+    } finally {
+      setSubmittingReport(false);
+    }
+  };
+
   if (!profile) return null;
 
   return (
@@ -347,6 +420,40 @@ export const MemeFeed: React.FC = () => {
 
                 {/* Meme Content */}
                 <div className="p-4 space-y-4">
+                  {/* Author Info */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Avatar className="w-8 h-8 border-2 border-primary/20">
+                        <AvatarImage src={meme.author_avatar || undefined} />
+                        <AvatarFallback className="text-xs bg-gradient-to-br from-primary to-secondary text-primary-foreground">
+                          {meme.author_username.slice(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="text-sm font-semibold">@{meme.author_username}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(meme.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreVertical className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onClick={() => setReportingMeme(meme.id)}
+                          className="text-destructive focus:text-destructive"
+                        >
+                          <Flag className="w-4 h-4 mr-2" />
+                          Report Meme
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+
                   {/* Caption */}
                   <p className="text-sm">{meme.caption}</p>
 
@@ -458,6 +565,50 @@ export const MemeFeed: React.FC = () => {
           </Card>
         )}
       </div>
+
+      {/* Report Meme Dialog */}
+      <Dialog open={!!reportingMeme} onOpenChange={(open) => !open && setReportingMeme(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Report Meme</DialogTitle>
+            <DialogDescription>
+              Help us keep the community safe by reporting inappropriate content.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Reason for reporting</label>
+              <Textarea
+                value={reportReason}
+                onChange={(e) => setReportReason(e.target.value)}
+                placeholder="Please describe why you're reporting this meme..."
+                rows={4}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setReportingMeme(null);
+                setReportReason('');
+              }}
+              disabled={submittingReport}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleReportMeme}
+              disabled={submittingReport || !reportReason.trim()}
+            >
+              {submittingReport ? 'Submitting...' : 'Submit Report'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
