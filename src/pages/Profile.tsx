@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -24,6 +24,8 @@ import {
   History,
   Trash2,
   AlertTriangle,
+  Users,
+  TrendingUp,
 } from 'lucide-react';
 import {
   Dialog,
@@ -65,6 +67,52 @@ export const Profile: React.FC = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [deletingAccount, setDeletingAccount] = useState(false);
+
+  const [referralStats, setReferralStats] = useState<{
+    total_referrals: number;
+    total_earnings: number;
+  } | null>(null);
+  const [loadingStats, setLoadingStats] = useState(true);
+
+  useEffect(() => {
+    if (profile) {
+      fetchReferralStats();
+    }
+  }, [profile]);
+
+  const fetchReferralStats = async () => {
+    if (!profile) return;
+
+    setLoadingStats(true);
+    try {
+      const { data, error } = await supabase.rpc('get_referral_stats', {
+        user_id_param: profile.user_id,
+      });
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        setReferralStats({
+          total_referrals: Number(data[0].total_referrals),
+          total_earnings: Number(data[0].total_earnings),
+        });
+      } else {
+        setReferralStats({
+          total_referrals: 0,
+          total_earnings: 0,
+        });
+      }
+    } catch (error: any) {
+      console.error('Error fetching referral stats:', error);
+      // Set default values on error
+      setReferralStats({
+        total_referrals: 0,
+        total_earnings: 0,
+      });
+    } finally {
+      setLoadingStats(false);
+    }
+  };
 
   const handleCopyReferralCode = async () => {
     if (!profile?.referral_code) return;
@@ -538,8 +586,39 @@ export const Profile: React.FC = () => {
           <div className="space-y-4">
             <div>
               <p className="text-sm text-muted-foreground mb-3">
-                Share your referral code and earn bonus coins when friends join!
+                Share your referral code and earn 50 bonus coins when friends join!
               </p>
+              
+              {/* Referral Statistics */}
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <Card className="p-4 bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-primary/20 p-2 rounded-full">
+                      <Users className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-foreground">
+                        {loadingStats ? '...' : referralStats?.total_referrals || 0}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Referrals</p>
+                    </div>
+                  </div>
+                </Card>
+                
+                <Card className="p-4 bg-gradient-to-br from-success/5 to-success/10 border-success/20">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-success/20 p-2 rounded-full">
+                      <TrendingUp className="w-5 h-5 text-success" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-foreground">
+                        {loadingStats ? '...' : referralStats?.total_earnings || 0}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Coins Earned</p>
+                    </div>
+                  </div>
+                </Card>
+              </div>
               
               <div className="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-lg p-4 border-2 border-primary/20">
                 <Label className="text-xs text-muted-foreground mb-2 block">

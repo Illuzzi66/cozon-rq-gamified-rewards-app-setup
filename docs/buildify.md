@@ -52,6 +52,7 @@ Cozon RQ is a gamified rewards app where users earn coins through various activi
     - [x] Implement account deletion backend logic
     - [x] Add delete account button to profile page
   - [x] Create referral code display and sharing
+  - [x] Display referral statistics (successful referrals count and earnings)
   - [x] Build activity log/history page
     - [x] Create activity history database view/query
     - [x] Build activity log page component
