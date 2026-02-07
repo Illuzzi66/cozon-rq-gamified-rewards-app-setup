@@ -148,7 +148,7 @@ export const Tasks: React.FC = () => {
 
         toast({
           title: '🎉 Task Completed!',
-          description: `You earned ${data.reward} coins!${data.is_premium ? ' (Premium 2.5× bonus applied)' : ''}`,
+          description: `You earned ${data.reward} coins${data.spins_awarded ? ` and ${data.spins_awarded} spins` : ''}!${data.is_premium ? ' (Premium 2.5× bonus applied)' : ''}`,
         });
 
         await fetchCompletions();

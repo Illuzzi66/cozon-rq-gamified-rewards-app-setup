@@ -96,7 +96,7 @@ export const WatchAds: React.FC = () => {
       if (data.success) {
         toast({
           title: '🎉 Reward Claimed!',
-          description: `You earned ${data.coins_earned} coins!`,
+          description: `You earned ${data.coins_earned} coins${data.spins_awarded ? ` and ${data.spins_awarded} spin` : ''}!`,
         });
 
         await refreshProfile();

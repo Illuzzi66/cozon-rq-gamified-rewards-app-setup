@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { formatCoins } from '@/lib/utils';
+import { supabase } from '@/lib/supabase';
 import { Coins, Gift, Image, Video, Wallet, Crown } from 'lucide-react';
 
 export const Dashboard: React.FC = () => {
@@ -20,10 +21,21 @@ export const Dashboard: React.FC = () => {
       const lastLogin = profile.last_daily_login?.split('T')[0];
       
       if (lastLogin !== today) {
-        // Award daily bonus
-        setShowConfetti(true);
-        setTimeout(() => setShowConfetti(false), 3000);
-        await refreshProfile();
+        try {
+          const { data, error } = await supabase.rpc('award_daily_login_bonus', {
+            p_user_id: profile.user_id,
+          });
+
+          if (error) throw error;
+
+          if (data.success) {
+            setShowConfetti(true);
+            setTimeout(() => setShowConfetti(false), 3000);
+            await refreshProfile();
+          }
+        } catch (error) {
+          console.error('Error awarding daily bonus:', error);
+        }
       }
     };
     
