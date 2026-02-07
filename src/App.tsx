@@ -7,6 +7,7 @@ import { Dashboard } from '@/pages/Dashboard';
 import { SpinWheel } from '@/pages/SpinWheel';
 import { Tasks } from '@/pages/Tasks';
 import { MemeFeed } from '@/pages/MemeFeed';
+import { PostMeme } from '@/pages/PostMeme';
 import { WatchAds } from '@/pages/WatchAds';
 import { Wallet } from '@/pages/Wallet';
 import { Premium } from '@/pages/Premium';
@@ -59,6 +60,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <MemeFeed />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/post-meme"
+            element={
+              <ProtectedRoute>
+                <PostMeme />
               </ProtectedRoute>
             }
           />

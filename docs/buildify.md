@@ -8,6 +8,8 @@ Cozon RQ is a gamified rewards app where users earn coins through various activi
 - Watch video ads
 - Withdraw earnings via Paystack ($5 minimum)
 - Upgrade to Premium ($2) for 2.5× earnings and instant withdrawals
+- Premium users can post memes (earn 5¢ per post, must watch ad to upload)
+- Free users can only like and comment on memes (comments visible to all)
 
 ### Designs
 - Clean, gamified UI with purple/blue/green color scheme
@@ -59,4 +61,10 @@ Cozon RQ is a gamified rewards app where users earn coins through various activi
     - [x] Add navigation to activity log from profile
     - [x] Add date range filtering for activities
     - [x] Show total earnings summary for filtered date range
+- [ ] Premium-only meme posting with earnings
+  - [ ] Update meme posting to require premium status
+  - [ ] Add watch ad requirement before meme upload
+  - [ ] Award 5¢ per successful meme post
+  - [ ] Update meme feed UI to show post button only for premium users
+  - [ ] Add premium upgrade prompt for free users attempting to post
 

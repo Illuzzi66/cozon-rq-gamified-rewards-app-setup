@@ -14,7 +14,8 @@ import {
   Coins,
   Send,
   Sparkles,
-  TrendingUp
+  TrendingUp,
+  Plus
 } from 'lucide-react';
 
 interface Meme {
@@ -279,9 +280,17 @@ export const MemeFeed: React.FC = () => {
               <p className="text-sm text-muted-foreground">Like & comment to earn coins</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 bg-gold/10 px-3 py-2 rounded-full">
-            <Coins className="w-5 h-5 text-gold" />
-            <span className="font-bold text-gold">{profile.coin_balance.toLocaleString()}</span>
+          <div className="flex items-center gap-2">
+            {profile.is_premium && (
+              <Button onClick={() => navigate('/post-meme')} size="sm" variant="default">
+                <Plus className="w-4 h-4 mr-1" />
+                Post
+              </Button>
+            )}
+            <div className="flex items-center gap-2 bg-gold/10 px-3 py-2 rounded-full">
+              <Coins className="w-5 h-5 text-gold" />
+              <span className="font-bold text-gold">{profile.coin_balance.toLocaleString()}</span>
+            </div>
           </div>
         </div>
 
@@ -428,10 +437,15 @@ export const MemeFeed: React.FC = () => {
           <Card className="p-6 bg-gradient-to-r from-premium/20 to-secondary/20 border-premium/30">
             <div className="text-center space-y-3">
               <TrendingUp className="w-12 h-12 text-premium mx-auto" />
-              <h3 className="text-xl font-bold">Earn 2.5× More!</h3>
+              <h3 className="text-xl font-bold">Earn 2.5× More + Post Memes!</h3>
               <p className="text-muted-foreground">
-                Upgrade to Premium and multiply your earnings on every like and comment.
+                Upgrade to Premium to post memes (earn 5¢ per post) and multiply your earnings on every like and comment.
               </p>
+              <div className="space-y-1 text-sm text-muted-foreground">
+                <p>✨ Post unlimited memes</p>
+                <p>💰 Earn 5¢ per meme post</p>
+                <p>🚀 2.5× earnings on all activities</p>
+              </div>
               <Button
                 onClick={() => navigate('/premium')}
                 variant="premium"
