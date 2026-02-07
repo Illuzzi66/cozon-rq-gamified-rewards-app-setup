@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Coins, Sparkles, Video, Gift, Calendar } from 'lucide-react';
+import { ArrowLeft, Coins, Sparkles, Video } from 'lucide-react';
 
 interface WheelSegment {
   id: number;
@@ -171,10 +171,7 @@ export const SpinWheel: React.FC = () => {
   };
 
   const handleWatchAdForSpin = () => {
-    toast({
-      title: 'Coming Soon',
-      description: 'Video ads will be available soon!',
-    });
+    navigate('/watch-ads');
   };
 
   if (!profile) return null;
@@ -294,7 +291,7 @@ export const SpinWheel: React.FC = () => {
                   className="w-full h-12"
                 >
                   <Video className="w-5 h-5 mr-2" />
-                  Watch Ad for Extra Spin
+                  Watch Ad for 3 Spins
                 </Button>
               )}
             </div>
@@ -367,64 +364,6 @@ export const SpinWheel: React.FC = () => {
             </div>
           </Card>
         )}
-
-        {/* Earn More Spins */}
-        <Card className="p-6">
-          <h3 className="font-bold mb-4 flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-gold" />
-            Earn More Spins
-          </h3>
-          <div className="space-y-3">
-            <Button
-              onClick={() => navigate('/watch-ads')}
-              variant="outline"
-              className="w-full h-16 justify-between"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center">
-                  <Video className="w-5 h-5 text-destructive" />
-                </div>
-                <div className="text-left">
-                  <p className="font-semibold">Watch Video Ads</p>
-                  <p className="text-xs text-muted-foreground">Earn 1 spin per ad</p>
-                </div>
-              </div>
-              <span className="text-gold font-bold">+1 🎰</span>
-            </Button>
-
-            <Button
-              onClick={() => navigate('/tasks')}
-              variant="outline"
-              className="w-full h-16 justify-between"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center">
-                  <Gift className="w-5 h-5 text-accent" />
-                </div>
-                <div className="text-left">
-                  <p className="font-semibold">Complete Tasks</p>
-                  <p className="text-xs text-muted-foreground">Daily & weekly challenges</p>
-                </div>
-              </div>
-              <span className="text-gold font-bold">+2 🎰</span>
-            </Button>
-
-            <div className="p-4 rounded-lg bg-gradient-to-r from-primary/10 to-secondary/10 border border-primary/20">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                    <Calendar className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="font-semibold">Daily Login Bonus</p>
-                    <p className="text-xs text-muted-foreground">Login every day</p>
-                  </div>
-                </div>
-                <span className="text-gold font-bold">+3 🎰</span>
-              </div>
-            </div>
-          </div>
-        </Card>
       </div>
     </div>
   );
