@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
+import { RewardedVideoAd } from '@/components/ads/RewardedVideoAd';
+import { BannerAd } from '@/components/ads/BannerAd';
 import { 
   ArrowLeft, 
   Video, 
@@ -31,9 +33,7 @@ export const WatchAds: React.FC = () => {
   const { toast } = useToast();
   const [stats, setStats] = useState<AdStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [watching, setWatching] = useState(false);
-  const [adProgress, setAdProgress] = useState(0);
-  const [adCompleted, setAdCompleted] = useState(false);
+  const [showRewardedAd, setShowRewardedAd] = useState(false);
 
   useEffect(() => {
     fetchStats();
@@ -62,33 +62,18 @@ export const WatchAds: React.FC = () => {
     }
   };
 
-  const simulateAdWatch = () => {
-    setWatching(true);
-    setAdProgress(0);
-    setAdCompleted(false);
-
-    // Simulate 30-second ad
-    const duration = 30;
-    const interval = setInterval(() => {
-      setAdProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setAdCompleted(true);
-          return 100;
-        }
-        return prev + (100 / duration);
-      });
-    }, 1000);
+  const handleWatchAd = () => {
+    setShowRewardedAd(true);
   };
 
-  const claimReward = async () => {
-    if (!profile || !adCompleted) return;
+  const handleRewardEarned = async (reward: { type: string; amount: number }) => {
+    if (!profile) return;
 
     try {
       const { data, error } = await supabase.rpc('record_ad_view', {
         p_user_id: profile.user_id,
         p_ad_type: 'video',
-        p_view_duration: 30,
+        p_view_duration: 15,
       });
 
       if (error) throw error;
@@ -101,18 +86,12 @@ export const WatchAds: React.FC = () => {
 
         await refreshProfile();
         await fetchStats();
-        setWatching(false);
-        setAdProgress(0);
-        setAdCompleted(false);
       } else {
         toast({
           title: 'Limit Reached',
           description: data.error,
           variant: 'destructive',
         });
-        setWatching(false);
-        setAdProgress(0);
-        setAdCompleted(false);
       }
     } catch (error) {
       console.error('Error claiming reward:', error);
@@ -183,110 +162,50 @@ export const WatchAds: React.FC = () => {
         )}
 
         {/* Ad Player */}
-        {!watching ? (
-          <Card className="p-8 text-center space-y-6">
-            <div className="w-24 h-24 mx-auto bg-gradient-to-br from-destructive to-primary rounded-full flex items-center justify-center">
-              <Video className="w-12 h-12 text-white" />
+        <Card className="p-8 text-center space-y-6">
+          <div className="w-24 h-24 mx-auto bg-gradient-to-br from-destructive to-primary rounded-full flex items-center justify-center">
+            <Video className="w-12 h-12 text-white" />
+          </div>
+          
+          <div>
+            <h2 className="text-2xl font-bold mb-2">Watch & Earn</h2>
+            <p className="text-muted-foreground">
+              Watch a 15-second video and earn {rewardAmount} coins
+            </p>
+          </div>
+
+          <div className="flex items-center justify-center gap-2 text-gold">
+            <Coins className="w-6 h-6" />
+            <span className="text-3xl font-bold">+{rewardAmount}</span>
+          </div>
+
+          {profile.is_premium && (
+            <div className="flex items-center justify-center gap-2 text-premium">
+              <Sparkles className="w-5 h-5" />
+              <span className="text-sm font-semibold">Premium 2.5× Bonus Active!</span>
             </div>
-            
-            <div>
-              <h2 className="text-2xl font-bold mb-2">Watch & Earn</h2>
-              <p className="text-muted-foreground">
-                Watch a 30-second video and earn {rewardAmount} coins
-              </p>
+          )}
+
+          <Button
+            size="lg"
+            onClick={handleWatchAd}
+            disabled={loading || (stats && stats.remaining <= 0)}
+            className="w-full"
+          >
+            <Play className="w-5 h-5 mr-2" />
+            {stats && stats.remaining <= 0 ? 'Daily Limit Reached' : 'Start Watching'}
+          </Button>
+
+          {stats && stats.remaining <= 0 && (
+            <div className="flex items-center justify-center gap-2 text-warning">
+              <AlertCircle className="w-5 h-5" />
+              <span className="text-sm">Come back tomorrow for more ads!</span>
             </div>
+          )}
+        </Card>
 
-            <div className="flex items-center justify-center gap-2 text-gold">
-              <Coins className="w-6 h-6" />
-              <span className="text-3xl font-bold">+{rewardAmount}</span>
-            </div>
-
-            {profile.is_premium && (
-              <div className="flex items-center justify-center gap-2 text-premium">
-                <Sparkles className="w-5 h-5" />
-                <span className="text-sm font-semibold">Premium 2.5× Bonus Active!</span>
-              </div>
-            )}
-
-            <Button
-              size="lg"
-              onClick={simulateAdWatch}
-              disabled={loading || (stats && stats.remaining <= 0)}
-              className="w-full"
-            >
-              <Play className="w-5 h-5 mr-2" />
-              {stats && stats.remaining <= 0 ? 'Daily Limit Reached' : 'Start Watching'}
-            </Button>
-
-            {stats && stats.remaining <= 0 && (
-              <div className="flex items-center justify-center gap-2 text-warning">
-                <AlertCircle className="w-5 h-5" />
-                <span className="text-sm">Come back tomorrow for more ads!</span>
-              </div>
-            )}
-          </Card>
-        ) : (
-          <Card className="p-8 space-y-6">
-            {/* Ad Video Simulation */}
-            <div className="aspect-video bg-gradient-to-br from-muted to-muted-foreground/20 rounded-lg flex items-center justify-center relative overflow-hidden">
-              {!adCompleted ? (
-                <>
-                  <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-secondary/20 animate-pulse" />
-                  <div className="relative z-10 text-center">
-                    <Video className="w-16 h-16 text-foreground/50 mx-auto mb-4 animate-bounce" />
-                    <p className="text-lg font-semibold text-foreground/70">
-                      Ad Playing...
-                    </p>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      {Math.ceil(30 - (adProgress / 100) * 30)}s remaining
-                    </p>
-                  </div>
-                </>
-              ) : (
-                <div className="text-center">
-                  <CheckCircle className="w-16 h-16 text-success mx-auto mb-4" />
-                  <p className="text-xl font-bold text-success">Ad Complete!</p>
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Claim your reward below
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Progress Bar */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Progress</span>
-                <span className="font-semibold">{Math.floor(adProgress)}%</span>
-              </div>
-              <div className="h-3 bg-muted rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-primary via-secondary to-accent transition-all duration-1000"
-                  style={{ width: `${adProgress}%` }}
-                />
-              </div>
-            </div>
-
-            {/* Claim Button */}
-            {adCompleted && (
-              <Button
-                size="lg"
-                onClick={claimReward}
-                className="w-full bg-gradient-to-r from-success to-accent"
-              >
-                <Coins className="w-5 h-5 mr-2" />
-                Claim {rewardAmount} Coins
-              </Button>
-            )}
-
-            {!adCompleted && (
-              <div className="flex items-center justify-center gap-2 text-muted-foreground">
-                <Clock className="w-5 h-5" />
-                <span className="text-sm">Please watch the entire ad</span>
-              </div>
-            )}
-          </Card>
-        )}
+        {/* Banner Ad */}
+        <BannerAd className="my-4" />
 
         {/* Reward Info */}
         <Card className="p-6 space-y-4">
@@ -349,6 +268,15 @@ export const WatchAds: React.FC = () => {
           </Card>
         )}
       </div>
+
+      {/* Rewarded Video Ad Component */}
+      <RewardedVideoAd
+        isOpen={showRewardedAd}
+        onClose={() => setShowRewardedAd(false)}
+        onRewardEarned={handleRewardEarned}
+        rewardAmount={rewardAmount}
+        rewardType="coins"
+      />
     </div>
   );
 };

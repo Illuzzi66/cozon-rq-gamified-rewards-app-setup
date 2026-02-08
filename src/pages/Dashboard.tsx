@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { formatCoins } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
+import { BannerAd } from '@/components/ads/BannerAd';
 import { Coins, Gift, Image, Video, Wallet, Crown, User as UserIcon } from 'lucide-react';
 
 export const Dashboard: React.FC = () => {
