@@ -71,9 +71,9 @@ Cozon RQ is a gamified rewards app where users earn coins through various activi
   - [x] Add meme moderation/reporting system
   - [x] Show user's posted memes in profile
 - [ ] Admin dashboard and meme management
-  - [ ] Add admin role to user profiles
-  - [ ] Create admin dashboard page
-  - [ ] Display reported memes with details
-  - [ ] Implement meme deletion by admins
+  - [x] Add admin role to user profiles
+  - [x] Create admin dashboard page
+  - [x] Display reported memes with details
+  - [x] Implement meme deletion by admins
   - [ ] Allow users to delete their own memes
 

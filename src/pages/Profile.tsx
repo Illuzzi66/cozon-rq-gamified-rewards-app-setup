@@ -811,6 +811,28 @@ export const Profile: React.FC = () => {
           </Card>
         )}
 
+        {/* Admin Dashboard Link */}
+        {profile?.is_admin && (
+          <Card className="p-6 bg-gradient-to-r from-primary/20 to-secondary/20 border-primary/30">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                  <Shield className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold">Admin Dashboard</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Manage reported content
+                  </p>
+                </div>
+              </div>
+              <Button variant="default" onClick={() => navigate('/admin')}>
+                Open Dashboard
+              </Button>
+            </div>
+          </Card>
+        )}
+
         {/* Activity History */}
         <Card className="p-6">
           <div className="flex items-center justify-between">
