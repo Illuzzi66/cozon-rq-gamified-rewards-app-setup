@@ -156,9 +156,14 @@ export const SpinWheel: React.FC = () => {
             description: `You received ${result.spins_awarded} spins!`,
           });
 
+          // Refresh profile first
           await refreshProfile();
-          await loadSpinData();
-          await checkDailyBonus();
+          
+          // Add delay to ensure data is updated
+          setTimeout(async () => {
+            await loadSpinData();
+            await checkDailyBonus();
+          }, 500);
         } else {
           toast({
             title: 'Already Claimed',
@@ -319,11 +324,18 @@ export const SpinWheel: React.FC = () => {
             description: `You earned ${result.spins_awarded} spins!`,
           });
 
-          await refreshProfile();
-          await loadSpinData();
+          // Reset ad state first
           setWatchingAd(false);
           setAdProgress(0);
           setAdCompleted(false);
+
+          // Refresh profile and reload spin data
+          await refreshProfile();
+          
+          // Add a small delay to ensure profile is updated
+          setTimeout(async () => {
+            await loadSpinData();
+          }, 500);
         } else {
           toast({
             title: 'Limit Reached',
@@ -342,6 +354,9 @@ export const SpinWheel: React.FC = () => {
         description: 'Failed to claim reward',
         variant: 'destructive',
       });
+      setWatchingAd(false);
+      setAdProgress(0);
+      setAdCompleted(false);
     }
   };
 
@@ -448,9 +463,9 @@ export const SpinWheel: React.FC = () => {
               ) : (
                 <div className="mt-2 space-y-1">
                   <p className="text-xs text-muted-foreground">Next claim available in:</p>
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-primary" />
-                    <span className="text-lg font-mono font-bold text-foreground tabular-nums">
+                  <div className="flex items-center gap-2 bg-background/50 rounded-lg px-3 py-2">
+                    <Clock className="w-5 h-5 text-primary" />
+                    <span className="text-xl font-mono font-bold text-primary tabular-nums tracking-wider">
                       {timeRemaining}
                     </span>
                   </div>
