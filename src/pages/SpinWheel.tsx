@@ -898,17 +898,51 @@ export const SpinWheel: React.FC = () => {
 
       {/* Purchase Dialog */}
       <Dialog open={showPurchaseDialog} onOpenChange={setShowPurchaseDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Purchase Spins</DialogTitle>
             <DialogDescription>
-              Buy spins with your coins. Each spin costs 50 coins.
+              Buy spins with your coins. Bulk discounts available!
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4 py-4">
+            {/* Quick Select Buttons */}
             <div className="space-y-2">
-              <Label htmlFor="spin-amount">Number of Spins</Label>
+              <Label>Quick Select</Label>
+              <div className="grid grid-cols-4 gap-2">
+                {[
+                  { amount: 1, discount: 0, label: '1' },
+                  { amount: 5, discount: 0, label: '5' },
+                  { amount: 10, discount: 10, label: '10', badge: '10% OFF' },
+                  { amount: 20, discount: 20, label: '20', badge: '20% OFF' },
+                ].map((option) => {
+                  const cost = option.amount * 50 * (1 - option.discount / 100);
+                  const canAfford = profile && profile.coin_balance >= cost;
+                  return (
+                    <Button
+                      key={option.amount}
+                      variant={purchaseAmount === option.amount ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setPurchaseAmount(option.amount)}
+                      disabled={!canAfford}
+                      className={`relative ${!canAfford ? 'opacity-50' : ''}`}
+                    >
+                      <div className="flex flex-col items-center">
+                        <span className="font-bold">{option.label}</span>
+                        {option.badge && (
+                          <span className="text-[8px] text-success font-semibold">{option.badge}</span>
+                        )}
+                      </div>
+                    </Button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Custom Amount Input */}
+            <div className="space-y-2">
+              <Label htmlFor="spin-amount">Custom Amount</Label>
               <Input
                 id="spin-amount"
                 type="number"
@@ -927,34 +961,68 @@ export const SpinWheel: React.FC = () => {
                   }
                 }}
               />
-              <p className="text-xs text-muted-foreground">
-                Enter any amount (50 coins per spin)
-              </p>
             </div>
+
+            {/* Discount Info */}
+            {purchaseAmount >= 10 && (
+              <div className="p-3 bg-success/10 border border-success/30 rounded-lg flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-success" />
+                <p className="text-xs text-success font-semibold">
+                  {purchaseAmount >= 20 ? '20% bulk discount applied!' : '10% bulk discount applied!'}
+                </p>
+              </div>
+            )}
             
+            {/* Cost Breakdown */}
             <div className="p-4 bg-muted rounded-lg space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Spins:</span>
                 <span className="font-semibold">{purchaseAmount || 0}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Cost per spin:</span>
-                <span className="font-semibold">50 coins</span>
+                <span className="text-muted-foreground">Base price:</span>
+                <span className="font-semibold">50 coins/spin</span>
               </div>
+              {purchaseAmount >= 10 && (
+                <>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Discount:</span>
+                    <span className="font-semibold text-success">
+                      -{purchaseAmount >= 20 ? '20%' : '10%'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground line-through opacity-50">
+                      {(purchaseAmount || 0) * 50} coins
+                    </span>
+                  </div>
+                </>
+              )}
               <div className="h-px bg-border my-2" />
               <div className="flex justify-between">
                 <span className="font-semibold">Total Cost:</span>
                 <span className="text-lg font-bold text-primary flex items-center gap-1">
                   <Coins className="w-5 h-5" />
-                  {(purchaseAmount || 0) * 50}
+                  {Math.floor((purchaseAmount || 0) * 50 * (purchaseAmount >= 20 ? 0.8 : purchaseAmount >= 10 ? 0.9 : 1))}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Your Balance:</span>
-                <span className={`font-semibold ${profile && profile.coin_balance >= (purchaseAmount || 0) * 50 ? 'text-success' : 'text-destructive'}`}>
+                <span className={`font-semibold ${
+                  profile && profile.coin_balance >= Math.floor((purchaseAmount || 0) * 50 * (purchaseAmount >= 20 ? 0.8 : purchaseAmount >= 10 ? 0.9 : 1))
+                    ? 'text-success' 
+                    : 'text-destructive'
+                }`}>
                   {profile?.coin_balance.toLocaleString()} coins
                 </span>
               </div>
+              {profile && purchaseAmount > 0 && profile.coin_balance < Math.floor((purchaseAmount || 0) * 50 * (purchaseAmount >= 20 ? 0.8 : purchaseAmount >= 10 ? 0.9 : 1)) && (
+                <div className="mt-2 p-2 bg-destructive/10 border border-destructive/30 rounded flex items-start gap-2">
+                  <span className="text-destructive text-xs font-semibold">
+                    ⚠️ Insufficient balance! You need {Math.floor((purchaseAmount || 0) * 50 * (purchaseAmount >= 20 ? 0.8 : purchaseAmount >= 10 ? 0.9 : 1)) - profile.coin_balance} more coins.
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -964,7 +1032,12 @@ export const SpinWheel: React.FC = () => {
             </Button>
             <Button 
               onClick={handlePurchaseSpins}
-              disabled={!profile || !purchaseAmount || purchaseAmount < 1 || profile.coin_balance < (purchaseAmount || 0) * 50}
+              disabled={
+                !profile || 
+                !purchaseAmount || 
+                purchaseAmount < 1 || 
+                profile.coin_balance < Math.floor((purchaseAmount || 0) * 50 * (purchaseAmount >= 20 ? 0.8 : purchaseAmount >= 10 ? 0.9 : 1))
+              }
               className="bg-gradient-to-r from-primary to-secondary"
             >
               <ShoppingCart className="w-4 h-4 mr-2" />
