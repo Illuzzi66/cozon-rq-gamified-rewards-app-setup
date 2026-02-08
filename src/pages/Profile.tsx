@@ -27,6 +27,7 @@ import {
   Users,
   TrendingUp,
   Image as ImageIcon,
+  Shield,
 } from 'lucide-react';
 import {
   Dialog,
@@ -77,6 +78,8 @@ export const Profile: React.FC = () => {
 
   const [userMemes, setUserMemes] = useState<any[]>([]);
   const [loadingMemes, setLoadingMemes] = useState(true);
+  const [deletingMeme, setDeletingMeme] = useState<string | null>(null);
+  const [confirmDeleteMeme, setConfirmDeleteMeme] = useState<string | null>(null);
 
   useEffect(() => {
     if (profile) {
@@ -145,6 +148,47 @@ export const Profile: React.FC = () => {
       setUserMemes([]);
     } finally {
       setLoadingMemes(false);
+    }
+  };
+
+  const handleDeleteMeme = async (memeId: string) => {
+    if (!profile) return;
+
+    setDeletingMeme(memeId);
+
+    try {
+      const { data, error } = await supabase.rpc('delete_meme', {
+        p_user_id: profile.user_id,
+        p_meme_id: memeId,
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        toast({
+          title: 'Meme Deleted',
+          description: 'Your meme has been removed successfully',
+        });
+
+        // Refresh memes list
+        await fetchUserMemes();
+      } else {
+        toast({
+          title: 'Error',
+          description: data.error,
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Error deleting meme:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete meme',
+        variant: 'destructive',
+      });
+    } finally {
+      setDeletingMeme(null);
+      setConfirmDeleteMeme(null);
     }
   };
 
@@ -727,8 +771,7 @@ export const Profile: React.FC = () => {
                 {userMemes.slice(0, 6).map((meme) => (
                   <div
                     key={meme.id}
-                    className="relative aspect-square rounded-lg overflow-hidden bg-muted cursor-pointer hover:opacity-80 transition-opacity"
-                    onClick={() => navigate('/meme-feed')}
+                    className="relative aspect-square rounded-lg overflow-hidden bg-muted group"
                   >
                     <img
                       src={meme.image_url}
@@ -740,6 +783,17 @@ export const Profile: React.FC = () => {
                         <p className="text-xs text-white font-semibold">Inactive</p>
                       </div>
                     )}
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => setConfirmDeleteMeme(meme.id)}
+                        disabled={deletingMeme === meme.id}
+                      >
+                        <Trash2 className="w-4 h-4 mr-1" />
+                        Delete
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
