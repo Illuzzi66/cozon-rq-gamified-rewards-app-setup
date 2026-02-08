@@ -260,7 +260,7 @@ export const WatchAds: React.FC = () => {
                 onClick={() => navigate('/premium')}
                 variant="premium"
                 size="lg"
-                className="mt-2"
+                className="mt-2 text-black"
               >
                 Upgrade to Premium - $2
               </Button>
