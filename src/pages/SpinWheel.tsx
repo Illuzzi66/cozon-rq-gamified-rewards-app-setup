@@ -70,10 +70,17 @@ export const SpinWheel: React.FC = () => {
 
   useEffect(() => {
     if (!dailyBonusAvailable && nextClaimTime) {
+      // Update immediately
+      updateTimeRemaining();
+      
+      // Then update every second
       const interval = setInterval(() => {
         updateTimeRemaining();
       }, 1000);
+      
       return () => clearInterval(interval);
+    } else if (dailyBonusAvailable) {
+      setTimeRemaining('0h 0m 0s');
     }
   }, [dailyBonusAvailable, nextClaimTime]);
 
@@ -110,38 +117,43 @@ export const SpinWheel: React.FC = () => {
       if (data && data.length > 0) {
         const status = data[0];
         setDailyBonusAvailable(status.available);
+        
         if (!status.available && status.next_claim_time) {
           const nextTime = new Date(status.next_claim_time);
           setNextClaimTime(nextTime);
-          // Calculate time remaining immediately
-          const now = new Date();
-          const diff = nextTime.getTime() - now.getTime();
-          
-          if (diff > 0) {
-            const hours = Math.floor(diff / (1000 * 60 * 60));
-            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-            setTimeRemaining(`${hours}h ${minutes}m ${seconds}s`);
-          }
+          updateTimeRemaining();
         } else if (status.available) {
-          setTimeRemaining('');
+          setNextClaimTime(null);
+          setTimeRemaining('0h 0m 0s');
         }
+      } else {
+        // No data means user can claim (first time or after 24 hours)
+        setDailyBonusAvailable(true);
+        setNextClaimTime(null);
+        setTimeRemaining('0h 0m 0s');
       }
     } catch (error) {
       console.error('Error checking daily bonus:', error);
+      // On error, assume available to allow user to try
+      setDailyBonusAvailable(true);
+      setNextClaimTime(null);
+      setTimeRemaining('0h 0m 0s');
     }
   };
 
   const updateTimeRemaining = () => {
-    if (!nextClaimTime) return;
+    if (!nextClaimTime) {
+      setTimeRemaining('0h 0m 0s');
+      return;
+    }
 
     const now = new Date();
     const diff = nextClaimTime.getTime() - now.getTime();
 
     if (diff <= 0) {
       setDailyBonusAvailable(true);
-      setTimeRemaining('');
-      checkDailyBonus(); // Recheck status
+      setTimeRemaining('0h 0m 0s');
+      setNextClaimTime(null);
       return;
     }
 
@@ -171,6 +183,12 @@ export const SpinWheel: React.FC = () => {
             title: '🎉 Daily Bonus Claimed!',
             description: `You received ${result.spins_awarded} spins!`,
           });
+
+          // Set next claim time to 24 hours from now
+          const nextTime = new Date();
+          nextTime.setHours(nextTime.getHours() + 24);
+          setNextClaimTime(nextTime);
+          setDailyBonusAvailable(false);
 
           // Refresh profile first
           await refreshProfile();
