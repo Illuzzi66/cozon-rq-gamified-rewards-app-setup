@@ -292,7 +292,16 @@ export const SpinWheel: React.FC = () => {
 
       const reward = selectReward();
       const segmentAngle = 360 / wheelSegments.length;
-      const targetRotation = 360 * 8 + (reward.id * segmentAngle) + segmentAngle / 2;
+      
+      // Calculate rotation to align winning segment with top pointer
+      // The pointer is at top (0 degrees), so we need to rotate the wheel
+      // so that the center of the winning segment is at the top
+      // Since segments start at -90 degrees, we need to account for that
+      const segmentCenterAngle = reward.id * segmentAngle;
+      
+      // Add multiple full rotations for dramatic effect (5-8 full spins)
+      const fullRotations = 5 + Math.floor(Math.random() * 3);
+      const targetRotation = 360 * fullRotations - segmentCenterAngle;
 
       setRotation(targetRotation);
 
@@ -702,12 +711,12 @@ export const SpinWheel: React.FC = () => {
               {/* Wheel */}
               <div className="relative w-full max-w-sm mx-auto aspect-square">
                 <svg
-                  className="w-full h-full transition-transform duration-[5000ms]"
+                  className="w-full h-full transition-transform duration-[6000ms]"
                   viewBox="0 0 400 400"
                   style={{
                     transform: `rotate(${rotation}deg)`,
                     filter: 'drop-shadow(0 10px 40px rgba(0,0,0,0.2))',
-                    transitionTimingFunction: 'linear',
+                    transitionTimingFunction: 'cubic-bezier(0.25, 0.1, 0.25, 1)',
                   }}
                 >
                   {wheelSegments.map((segment, index) => {
