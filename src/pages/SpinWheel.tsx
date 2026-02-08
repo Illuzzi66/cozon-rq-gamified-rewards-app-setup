@@ -361,6 +361,7 @@ export const SpinWheel: React.FC = () => {
         if (prev >= 100) {
           clearInterval(interval);
           setAdCompleted(true);
+          soundEffects.playBonus(); // Play sound when ad completes
           return 100;
         }
         return prev + (100 / duration);
