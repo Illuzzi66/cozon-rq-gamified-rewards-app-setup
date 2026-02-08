@@ -702,11 +702,12 @@ export const SpinWheel: React.FC = () => {
               {/* Wheel */}
               <div className="relative w-full max-w-sm mx-auto aspect-square">
                 <svg
-                  className="w-full h-full transition-transform duration-[5000ms] ease-out"
+                  className="w-full h-full transition-transform duration-[5000ms]"
                   viewBox="0 0 400 400"
                   style={{
                     transform: `rotate(${rotation}deg)`,
                     filter: 'drop-shadow(0 10px 40px rgba(0,0,0,0.2))',
+                    transitionTimingFunction: 'linear',
                   }}
                 >
                   {wheelSegments.map((segment, index) => {
