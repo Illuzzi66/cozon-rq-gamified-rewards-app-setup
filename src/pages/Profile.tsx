@@ -1082,6 +1082,47 @@ export const Profile: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Meme Confirmation Dialog */}
+      <Dialog open={!!confirmDeleteMeme} onOpenChange={() => setConfirmDeleteMeme(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="w-5 h-5" />
+              Delete Meme
+            </DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this meme? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setConfirmDeleteMeme(null)}
+              disabled={!!deletingMeme}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => confirmDeleteMeme && handleDeleteMeme(confirmDeleteMeme)}
+              disabled={!!deletingMeme}
+            >
+              {deletingMeme ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete Meme
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
