@@ -13,6 +13,7 @@ import { Wallet } from '@/pages/Wallet';
 import { Premium } from '@/pages/Premium';
 import { Profile } from '@/pages/Profile';
 import { ActivityLog } from '@/pages/ActivityLog';
+import { AdminDashboard } from '@/pages/AdminDashboard';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
@@ -108,6 +109,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <ActivityLog />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute>
+                <AdminDashboard />
               </ProtectedRoute>
             }
           />

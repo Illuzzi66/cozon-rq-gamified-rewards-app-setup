@@ -10,6 +10,7 @@ interface Profile {
   username: string;
   email: string;
   is_premium: boolean;
+  is_admin: boolean;
   coin_balance: number;
   locked_coins: number;
   referral_code: string | null;
