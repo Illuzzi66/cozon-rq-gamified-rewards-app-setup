@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { soundEffects } from '@/utils/soundEffects';
 
 interface WheelSegment {
   id: number;
@@ -155,6 +156,8 @@ export const SpinWheel: React.FC = () => {
     if (!profile || !dailyBonusAvailable) return;
 
     try {
+      soundEffects.playBonusSound();
+      
       const { data, error } = await supabase.rpc('claim_daily_bonus_spins', {
         p_user_id: profile.user_id,
       });
@@ -213,6 +216,7 @@ export const SpinWheel: React.FC = () => {
     if (!profile || spinsAvailable < 1 || spinning) return;
 
     setSpinning(true);
+    soundEffects.playSpinSound();
 
     try {
       // Deduct one spin
@@ -249,6 +253,15 @@ export const SpinWheel: React.FC = () => {
 
           setLastReward(reward);
           setShowReward(true);
+          
+          // Play appropriate sound based on reward
+          if (reward.rewardType === 'loss') {
+            soundEffects.playLoseSound();
+          } else if (reward.rewardType === 'money' && reward.moneyAmount && reward.moneyAmount >= 2) {
+            soundEffects.playBigWinSound();
+          } else {
+            soundEffects.playWinSound();
+          }
           
           if (reward.rewardType !== 'loss') {
             setShowConfetti(true);
@@ -591,7 +604,10 @@ export const SpinWheel: React.FC = () => {
               {/* Spin Button */}
               <div className="mt-8 space-y-4">
                 <Button
-                  onClick={handleSpin}
+                  onClick={() => {
+                    soundEffects.playClickSound();
+                    handleSpin();
+                  }}
                   disabled={spinsAvailable < 1 || spinning}
                   className="w-full h-14 text-lg font-bold"
                   size="lg"
