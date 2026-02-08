@@ -370,22 +370,27 @@ export const SpinWheel: React.FC = () => {
   };
 
   const claimAdReward = async () => {
-    if (!profile || !adCompleted || claimingReward) return;
+    if (!profile || !adCompleted || claimingReward) {
+      console.log('Cannot claim:', { profile: !!profile, adCompleted, claimingReward });
+      return;
+    }
 
     setClaimingReward(true);
+    console.log('Starting claim process for user:', profile.user_id);
 
     try {
-      console.log('Claiming ad reward for user:', profile.user_id);
-      
       const { data, error } = await supabase.rpc('record_spin_ad_view', {
         p_user_id: profile.user_id,
         p_ad_type: 'spin_video',
         p_view_duration: 30,
       });
 
-      console.log('Ad claim response:', { data, error });
+      console.log('Ad claim RPC response:', { data, error });
 
-      if (error) throw error;
+      if (error) {
+        console.error('RPC error:', error);
+        throw error;
+      }
 
       if (data && data.length > 0) {
         const result = data[0];
@@ -395,23 +400,23 @@ export const SpinWheel: React.FC = () => {
           // Play bonus sound effect
           soundEffects.playBonusSound();
 
-          // Reset ad state
+          // Reset ad state FIRST
           setWatchingAd(false);
           setAdProgress(0);
           setAdCompleted(false);
 
-          // Force reload from database - refresh profile first, then load spin data
+          // Refresh data
           await refreshProfile();
-          const updatedSpins = await loadSpinData(true);
+          await loadSpinData(true);
 
           toast({
             title: '🎉 Reward Claimed!',
-            description: `You earned ${result.spins_awarded} spins! Total available: ${updatedSpins}`,
+            description: `You earned ${result.spins_awarded} spins!`,
           });
         } else {
           toast({
             title: 'Limit Reached',
-            description: result.error,
+            description: result.error || 'Daily limit reached',
             variant: 'destructive',
           });
           setWatchingAd(false);
@@ -419,14 +424,14 @@ export const SpinWheel: React.FC = () => {
           setAdCompleted(false);
         }
       } else {
-        console.error('No data returned from ad claim');
+        console.error('No data returned from RPC');
         throw new Error('No data returned from server');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error claiming reward:', error);
       toast({
         title: 'Error',
-        description: 'Failed to claim reward. Please try again.',
+        description: error.message || 'Failed to claim reward. Please try again.',
         variant: 'destructive',
       });
       setWatchingAd(false);
@@ -434,6 +439,7 @@ export const SpinWheel: React.FC = () => {
       setAdCompleted(false);
     } finally {
       setClaimingReward(false);
+      console.log('Claim process completed');
     }
   };
 
@@ -447,39 +453,67 @@ export const SpinWheel: React.FC = () => {
       return;
     }
 
+    const finalCost = Math.floor((purchaseAmount || 0) * 50 * (purchaseAmount >= 20 ? 0.8 : purchaseAmount >= 10 ? 0.9 : 1));
+
+    if (profile.coin_balance < finalCost) {
+      toast({
+        title: 'Insufficient Balance',
+        description: `You need ${finalCost - profile.coin_balance} more coins`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
     try {
+      console.log('Purchasing spins:', { user_id: profile.user_id, spin_count: purchaseAmount });
+
       const { data, error } = await supabase.rpc('purchase_spins_with_coins', {
         p_user_id: profile.user_id,
         p_spin_count: purchaseAmount,
       });
 
-      if (error) throw error;
+      console.log('Purchase RPC response:', { data, error });
+
+      if (error) {
+        console.error('Purchase error:', error);
+        throw error;
+      }
 
       if (data && data.length > 0) {
         const result = data[0];
+        console.log('Purchase result:', result);
+        
         if (result.success) {
+          soundEffects.playBonusSound();
+          
           toast({
             title: '🎉 Purchase Successful!',
             description: `You bought ${result.spins_purchased} spins for ${result.coins_spent} coins!`,
           });
 
+          // Refresh data
           await refreshProfile();
-          await loadSpinData();
+          await loadSpinData(true);
+          
+          // Close dialog and reset
           setShowPurchaseDialog(false);
-          setPurchaseAmount(1);
+          setPurchaseAmount(0);
         } else {
           toast({
             title: 'Purchase Failed',
-            description: result.error,
+            description: result.error || 'Unable to complete purchase',
             variant: 'destructive',
           });
         }
+      } else {
+        console.error('No data returned from purchase');
+        throw new Error('No data returned from server');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error purchasing spins:', error);
       toast({
         title: 'Error',
-        description: 'Failed to purchase spins',
+        description: error.message || 'Failed to purchase spins. Please try again.',
         variant: 'destructive',
       });
     }
