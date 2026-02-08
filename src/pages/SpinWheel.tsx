@@ -400,13 +400,13 @@ export const SpinWheel: React.FC = () => {
           setAdProgress(0);
           setAdCompleted(false);
 
-          // Force reload from database
-          const updatedSpins = await loadSpinData(true);
+          // Force reload from database - refresh profile first, then load spin data
           await refreshProfile();
+          const updatedSpins = await loadSpinData(true);
 
           toast({
             title: '🎉 Reward Claimed!',
-            description: `You earned ${result.spins_awarded} spins! Available: ${updatedSpins}`,
+            description: `You earned ${result.spins_awarded} spins! Total available: ${updatedSpins}`,
           });
         } else {
           toast({
