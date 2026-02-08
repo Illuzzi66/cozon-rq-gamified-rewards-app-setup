@@ -296,22 +296,28 @@ export const Premium: React.FC = () => {
             <p className="text-muted-foreground">
               Join thousands of premium members earning more every day
             </p>
-            <Button
-              size="lg"
-              variant="premium"
-              className="text-lg px-12 py-6 h-auto"
-              onClick={handleUpgrade}
-              disabled={loading || !paystackLoaded}
-            >
-              {loading ? (
-                'Processing...'
-              ) : (
-                <>
-                  <Crown className="w-6 h-6" />
-                  Upgrade Now - ${PREMIUM_PRICE_USD}
-                </>
-              )}
-            </Button>
+            
+            {/* Blurred Button Area */}
+            <div className="relative inline-block">
+              <div className="absolute inset-0 bg-gradient-to-r from-premium/30 to-secondary/30 blur-2xl rounded-2xl"></div>
+              <Button
+                size="lg"
+                variant="premium"
+                className="relative text-lg px-12 py-6 h-auto bg-gradient-to-r from-premium to-premium/80 hover:from-premium/90 hover:to-premium/70 text-white font-bold shadow-2xl border-2 border-premium/50"
+                onClick={handleUpgrade}
+                disabled={loading || !paystackLoaded}
+              >
+                {loading ? (
+                  <span className="text-white">Processing...</span>
+                ) : (
+                  <>
+                    <Crown className="w-6 h-6 mr-2" />
+                    <span className="text-white">Upgrade Now - ${PREMIUM_PRICE_USD}</span>
+                  </>
+                )}
+              </Button>
+            </div>
+            
             <p className="text-xs text-muted-foreground">
               Secure payment powered by Paystack • One-time payment • Lifetime access
             </p>
