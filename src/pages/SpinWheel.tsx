@@ -438,7 +438,14 @@ export const SpinWheel: React.FC = () => {
   };
 
   const handlePurchaseSpins = async () => {
-    if (!profile || purchaseAmount < 1) return;
+    if (!profile || !purchaseAmount || purchaseAmount < 1) {
+      toast({
+        title: 'Invalid Amount',
+        description: 'Please enter a valid number of spins',
+        variant: 'destructive',
+      });
+      return;
+    }
 
     try {
       const { data, error } = await supabase.rpc('purchase_spins_with_coins', {
@@ -907,11 +914,11 @@ export const SpinWheel: React.FC = () => {
                 type="number"
                 min="1"
                 placeholder="Enter number of spins"
-                value={purchaseAmount === 1 ? '' : purchaseAmount}
+                value={purchaseAmount || ''}
                 onChange={(e) => {
                   const value = e.target.value;
                   if (value === '') {
-                    setPurchaseAmount(1);
+                    setPurchaseAmount(0);
                   } else {
                     const num = parseInt(value);
                     if (!isNaN(num) && num >= 1) {
@@ -928,7 +935,7 @@ export const SpinWheel: React.FC = () => {
             <div className="p-4 bg-muted rounded-lg space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Spins:</span>
-                <span className="font-semibold">{purchaseAmount}</span>
+                <span className="font-semibold">{purchaseAmount || 0}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Cost per spin:</span>
@@ -939,12 +946,12 @@ export const SpinWheel: React.FC = () => {
                 <span className="font-semibold">Total Cost:</span>
                 <span className="text-lg font-bold text-primary flex items-center gap-1">
                   <Coins className="w-5 h-5" />
-                  {purchaseAmount * 50}
+                  {(purchaseAmount || 0) * 50}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Your Balance:</span>
-                <span className={`font-semibold ${profile && profile.coin_balance >= purchaseAmount * 50 ? 'text-success' : 'text-destructive'}`}>
+                <span className={`font-semibold ${profile && profile.coin_balance >= (purchaseAmount || 0) * 50 ? 'text-success' : 'text-destructive'}`}>
                   {profile?.coin_balance.toLocaleString()} coins
                 </span>
               </div>
@@ -957,7 +964,7 @@ export const SpinWheel: React.FC = () => {
             </Button>
             <Button 
               onClick={handlePurchaseSpins}
-              disabled={!profile || profile.coin_balance < purchaseAmount * 50}
+              disabled={!profile || !purchaseAmount || purchaseAmount < 1 || profile.coin_balance < (purchaseAmount || 0) * 50}
               className="bg-gradient-to-r from-primary to-secondary"
             >
               <ShoppingCart className="w-4 h-4 mr-2" />
