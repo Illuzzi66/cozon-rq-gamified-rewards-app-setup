@@ -906,10 +906,23 @@ export const SpinWheel: React.FC = () => {
                 id="spin-amount"
                 type="number"
                 min="1"
-                max="20"
-                value={purchaseAmount}
-                onChange={(e) => setPurchaseAmount(Math.max(1, Math.min(20, parseInt(e.target.value) || 1)))}
+                placeholder="Enter number of spins"
+                value={purchaseAmount === 1 ? '' : purchaseAmount}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === '') {
+                    setPurchaseAmount(1);
+                  } else {
+                    const num = parseInt(value);
+                    if (!isNaN(num) && num >= 1) {
+                      setPurchaseAmount(num);
+                    }
+                  }
+                }}
               />
+              <p className="text-xs text-muted-foreground">
+                Enter any amount (50 coins per spin)
+              </p>
             </div>
             
             <div className="p-4 bg-muted rounded-lg space-y-2">
