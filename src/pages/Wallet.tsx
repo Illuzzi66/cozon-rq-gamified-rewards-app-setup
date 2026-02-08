@@ -424,11 +424,10 @@ export const Wallet: React.FC = () => {
               </p>
               <Button
                 onClick={() => navigate('/premium')}
-                variant="premium"
                 size="lg"
-                className="mt-2"
+                className="mt-2 bg-white text-black hover:bg-gray-100 border-2 border-black"
               >
-                Upgrade to Premium - $2
+                Go Premium Now
               </Button>
             </div>
           </Card>
