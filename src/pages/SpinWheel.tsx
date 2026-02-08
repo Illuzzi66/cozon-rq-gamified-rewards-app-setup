@@ -91,7 +91,7 @@ export const SpinWheel: React.FC = () => {
     try {
       // Get latest spins available directly from database
       const { data: profileData, error: profileError } = await supabase
-        .from('user_profiles')
+        .from('profiles')
         .select('spins_available')
         .eq('user_id', profile.user_id)
         .single();
