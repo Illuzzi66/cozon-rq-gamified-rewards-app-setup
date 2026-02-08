@@ -369,7 +369,7 @@ export const SpinWheel: React.FC = () => {
         } finally {
           setSpinning(false);
         }
-      }, 5000);
+      }, 6000);
     } catch (error) {
       console.error('Error deducting spin:', error);
       toast({
