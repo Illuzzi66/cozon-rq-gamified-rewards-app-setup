@@ -89,7 +89,9 @@ export const SpinWheel: React.FC = () => {
     if (!profile) return;
 
     try {
-      // Get latest spins available directly from database
+      console.log('Loading spin data for user:', profile.user_id);
+      
+      // Get latest spins available directly from database with timestamp to prevent caching
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('spins_available')
@@ -97,6 +99,8 @@ export const SpinWheel: React.FC = () => {
         .single();
 
       if (profileError) throw profileError;
+      
+      console.log('Loaded spins_available from DB:', profileData?.spins_available);
       setSpinsAvailable(profileData?.spins_available || 0);
 
       // Load spin history
@@ -389,15 +393,20 @@ export const SpinWheel: React.FC = () => {
           setAdProgress(0);
           setAdCompleted(false);
 
-          // Reload spin data directly from database
-          await loadSpinData();
-          
-          // Also refresh profile for other components
-          await refreshProfile();
+          // Update spins immediately from response
+          const newSpinsTotal = (spinsAvailable || 0) + result.spins_awarded;
+          console.log('Updating spins:', { current: spinsAvailable, awarded: result.spins_awarded, new: newSpinsTotal });
+          setSpinsAvailable(newSpinsTotal);
+
+          // Reload spin data from database to confirm
+          setTimeout(async () => {
+            await loadSpinData();
+            await refreshProfile();
+          }, 100);
 
           toast({
             title: '🎉 Reward Claimed!',
-            description: `You earned ${result.spins_awarded} spins!`,
+            description: `You earned ${result.spins_awarded} spins! Total: ${newSpinsTotal}`,
           });
         } else {
           toast({
