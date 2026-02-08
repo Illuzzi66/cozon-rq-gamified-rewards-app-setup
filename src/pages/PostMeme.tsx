@@ -75,11 +75,10 @@ export const PostMeme: React.FC = () => {
             </div>
             <Button
               onClick={() => navigate('/premium')}
-              variant="premium"
               size="lg"
-              className="mt-4"
+              className="mt-4 bg-black text-white hover:bg-black/90"
             >
-              Upgrade to Premium - $2
+              Go Premium Now
             </Button>
           </Card>
         </div>
@@ -202,7 +201,7 @@ export const PostMeme: React.FC = () => {
             </div>
             <Button onClick={handleWatchAd} size="lg" className="w-full">
               <Video className="w-5 h-5 mr-2" />
-              Watch Ad (3 seconds)
+              Watch Ad (5 minutes)
             </Button>
           </Card>
         )}

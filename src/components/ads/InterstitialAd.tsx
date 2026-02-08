@@ -13,7 +13,7 @@ interface InterstitialAdProps {
 
 export function InterstitialAd({ isOpen, onClose, onAdCompleted }: InterstitialAdProps) {
   const [isLoading, setIsLoading] = useState(true);
-  const [countdown, setCountdown] = useState(5);
+  const [countdown, setCountdown] = useState(300);
   const [canClose, setCanClose] = useState(false);
 
   useEffect(() => {
@@ -35,7 +35,7 @@ export function InterstitialAd({ isOpen, onClose, onAdCompleted }: InterstitialA
 
   const loadAd = async () => {
     setIsLoading(true);
-    setCountdown(5);
+    setCountdown(300);
     setCanClose(false);
     
     try {
