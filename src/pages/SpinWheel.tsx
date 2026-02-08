@@ -85,23 +85,26 @@ export const SpinWheel: React.FC = () => {
     }
   }, [dailyBonusAvailable, nextClaimTime]);
 
-  const loadSpinData = async () => {
+  const loadSpinData = async (forceRefresh = false) => {
     if (!profile) return;
 
     try {
-      console.log('Loading spin data for user:', profile.user_id);
+      console.log('Loading spin data for user:', profile.user_id, 'forceRefresh:', forceRefresh);
       
-      // Get latest spins available directly from database with timestamp to prevent caching
-      const { data: profileData, error: profileError } = await supabase
+      // Get latest spins available directly from database
+      const query = supabase
         .from('profiles')
         .select('spins_available')
         .eq('user_id', profile.user_id)
         .single();
 
+      const { data: profileData, error: profileError } = await query;
+
       if (profileError) throw profileError;
       
-      console.log('Loaded spins_available from DB:', profileData?.spins_available);
-      setSpinsAvailable(profileData?.spins_available || 0);
+      const newSpins = profileData?.spins_available || 0;
+      console.log('Loaded spins_available from DB:', newSpins);
+      setSpinsAvailable(newSpins);
 
       // Load spin history
       const { data, error } = await supabase.rpc('get_spin_history', {
@@ -111,8 +114,11 @@ export const SpinWheel: React.FC = () => {
 
       if (error) throw error;
       setSpinHistory(data || []);
+      
+      return newSpins;
     } catch (error) {
       console.error('Error loading spin data:', error);
+      return spinsAvailable;
     }
   };
 
@@ -393,20 +399,13 @@ export const SpinWheel: React.FC = () => {
           setAdProgress(0);
           setAdCompleted(false);
 
-          // Update spins immediately from response
-          const newSpinsTotal = (spinsAvailable || 0) + result.spins_awarded;
-          console.log('Updating spins:', { current: spinsAvailable, awarded: result.spins_awarded, new: newSpinsTotal });
-          setSpinsAvailable(newSpinsTotal);
-
-          // Reload spin data from database to confirm
-          setTimeout(async () => {
-            await loadSpinData();
-            await refreshProfile();
-          }, 100);
+          // Force reload from database
+          const updatedSpins = await loadSpinData(true);
+          await refreshProfile();
 
           toast({
             title: '🎉 Reward Claimed!',
-            description: `You earned ${result.spins_awarded} spins! Total: ${newSpinsTotal}`,
+            description: `You earned ${result.spins_awarded} spins! Available: ${updatedSpins}`,
           });
         } else {
           toast({
