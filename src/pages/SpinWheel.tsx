@@ -109,9 +109,21 @@ export const SpinWheel: React.FC = () => {
       if (data && data.length > 0) {
         const status = data[0];
         setDailyBonusAvailable(status.available);
-        if (!status.available) {
-          setNextClaimTime(new Date(status.next_claim_time));
-          updateTimeRemaining();
+        if (!status.available && status.next_claim_time) {
+          const nextTime = new Date(status.next_claim_time);
+          setNextClaimTime(nextTime);
+          // Calculate time remaining immediately
+          const now = new Date();
+          const diff = nextTime.getTime() - now.getTime();
+          
+          if (diff > 0) {
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            setTimeRemaining(`${hours}h ${minutes}m ${seconds}s`);
+          }
+        } else if (status.available) {
+          setTimeRemaining('');
         }
       }
     } catch (error) {
@@ -128,6 +140,7 @@ export const SpinWheel: React.FC = () => {
     if (diff <= 0) {
       setDailyBonusAvailable(true);
       setTimeRemaining('');
+      checkDailyBonus(); // Recheck status
       return;
     }
 
