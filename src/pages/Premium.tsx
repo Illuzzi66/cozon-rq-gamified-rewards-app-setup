@@ -217,10 +217,10 @@ export const Premium: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-premium/20 via-background to-secondary/20">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-purple-900/20 dark:to-blue-900/20">
       <div className="max-w-4xl mx-auto p-4 space-y-6">
         {/* Header */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 pt-2">
           <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')}>
             <ArrowLeft className="w-5 h-5" />
           </Button>
@@ -231,30 +231,31 @@ export const Premium: React.FC = () => {
         </div>
 
         {/* Hero Card */}
-        <Card className="p-8 bg-gradient-to-br from-premium/30 to-secondary/30 border-premium/50 premium-glow">
-          <div className="text-center space-y-4">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-premium/20 mb-4">
-              <Crown className="w-12 h-12 text-premium" />
+        <Card className="relative overflow-hidden p-8 bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-600 border-0 shadow-2xl">
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48cGF0aCBkPSJNMzYgMzRjMC0yLjIxLTEuNzktNC00LTRzLTQgMS43OS00IDQgMS43OSA0IDQgNCA0LTEuNzkgNC00em0wLTEwYzAtMi4yMS0xLjc5LTQtNC00cy00IDEuNzktNCA0IDEuNzkgNCA0IDQgNC0xLjc5IDQtNHptMC0xMGMwLTIuMjEtMS43OS00LTQtNHMtNCAxLjc5LTQgNCAxLjc5IDQgNCA0IDQtMS43OSA0LTR6Ii8+PC9nPjwvZz48L3N2Zz4=')] opacity-20"></div>
+          <div className="relative text-center space-y-4">
+            <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-white/20 backdrop-blur-sm mb-4 shadow-lg">
+              <Crown className="w-14 h-14 text-yellow-300 drop-shadow-lg" />
             </div>
-            <h2 className="text-3xl font-bold">Cozon RQ Premium</h2>
-            <p className="text-muted-foreground max-w-md mx-auto">
+            <h2 className="text-4xl font-bold text-white drop-shadow-md">Cozon RQ Premium</h2>
+            <p className="text-white/90 max-w-md mx-auto text-lg">
               Supercharge your earnings and enjoy exclusive benefits with our premium membership
             </p>
             <div className="flex items-baseline justify-center gap-2 mt-6">
-              <span className="text-5xl font-bold text-premium">${PREMIUM_PRICE_USD}</span>
-              <span className="text-muted-foreground">one-time payment</span>
+              <span className="text-6xl font-bold text-white drop-shadow-lg">${PREMIUM_PRICE_USD}</span>
+              <span className="text-white/80 text-lg">one-time payment</span>
             </div>
-            <p className="text-sm text-muted-foreground">Lifetime access • No recurring fees</p>
+            <p className="text-sm text-white/80">Lifetime access • No recurring fees</p>
           </div>
         </Card>
 
         {/* Benefits Grid */}
         <div className="grid md:grid-cols-2 gap-4">
           {benefits.map((benefit, index) => (
-            <Card key={index} className="p-6 hover:border-premium/50 transition-colors">
+            <Card key={index} className="p-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm hover:shadow-xl hover:scale-105 transition-all duration-300 border-purple-200 dark:border-purple-800">
               <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-premium/10 flex items-center justify-center">
-                  <benefit.icon className="w-6 h-6 text-premium" />
+                <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center shadow-lg">
+                  <benefit.icon className="w-6 h-6 text-white" />
                 </div>
                 <div>
                   <h3 className="font-semibold mb-1">{benefit.title}</h3>
@@ -266,7 +267,7 @@ export const Premium: React.FC = () => {
         </div>
 
         {/* Comparison Table */}
-        <Card className="p-6">
+        <Card className="p-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-xl">
           <h3 className="text-xl font-bold mb-4 text-center">Free vs Premium</h3>
           <div className="space-y-3">
             {[
@@ -283,49 +284,49 @@ export const Premium: React.FC = () => {
               >
                 <div className="font-medium">{item.feature}</div>
                 <div className="text-center text-muted-foreground">{item.free}</div>
-                <div className="text-center text-premium font-semibold">{item.premium}</div>
+                <div className="text-center text-purple-600 dark:text-purple-400 font-semibold">{item.premium}</div>
               </div>
             ))}
           </div>
         </Card>
 
         {/* CTA */}
-        <Card className="p-8 bg-gradient-to-r from-premium/20 to-secondary/20 border-premium/50">
-          <div className="text-center space-y-4">
-            <h3 className="text-2xl font-bold">Ready to Upgrade?</h3>
-            <p className="text-muted-foreground">
+        <Card className="relative overflow-hidden p-8 bg-gradient-to-r from-purple-500 via-blue-500 to-indigo-500 border-0 shadow-2xl">
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0YzAtMi4yMS0xLjc5LTQtNC00cy00IDEuNzktNCA0IDEuNzkgNCA0IDQgNC0xLjc5IDQtNHptMC0xMGMwLTIuMjEtMS43OS00LTQtNHMtNCAxLjc5LTQgNCAxLjc5IDQgNCA0IDQtMS43OSA0LTR6bTAtMTBjMC0yLjIxLTEuNzktNC00LTRzLTQgMS43OS00IDQgMS43OSA0IDQgNCA0LTEuNzkgNC00eiIvPjwvZz48L2c+PC9zdmc+')] opacity-30"></div>
+          <div className="relative text-center space-y-4">
+            <h3 className="text-3xl font-bold text-white drop-shadow-md">Ready to Upgrade?</h3>
+            <p className="text-white/90 text-lg">
               Join thousands of premium members earning more every day
             </p>
             
-            {/* Blurred Button Area */}
-            <div className="relative inline-block">
-              <div className="absolute inset-0 bg-gradient-to-r from-premium/30 to-secondary/30 blur-2xl rounded-2xl"></div>
+            {/* Glowing Button */}
+            <div className="relative inline-block pt-4">
+              <div className="absolute inset-0 bg-yellow-300 blur-3xl opacity-50 rounded-2xl animate-pulse"></div>
               <Button
                 size="lg"
-                variant="premium"
-                className="relative text-lg px-12 py-6 h-auto bg-gradient-to-r from-premium to-premium/80 hover:from-premium/90 hover:to-premium/70 text-white font-bold shadow-2xl border-2 border-premium/50"
+                className="relative text-xl px-16 py-8 h-auto bg-white hover:bg-gray-50 text-purple-600 font-bold shadow-2xl rounded-2xl transform hover:scale-105 transition-all duration-300"
                 onClick={handleUpgrade}
                 disabled={loading || !paystackLoaded}
               >
                 {loading ? (
-                  <span className="text-white">Processing...</span>
+                  <span>Processing...</span>
                 ) : (
                   <>
-                    <Crown className="w-6 h-6 mr-2" />
-                    <span className="text-white">Upgrade Now - ${PREMIUM_PRICE_USD}</span>
+                    <Crown className="w-7 h-7 mr-3 text-yellow-500" />
+                    <span>Upgrade Now - ${PREMIUM_PRICE_USD}</span>
                   </>
                 )}
               </Button>
             </div>
             
-            <p className="text-xs text-muted-foreground">
+            <p className="text-sm text-white/80 pt-2">
               Secure payment powered by Paystack • One-time payment • Lifetime access
             </p>
           </div>
         </Card>
 
         {/* FAQ */}
-        <Card className="p-6">
+        <Card className="p-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-xl">
           <h3 className="text-xl font-bold mb-4">Frequently Asked Questions</h3>
           <div className="space-y-4">
             <div>
