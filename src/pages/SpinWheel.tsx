@@ -58,6 +58,8 @@ export const SpinWheel: React.FC = () => {
   const [adProgress, setAdProgress] = useState(0);
   const [adCompleted, setAdCompleted] = useState(false);
   const [claimingReward, setClaimingReward] = useState(false);
+  const [adsWatchedToday, setAdsWatchedToday] = useState(0);
+  const [adsRemaining, setAdsRemaining] = useState(5);
   const [dailyBonusAvailable, setDailyBonusAvailable] = useState(false);
   const [nextClaimTime, setNextClaimTime] = useState<Date | null>(null);
   const [timeRemaining, setTimeRemaining] = useState<string>('');
@@ -67,6 +69,7 @@ export const SpinWheel: React.FC = () => {
   useEffect(() => {
     loadSpinData();
     checkDailyBonus();
+    checkDailyAdCount();
   }, [profile]);
 
   useEffect(() => {
@@ -180,6 +183,26 @@ export const SpinWheel: React.FC = () => {
     const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
     setTimeRemaining(`${hours}h ${minutes}m ${seconds}s`);
+  };
+
+  const checkDailyAdCount = async () => {
+    if (!profile) return;
+
+    try {
+      const { data, error } = await supabase.rpc('get_daily_spin_ad_count', {
+        p_user_id: profile.user_id,
+      });
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        const result = data[0];
+        setAdsWatchedToday(result.ads_watched_today || 0);
+        setAdsRemaining(result.remaining_ads || 0);
+      }
+    } catch (error) {
+      console.error('Error checking daily ad count:', error);
+    }
   };
 
   const claimDailyBonus = async () => {
@@ -417,9 +440,12 @@ export const SpinWheel: React.FC = () => {
           const newSpins = await loadSpinData(true);
           console.log('Spins after refresh:', newSpins);
 
+          // Refresh ad count
+          await checkDailyAdCount();
+
           toast({
             title: '🎉 Reward Claimed!',
-            description: `You earned ${result.spins_awarded} spins! You now have ${newSpins} spins.`,
+            description: `You earned ${result.spins_awarded} spin! You now have ${newSpins} spins. (${adsRemaining - 1} ads remaining today)`,
           });
         } else {
           toast({
@@ -767,9 +793,10 @@ export const SpinWheel: React.FC = () => {
                       onClick={handleWatchAdForSpin}
                       variant="outline"
                       className="h-12"
+                      disabled={adsRemaining <= 0}
                     >
                       <Video className="w-5 h-5 mr-2" />
-                      Watch Ad
+                      Watch Ad ({adsRemaining}/5)
                     </Button>
                     <Button
                       onClick={() => setShowPurchaseDialog(true)}
@@ -780,6 +807,12 @@ export const SpinWheel: React.FC = () => {
                       Buy Spins
                     </Button>
                   </div>
+                )}
+                
+                {adsRemaining <= 0 && spinsAvailable < 1 && (
+                  <p className="text-sm text-muted-foreground text-center mt-2">
+                    Daily ad limit reached. Come back tomorrow or buy spins!
+                  </p>
                 )}
               </div>
             </div>
@@ -841,7 +874,7 @@ export const SpinWheel: React.FC = () => {
                   ) : (
                     <>
                       <Sparkles className="w-5 h-5 mr-2" />
-                      Claim 3 Spins
+                      Claim 1 Spin
                     </>
                   )}
                 </Button>
