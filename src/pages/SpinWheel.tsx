@@ -476,10 +476,10 @@ export const SpinWheel: React.FC = () => {
               ) : (
                 <div className="mt-2 space-y-1">
                   <p className="text-xs text-muted-foreground">Next claim available in:</p>
-                  <div className="flex items-center gap-2 bg-background/50 rounded-lg px-3 py-2">
-                    <Clock className="w-5 h-5 text-primary" />
+                  <div className="flex items-center gap-2 bg-background/50 rounded-lg px-3 py-2 timer-pulse">
+                    <Clock className="w-5 h-5 text-primary animate-spin" style={{ animationDuration: '3s' }} />
                     <span className="text-xl font-mono font-bold text-primary tabular-nums tracking-wider">
-                      {timeRemaining}
+                      {timeRemaining || '...'}
                     </span>
                   </div>
                 </div>

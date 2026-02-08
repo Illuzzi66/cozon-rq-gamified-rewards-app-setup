@@ -95,4 +95,19 @@
   .confetti {
     animation: confetti-fall 3s ease-in forwards;
   }
+  
+  @keyframes timer-pulse {
+    0%, 100% { 
+      transform: scale(1);
+      box-shadow: 0 0 0 0 hsl(var(--primary) / 0.7);
+    }
+    50% { 
+      transform: scale(1.05);
+      box-shadow: 0 0 20px 5px hsl(var(--primary) / 0.3);
+    }
+  }
+  
+  .timer-pulse {
+    animation: timer-pulse 2s ease-in-out infinite;
+  }
 }
