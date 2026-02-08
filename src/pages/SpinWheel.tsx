@@ -588,6 +588,11 @@ export const SpinWheel: React.FC = () => {
           <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')}>
             <ArrowLeft className="w-5 h-5" />
           </Button>
+          <img 
+            src="/src/assets/screenshot_20260208-235951.jpg" 
+            alt="Casino" 
+            className="w-12 h-12 rounded-lg object-cover shadow-md"
+          />
           <div>
             <h1 className="text-2xl font-bold">Spin Wheel</h1>
             <p className="text-sm text-muted-foreground">
@@ -777,22 +782,9 @@ export const SpinWheel: React.FC = () => {
                     );
                   })}
                   
-                  {/* Center Circle with Casino Image */}
-                  <defs>
-                    <clipPath id="centerClip">
-                      <circle cx="200" cy="200" r="40" />
-                    </clipPath>
-                  </defs>
+                  {/* Center Circle */}
                   <circle cx="200" cy="200" r="40" fill="white" stroke="#FFD700" strokeWidth="4" />
-                  <image 
-                    href="/src/assets/screenshot_20260208-235951.jpg" 
-                    x="160" 
-                    y="160" 
-                    width="80" 
-                    height="80" 
-                    clipPath="url(#centerClip)"
-                    preserveAspectRatio="xMidYMid slice"
-                  />
+                  <text x="200" y="210" textAnchor="middle" fontSize="30" fill="#FFD700">✨</text>
                 </svg>
               </div>
 
