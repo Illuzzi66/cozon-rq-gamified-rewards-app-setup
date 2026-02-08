@@ -57,6 +57,7 @@ export const SpinWheel: React.FC = () => {
   const [watchingAd, setWatchingAd] = useState(false);
   const [adProgress, setAdProgress] = useState(0);
   const [adCompleted, setAdCompleted] = useState(false);
+  const [claimingReward, setClaimingReward] = useState(false);
   const [dailyBonusAvailable, setDailyBonusAvailable] = useState(false);
   const [nextClaimTime, setNextClaimTime] = useState<Date | null>(null);
   const [timeRemaining, setTimeRemaining] = useState<string>('');
@@ -351,7 +352,9 @@ export const SpinWheel: React.FC = () => {
   };
 
   const claimAdReward = async () => {
-    if (!profile || !adCompleted) return;
+    if (!profile || !adCompleted || claimingReward) return;
+
+    setClaimingReward(true);
 
     try {
       const { data, error } = await supabase.rpc('record_spin_ad_view', {
@@ -365,23 +368,22 @@ export const SpinWheel: React.FC = () => {
       if (data && data.length > 0) {
         const result = data[0];
         if (result.success) {
+          // Play bonus sound effect
+          soundEffects.playBonus();
+
           toast({
             title: '🎉 Reward Claimed!',
             description: `You earned ${result.spins_awarded} spins!`,
           });
 
-          // Reset ad state first
+          // Reset ad state
           setWatchingAd(false);
           setAdProgress(0);
           setAdCompleted(false);
 
           // Refresh profile and reload spin data
           await refreshProfile();
-          
-          // Add a small delay to ensure profile is updated
-          setTimeout(async () => {
-            await loadSpinData();
-          }, 500);
+          await loadSpinData();
         } else {
           toast({
             title: 'Limit Reached',
@@ -397,12 +399,14 @@ export const SpinWheel: React.FC = () => {
       console.error('Error claiming reward:', error);
       toast({
         title: 'Error',
-        description: 'Failed to claim reward',
+        description: 'Failed to claim reward. Please try again.',
         variant: 'destructive',
       });
       setWatchingAd(false);
       setAdProgress(0);
       setAdCompleted(false);
+    } finally {
+      setClaimingReward(false);
     }
   };
 
@@ -750,10 +754,20 @@ export const SpinWheel: React.FC = () => {
                 <Button
                   size="lg"
                   onClick={claimAdReward}
+                  disabled={claimingReward}
                   className="w-full bg-gradient-to-r from-success to-accent"
                 >
-                  <Sparkles className="w-5 h-5 mr-2" />
-                  Claim 3 Spins
+                  {claimingReward ? (
+                    <>
+                      <div className="w-5 h-5 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Claiming...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-5 h-5 mr-2" />
+                      Claim 3 Spins
+                    </>
+                  )}
                 </Button>
               ) : (
                 <div className="flex items-center justify-center gap-2 text-muted-foreground py-3">
