@@ -16,6 +16,7 @@ interface Profile {
   referral_code: string | null;
   avatar_url?: string;
   last_daily_login?: string;
+  spins_available: number;
 }
 
 interface AuthContextType {
