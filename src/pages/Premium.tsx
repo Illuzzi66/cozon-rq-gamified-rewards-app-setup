@@ -304,16 +304,16 @@ export const Premium: React.FC = () => {
               <div className="absolute inset-0 bg-yellow-300 blur-3xl opacity-50 rounded-2xl animate-pulse"></div>
               <Button
                 size="lg"
-                className="relative text-xl px-16 py-8 h-auto bg-white hover:bg-gray-50 text-purple-600 font-bold shadow-2xl rounded-2xl transform hover:scale-105 transition-all duration-300"
+                className="relative text-xl px-16 py-8 h-auto bg-white hover:bg-gray-50 text-black font-bold shadow-2xl rounded-2xl transform hover:scale-105 transition-all duration-300"
                 onClick={handleUpgrade}
                 disabled={loading || !paystackLoaded}
               >
                 {loading ? (
-                  <span>Processing...</span>
+                  <span className="text-black">Processing...</span>
                 ) : (
                   <>
                     <Crown className="w-7 h-7 mr-3 text-yellow-500" />
-                    <span>Upgrade Now - ${PREMIUM_PRICE_USD}</span>
+                    <span className="text-black">Upgrade Now - ${PREMIUM_PRICE_USD}</span>
                   </>
                 )}
               </Button>
