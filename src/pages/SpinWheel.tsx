@@ -445,7 +445,7 @@ export const SpinWheel: React.FC = () => {
 
           toast({
             title: '🎉 Reward Claimed!',
-            description: `You earned ${result.spins_awarded} spin! You now have ${newSpins} spins. (${adsRemaining - 1} ads remaining today)`,
+            description: `You earned ${result.spins_awarded} spins! You now have ${newSpins} spins. (${adsRemaining - 1} ads remaining today)`,
           });
         } else {
           toast({
@@ -874,7 +874,7 @@ export const SpinWheel: React.FC = () => {
                   ) : (
                     <>
                       <Sparkles className="w-5 h-5 mr-2" />
-                      Claim 1 Spin
+                      Claim 3 Spins
                     </>
                   )}
                 </Button>
