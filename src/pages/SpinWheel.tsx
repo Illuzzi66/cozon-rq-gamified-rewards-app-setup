@@ -376,7 +376,9 @@ export const SpinWheel: React.FC = () => {
     }
 
     setClaimingReward(true);
-    console.log('Starting claim process for user:', profile.user_id);
+    console.log('=== STARTING AD CLAIM ===');
+    console.log('User ID:', profile.user_id);
+    console.log('Current spins before claim:', spinsAvailable);
 
     try {
       const { data, error } = await supabase.rpc('record_spin_ad_view', {
@@ -385,33 +387,39 @@ export const SpinWheel: React.FC = () => {
         p_view_duration: 30,
       });
 
-      console.log('Ad claim RPC response:', { data, error });
+      console.log('RPC Response:', { data, error });
 
       if (error) {
-        console.error('RPC error:', error);
+        console.error('RPC Error:', error);
         throw error;
       }
 
       if (data && data.length > 0) {
         const result = data[0];
-        console.log('Ad claim result:', result);
+        console.log('Claim Result:', result);
         
         if (result.success) {
-          // Play bonus sound effect
+          // Play sound
           soundEffects.playBonusSound();
 
-          // Reset ad state FIRST
+          // Reset ad UI state
           setWatchingAd(false);
           setAdProgress(0);
           setAdCompleted(false);
 
-          // Refresh data
+          // Force refresh profile and spin data
+          console.log('Refreshing profile and spin data...');
           await refreshProfile();
-          await loadSpinData(true);
+          
+          // Wait a moment for database to update
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          const newSpins = await loadSpinData(true);
+          console.log('Spins after refresh:', newSpins);
 
           toast({
             title: '🎉 Reward Claimed!',
-            description: `You earned ${result.spins_awarded} spins!`,
+            description: `You earned ${result.spins_awarded} spins! You now have ${newSpins} spins.`,
           });
         } else {
           toast({
@@ -428,7 +436,7 @@ export const SpinWheel: React.FC = () => {
         throw new Error('No data returned from server');
       }
     } catch (error: any) {
-      console.error('Error claiming reward:', error);
+      console.error('=== AD CLAIM ERROR ===', error);
       toast({
         title: 'Error',
         description: error.message || 'Failed to claim reward. Please try again.',
@@ -439,7 +447,7 @@ export const SpinWheel: React.FC = () => {
       setAdCompleted(false);
     } finally {
       setClaimingReward(false);
-      console.log('Claim process completed');
+      console.log('=== AD CLAIM COMPLETE ===');
     }
   };
 
