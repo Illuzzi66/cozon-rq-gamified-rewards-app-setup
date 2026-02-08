@@ -164,6 +164,9 @@ export const Dashboard: React.FC = () => {
           )}
         </div>
 
+        {/* Banner Ad */}
+        <BannerAd className="my-4" />
+
         {/* Disclaimer */}
         <div className="bg-muted/50 rounded-lg p-4 text-sm text-muted-foreground text-center">
           ⚠️ Earnings depend on ads and activity. Payouts subject to review and approval.

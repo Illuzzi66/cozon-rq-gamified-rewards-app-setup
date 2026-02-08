@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { BannerAd } from '@/components/ads/BannerAd';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -564,6 +565,9 @@ export const MemeFeed: React.FC = () => {
             </div>
           </Card>
         )}
+
+        {/* Banner Ad */}
+        <BannerAd className="my-4" />
       </div>
 
       {/* Report Meme Dialog */}
