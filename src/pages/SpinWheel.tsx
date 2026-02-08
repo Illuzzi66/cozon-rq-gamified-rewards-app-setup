@@ -89,8 +89,15 @@ export const SpinWheel: React.FC = () => {
     if (!profile) return;
 
     try {
-      // Get spins available from profile
-      setSpinsAvailable(profile.spins_available || 0);
+      // Get latest spins available directly from database
+      const { data: profileData, error: profileError } = await supabase
+        .from('user_profiles')
+        .select('spins_available')
+        .eq('user_id', profile.user_id)
+        .single();
+
+      if (profileError) throw profileError;
+      setSpinsAvailable(profileData?.spins_available || 0);
 
       // Load spin history
       const { data, error } = await supabase.rpc('get_spin_history', {
@@ -371,19 +378,21 @@ export const SpinWheel: React.FC = () => {
           // Play bonus sound effect
           soundEffects.playBonus();
 
-          toast({
-            title: '🎉 Reward Claimed!',
-            description: `You earned ${result.spins_awarded} spins!`,
-          });
-
           // Reset ad state
           setWatchingAd(false);
           setAdProgress(0);
           setAdCompleted(false);
 
-          // Refresh profile and reload spin data
-          await refreshProfile();
+          // Reload spin data directly from database
           await loadSpinData();
+          
+          // Also refresh profile for other components
+          await refreshProfile();
+
+          toast({
+            title: '🎉 Reward Claimed!',
+            description: `You earned ${result.spins_awarded} spins!`,
+          });
         } else {
           toast({
             title: 'Limit Reached',
