@@ -588,17 +588,17 @@ export const SpinWheel: React.FC = () => {
           <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')}>
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <img 
-            src="/src/assets/screenshot_20260208-235951.jpg" 
-            alt="Casino" 
-            className="w-12 h-12 rounded-lg object-cover shadow-md"
-          />
-          <div>
+          <div className="flex-1">
             <h1 className="text-2xl font-bold">Spin Wheel</h1>
             <p className="text-sm text-muted-foreground">
               Available Spins: {spinsAvailable}
             </p>
           </div>
+          <img 
+            src="/src/assets/screenshot_20260208-235951.jpg" 
+            alt="Casino" 
+            className="w-16 h-16 rounded-lg object-cover shadow-lg border-2 border-gold/50"
+          />
         </div>
 
         {/* Balance Display */}
