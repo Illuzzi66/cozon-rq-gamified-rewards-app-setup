@@ -179,9 +179,11 @@ export const SpinWheel: React.FC = () => {
       if (data && data.length > 0) {
         const result = data[0];
         if (result.success) {
+          const newSpinCount = (profile.spins_available || 0) + result.spins_awarded;
+          
           toast({
             title: '🎉 Daily Bonus Claimed!',
-            description: `You received ${result.spins_awarded} spins!`,
+            description: `You received ${result.spins_awarded} spins! Total spins: ${newSpinCount}`,
           });
 
           // Set next claim time to 24 hours from now
