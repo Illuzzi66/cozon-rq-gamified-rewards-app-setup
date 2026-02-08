@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
+import { InterstitialAd } from '@/components/ads/InterstitialAd';
 import { ArrowLeft, Upload, Video, Crown, Sparkles, Image as ImageIcon } from 'lucide-react';
 import {
   Select,
@@ -45,6 +46,7 @@ export const PostMeme: React.FC = () => {
   const [category, setCategory] = useState('');
   const [uploading, setUploading] = useState(false);
   const [showAdDialog, setShowAdDialog] = useState(false);
+  const [showInterstitialAd, setShowInterstitialAd] = useState(false);
   const [adWatched, setAdWatched] = useState(false);
 
   // Redirect if not premium
@@ -86,16 +88,15 @@ export const PostMeme: React.FC = () => {
   }
 
   const handleWatchAd = () => {
-    setShowAdDialog(true);
-    // Simulate ad watching
-    setTimeout(() => {
-      setAdWatched(true);
-      setShowAdDialog(false);
-      toast({
-        title: '✅ Ad Watched',
-        description: 'You can now upload your meme!',
-      });
-    }, 3000);
+    setShowInterstitialAd(true);
+  };
+
+  const handleAdCompleted = () => {
+    setAdWatched(true);
+    toast({
+      title: '✅ Ad Watched',
+      description: 'You can now upload your meme!',
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
