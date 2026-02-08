@@ -225,7 +225,7 @@ export const Premium: React.FC = () => {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold">Upgrade to Premium</h1>
+            <h1 className="text-2xl font-bold text-black dark:text-white">Upgrade to Premium</h1>
             <p className="text-sm text-muted-foreground">Unlock exclusive benefits</p>
           </div>
         </div>
