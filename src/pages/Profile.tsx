@@ -858,8 +858,6 @@ export const Profile: React.FC = () => {
             </Button>
           </div>
         </Card>
-          </div>
-        </Card>
 
         {/* Notifications */}
         <Card className="p-6 space-y-4">
