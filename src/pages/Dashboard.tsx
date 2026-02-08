@@ -154,8 +154,7 @@ export const Dashboard: React.FC = () => {
           {!profile.is_premium && (
             <Button
               onClick={() => navigate('/premium')}
-              variant="premium"
-              className="h-32 flex-col gap-3 text-lg"
+              className="h-32 flex-col gap-3 text-lg bg-white text-black hover:bg-gray-100 border-2 border-black"
             >
               <Crown className="w-8 h-8" />
               <span>Go Premium</span>
