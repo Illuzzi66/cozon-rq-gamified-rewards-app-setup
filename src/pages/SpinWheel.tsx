@@ -777,9 +777,22 @@ export const SpinWheel: React.FC = () => {
                     );
                   })}
                   
-                  {/* Center Circle */}
+                  {/* Center Circle with Casino Image */}
+                  <defs>
+                    <clipPath id="centerClip">
+                      <circle cx="200" cy="200" r="40" />
+                    </clipPath>
+                  </defs>
                   <circle cx="200" cy="200" r="40" fill="white" stroke="#FFD700" strokeWidth="4" />
-                  <text x="200" y="210" textAnchor="middle" fontSize="30" fill="#FFD700">✨</text>
+                  <image 
+                    href="/src/assets/screenshot_20260208-235951.jpg" 
+                    x="160" 
+                    y="160" 
+                    width="80" 
+                    height="80" 
+                    clipPath="url(#centerClip)"
+                    preserveAspectRatio="xMidYMid slice"
+                  />
                 </svg>
               </div>
 
