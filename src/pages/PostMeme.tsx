@@ -76,7 +76,7 @@ export const PostMeme: React.FC = () => {
             <Button
               onClick={() => navigate('/premium')}
               size="lg"
-              className="mt-4 bg-black text-white hover:bg-black/90"
+              className="mt-4 bg-white text-black hover:bg-gray-100 border-2 border-black"
             >
               Go Premium Now
             </Button>
