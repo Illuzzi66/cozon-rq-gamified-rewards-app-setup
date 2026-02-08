@@ -28,6 +28,7 @@ import {
   TrendingUp,
   Image as ImageIcon,
   Shield,
+  BarChart3,
 } from 'lucide-react';
 import {
   Dialog,
@@ -835,19 +836,28 @@ export const Profile: React.FC = () => {
 
         {/* Activity History */}
         <Card className="p-6">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-lg font-semibold flex items-center gap-2">
                 <History className="w-5 h-5" />
-                Activity History
+                Activity & Analytics
               </h2>
               <p className="text-sm text-muted-foreground mt-1">
-                View all your earnings and actions
+                View your earnings and performance insights
               </p>
             </div>
-            <Button variant="outline" onClick={() => navigate('/activity')}>
-              View All
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <Button variant="outline" className="h-20 flex-col gap-2" onClick={() => navigate('/activity')}>
+              <History className="w-5 h-5" />
+              <span className="text-sm">Activity Log</span>
             </Button>
+            <Button variant="outline" className="h-20 flex-col gap-2" onClick={() => navigate('/analytics')}>
+              <BarChart3 className="w-5 h-5" />
+              <span className="text-sm">Analytics</span>
+            </Button>
+          </div>
+        </Card>
           </div>
         </Card>
 
