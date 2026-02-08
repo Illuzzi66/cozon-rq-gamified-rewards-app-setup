@@ -298,20 +298,12 @@ export const PostMeme: React.FC = () => {
         </form>
       </div>
 
-      {/* Ad Dialog */}
-      <Dialog open={showAdDialog} onOpenChange={setShowAdDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Watching Ad...</DialogTitle>
-            <DialogDescription>
-              Please wait while the ad plays (3 seconds)
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex items-center justify-center py-8">
-            <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Interstitial Ad */}
+      <InterstitialAd
+        isOpen={showInterstitialAd}
+        onClose={() => setShowInterstitialAd(false)}
+        onAdCompleted={handleAdCompleted}
+      />
     </div>
   );
 };
