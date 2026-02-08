@@ -364,16 +364,22 @@ export const SpinWheel: React.FC = () => {
     setClaimingReward(true);
 
     try {
+      console.log('Claiming ad reward for user:', profile.user_id);
+      
       const { data, error } = await supabase.rpc('record_spin_ad_view', {
         p_user_id: profile.user_id,
         p_ad_type: 'spin_video',
         p_view_duration: 30,
       });
 
+      console.log('Ad claim response:', { data, error });
+
       if (error) throw error;
 
       if (data && data.length > 0) {
         const result = data[0];
+        console.log('Ad claim result:', result);
+        
         if (result.success) {
           // Play bonus sound effect
           soundEffects.playBonus();
@@ -403,6 +409,9 @@ export const SpinWheel: React.FC = () => {
           setAdProgress(0);
           setAdCompleted(false);
         }
+      } else {
+        console.error('No data returned from ad claim');
+        throw new Error('No data returned from server');
       }
     } catch (error) {
       console.error('Error claiming reward:', error);
