@@ -487,13 +487,59 @@ export const SpinWheel: React.FC = () => {
                   🎁 Claim your 2 free spins now!
                 </p>
               ) : (
-                <div className="mt-2 space-y-1">
+                <div className="mt-2 space-y-2">
                   <p className="text-xs text-muted-foreground">Next claim available in:</p>
-                  <div className="flex items-center gap-2 bg-background/50 rounded-lg px-3 py-2 timer-pulse">
-                    <Clock className="w-5 h-5 text-primary animate-spin" style={{ animationDuration: '3s' }} />
-                    <span className="text-xl font-mono font-bold text-primary tabular-nums tracking-wider">
-                      {timeRemaining || '...'}
-                    </span>
+                  <div className="flex items-center gap-2">
+                    {(() => {
+                      const parts = timeRemaining.split(' ');
+                      const hours = parts[0]?.replace('h', '') || '0';
+                      const minutes = parts[1]?.replace('m', '') || '0';
+                      const seconds = parts[2]?.replace('s', '') || '0';
+                      
+                      return (
+                        <div className="flex items-center gap-1.5">
+                          {/* Hours */}
+                          <div className="flex flex-col items-center">
+                            <div className="flex gap-0.5">
+                              <div className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground rounded-md px-2.5 py-1.5 min-w-[36px] text-center shadow-lg">
+                                <span className="text-xl font-bold font-mono tabular-nums">
+                                  {hours.padStart(2, '0')}
+                                </span>
+                              </div>
+                            </div>
+                            <span className="text-[10px] text-muted-foreground mt-0.5 font-medium">Hours</span>
+                          </div>
+                          
+                          <span className="text-2xl font-bold text-primary pb-4">:</span>
+                          
+                          {/* Minutes */}
+                          <div className="flex flex-col items-center">
+                            <div className="flex gap-0.5">
+                              <div className="bg-gradient-to-br from-secondary to-secondary/80 text-secondary-foreground rounded-md px-2.5 py-1.5 min-w-[36px] text-center shadow-lg">
+                                <span className="text-xl font-bold font-mono tabular-nums">
+                                  {minutes.padStart(2, '0')}
+                                </span>
+                              </div>
+                            </div>
+                            <span className="text-[10px] text-muted-foreground mt-0.5 font-medium">Minutes</span>
+                          </div>
+                          
+                          <span className="text-2xl font-bold text-primary pb-4">:</span>
+                          
+                          {/* Seconds */}
+                          <div className="flex flex-col items-center">
+                            <div className="flex gap-0.5">
+                              <div className="bg-gradient-to-br from-accent to-accent/80 text-accent-foreground rounded-md px-2.5 py-1.5 min-w-[36px] text-center shadow-lg">
+                                <span className="text-xl font-bold font-mono tabular-nums">
+                                  {seconds.padStart(2, '0')}
+                                </span>
+                              </div>
+                            </div>
+                            <span className="text-[10px] text-muted-foreground mt-0.5 font-medium">Seconds</span>
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               )}
