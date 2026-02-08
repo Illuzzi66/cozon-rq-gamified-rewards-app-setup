@@ -119,7 +119,11 @@ export const Dashboard: React.FC = () => {
             variant="outline"
             className="h-32 flex-col gap-3 text-lg"
           >
-            <div className="w-8 h-8 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+            <img 
+              src="/src/assets/screenshot_20260209-004012.jpg" 
+              alt="Spin Wheel" 
+              className="w-12 h-12 object-contain"
+            />
             <span>Spin Wheel</span>
           </Button>
 
