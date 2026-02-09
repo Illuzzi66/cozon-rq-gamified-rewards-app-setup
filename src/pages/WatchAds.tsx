@@ -80,12 +80,37 @@ export const WatchAds: React.FC = () => {
       return;
     }
 
+    const baseReward = 5;
+    const expectedReward = profile.is_premium ? Math.floor(baseReward * 2.5) : baseReward;
+    const oldBalance = profile.coin_balance;
+    const optimisticNewBalance = oldBalance + expectedReward;
+
     try {
       console.log('=== Starting ad reward claim ===');
       console.log('Current balance:', profile.coin_balance);
-      console.log('Calling record_ad_view with user_id:', profile.user_id);
       
       setBalanceUpdating(true);
+      
+      // IMMEDIATELY update UI with optimistic balance
+      refreshProfile();
+      const { soundEffects } = await import('@/utils/soundEffects');
+      soundEffects.playWinSound();
+      
+      // Show immediate success toast
+      toast({
+        title: '🎉 Reward Claimed!',
+        description: `You earned ${expectedReward} coins! New balance: ${optimisticNewBalance}`,
+      });
+      
+      // Show celebration animation immediately
+      setCelebrationData({
+        amount: expectedReward,
+        oldBalance: oldBalance,
+        newBalance: optimisticNewBalance,
+      });
+      setShowCelebration(true);
+      
+      console.log('Calling record_ad_view with user_id:', profile.user_id);
       
       const { data, error } = await supabase.rpc('record_ad_view', {
         p_user_id: profile.user_id,
@@ -113,49 +138,13 @@ export const WatchAds: React.FC = () => {
         console.log('New balance:', data.new_balance);
         console.log('Coins earned:', data.coins_earned);
         
-        // Show immediate success toast
-        toast({
-          title: '🎉 Reward Claimed!',
-          description: `You earned ${data.coins_earned} coins! New balance: ${data.new_balance}`,
-        });
-        
-        // Play win sound effect
-        const { soundEffects } = await import('@/utils/soundEffects');
-        soundEffects.playWinSound();
-        
-        // Aggressively refresh profile to ensure balance updates
-        console.log('Refreshing profile and stats...');
-        let attempts = 0;
-        const maxAttempts = 5;
-        
-        while (attempts < maxAttempts) {
-          const updatedProfile = await refreshProfile();
-          console.log(`Refresh attempt ${attempts + 1}:`, updatedProfile?.coin_balance);
-          
-          if (updatedProfile && updatedProfile.coin_balance === data.new_balance) {
-            console.log('✅ Balance confirmed updated!');
-            break;
-          }
-          
-          attempts++;
-          if (attempts < maxAttempts) {
-            await new Promise(resolve => setTimeout(resolve, 300));
-          }
-        }
-        
+        // Sync with actual database values
+        console.log('Syncing with database...');
+        await refreshProfile();
         await fetchStats();
         
-        console.log('Profile refreshed. New balance should be:', data.new_balance);
-        
+        console.log('Profile synced. Actual balance:', data.new_balance);
         setBalanceUpdating(false);
-        
-        // Show celebration animation
-        setCelebrationData({
-          amount: data.coins_earned,
-          oldBalance: data.old_balance,
-          newBalance: data.new_balance,
-        });
-        setShowCelebration(true);
         console.log('=== Ad reward claim complete ===');
       } else {
         console.log('❌ Reward claim failed:', data?.error);

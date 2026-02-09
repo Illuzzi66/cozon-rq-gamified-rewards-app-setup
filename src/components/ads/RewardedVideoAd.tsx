@@ -84,7 +84,7 @@ export function RewardedVideoAd({
   const handleClaimReward = async () => {
     if (isClaiming) {
       console.log('Already claiming, preventing double-claim');
-      return; // Prevent double-claiming
+      return;
     }
     
     console.log('Starting reward claim process...');
@@ -93,10 +93,8 @@ export function RewardedVideoAd({
       await recordAdShown();
       console.log('Ad shown recorded, calling onRewardEarned...');
       await onRewardEarned({ type: rewardType, amount: rewardAmount });
-      console.log('Reward earned callback completed, waiting for profile update...');
-      // Wait longer to ensure profile updates complete
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      console.log('Closing ad dialog');
+      console.log('Reward earned callback completed');
+      // Close immediately after reward is processed
       onClose();
     } catch (error) {
       console.error('Error in handleClaimReward:', error);
