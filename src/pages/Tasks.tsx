@@ -35,7 +35,7 @@ interface Task {
 }
 
 interface TaskCompletion {
-  task_id: string;
+  task_type: 'simple' | 'medium' | 'weekly';
   completed_at: string;
 }
 
@@ -95,7 +95,7 @@ export const Tasks: React.FC = () => {
     try {
       const { data, error } = await supabase
         .from('task_completions')
-        .select('task_id, completed_at')
+        .select('task_type, completed_at')
         .eq('user_id', profile.user_id);
 
       if (error) throw error;
@@ -107,24 +107,21 @@ export const Tasks: React.FC = () => {
 
   const isTaskCompleted = (task: Task): boolean => {
     const today = new Date().toISOString().split('T')[0];
-    const currentWeek = Math.ceil(
-      (new Date().getTime() - new Date(new Date().getFullYear(), 0, 1).getTime()) / 
-      (7 * 24 * 60 * 60 * 1000)
-    );
+    const now = new Date();
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay() + 1); // Monday
+    startOfWeek.setHours(0, 0, 0, 0);
 
     return completions.some((completion) => {
-      if (completion.task_id !== task.id) return false;
+      if (completion.task_type !== task.task_type) return false;
+
+      const completionDate = new Date(completion.completed_at);
 
       if (task.task_type === 'weekly') {
-        const completionWeek = Math.ceil(
-          (new Date(completion.completed_at).getTime() - 
-           new Date(new Date(completion.completed_at).getFullYear(), 0, 1).getTime()) / 
-          (7 * 24 * 60 * 60 * 1000)
-        );
-        return completionWeek === currentWeek;
+        return completionDate >= startOfWeek;
       } else {
-        const completionDate = completion.completed_at.split('T')[0];
-        return completionDate === today;
+        const completionDateStr = completion.completed_at.split('T')[0];
+        return completionDateStr === today;
       }
     });
   };
