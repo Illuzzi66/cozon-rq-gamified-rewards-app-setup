@@ -36,6 +36,7 @@ export const WatchAds: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [showRewardedAd, setShowRewardedAd] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [balanceUpdating, setBalanceUpdating] = useState(false);
   const [celebrationData, setCelebrationData] = useState<{
     amount: number;
     oldBalance: number;
@@ -74,9 +75,14 @@ export const WatchAds: React.FC = () => {
   };
 
   const handleRewardEarned = async (reward: { type: string; amount: number }) => {
-    if (!profile) return;
+    if (!profile) {
+      console.error('No profile found');
+      return;
+    }
 
     try {
+      console.log('=== Starting ad reward claim ===');
+      console.log('Current balance:', profile.coin_balance);
       console.log('Calling record_ad_view with user_id:', profile.user_id);
       
       const { data, error } = await supabase.rpc('record_ad_view', {
@@ -94,17 +100,22 @@ export const WatchAds: React.FC = () => {
 
       // record_ad_view returns JSON object directly
       if (data && data.success) {
-        console.log('Reward claimed successfully:', data);
+        console.log('✅ Reward claimed successfully:', data);
+        console.log('Old balance:', data.old_balance);
+        console.log('New balance:', data.new_balance);
+        console.log('Coins earned:', data.coins_earned);
         
         // Play win sound effect
         const { soundEffects } = await import('@/utils/soundEffects');
         soundEffects.playWinSound();
         
         // Refresh profile and stats first
+        console.log('Refreshing profile and stats...');
         await Promise.all([
           refreshProfile(),
           fetchStats()
         ]);
+        console.log('Profile refreshed. New balance should be:', data.new_balance);
         
         // Then show celebration animation
         setCelebrationData({
@@ -113,8 +124,9 @@ export const WatchAds: React.FC = () => {
           newBalance: data.new_balance,
         });
         setShowCelebration(true);
+        console.log('=== Ad reward claim complete ===');
       } else {
-        console.log('Reward claim failed:', data?.error);
+        console.log('❌ Reward claim failed:', data?.error);
         toast({
           title: 'Limit Reached',
           description: data?.error || 'Failed to claim reward',
@@ -122,7 +134,7 @@ export const WatchAds: React.FC = () => {
         });
       }
     } catch (error) {
-      console.error('Error claiming reward:', error);
+      console.error('❌ Error claiming reward:', error);
       toast({
         title: 'Error',
         description: 'Failed to claim reward',
@@ -151,9 +163,22 @@ export const WatchAds: React.FC = () => {
               <p className="text-sm text-muted-foreground">Earn coins by watching videos</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 bg-gold/10 px-3 py-2 rounded-full">
-            <Coins className="w-5 h-5 text-gold" />
-            <span className="font-bold text-gold">{profile.coin_balance.toLocaleString()}</span>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 bg-gold/10 px-3 py-2 rounded-full">
+              <Coins className="w-5 h-5 text-gold" />
+              <span className="font-bold text-gold">{profile.coin_balance.toLocaleString()}</span>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={async () => {
+                console.log('Manual refresh triggered');
+                await refreshProfile();
+                console.log('Profile refreshed, new balance:', profile.coin_balance);
+              }}
+            >
+              🔄
+            </Button>
           </div>
         </div>
 

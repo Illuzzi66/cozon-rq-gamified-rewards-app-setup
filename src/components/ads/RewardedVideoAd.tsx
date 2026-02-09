@@ -82,18 +82,25 @@ export function RewardedVideoAd({
   };
 
   const handleClaimReward = async () => {
-    if (isClaiming) return; // Prevent double-claiming
+    if (isClaiming) {
+      console.log('Already claiming, preventing double-claim');
+      return; // Prevent double-claiming
+    }
     
+    console.log('Starting reward claim process...');
     setIsClaiming(true);
     try {
       await recordAdShown();
+      console.log('Ad shown recorded, calling onRewardEarned...');
       await onRewardEarned({ type: rewardType, amount: rewardAmount });
+      console.log('Reward earned callback completed');
       // Small delay to ensure state updates before closing
       setTimeout(() => {
+        console.log('Closing ad dialog');
         onClose();
       }, 500);
     } catch (error) {
-      console.error('Error claiming reward:', error);
+      console.error('Error in handleClaimReward:', error);
       setIsClaiming(false);
     }
   };

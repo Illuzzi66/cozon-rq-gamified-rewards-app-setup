@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
+import { RewardCelebration } from '@/components/RewardCelebration';
 import { 
   ArrowLeft, 
   Wallet as WalletIcon, 
