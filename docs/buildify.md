@@ -1,6 +1,7 @@
 
 
 
+
 ### Requirements
 Cozon RQ is a gamified rewards app where users earn coins through various activities:
 - Complete tasks (Simple, Medium, Weekly)
