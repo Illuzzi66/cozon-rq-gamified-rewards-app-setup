@@ -143,8 +143,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Generate unique referral code
       const referralCode = `REF${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
 
-      const WELCOME_BONUS = 1000; // 1000 coins welcome bonus
-
       const { error: profileError } = await supabase.from('profiles').insert({
         user_id: authData.user.id,
         full_name: data.fullName,
@@ -154,20 +152,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         referral_code: referralCode,
         referred_by: data.referralCode || null,
         is_premium: false,
-        coin_balance: WELCOME_BONUS,
+        coin_balance: 0,
         locked_coins: 0,
+        spins_available: 0,
         last_daily_login: null,
       });
 
       if (profileError) throw profileError;
-
-      // Log the welcome bonus activity
-      await supabase.from('activity_log').insert({
-        user_id: authData.user.id,
-        activity_type: 'welcome_bonus',
-        coins_earned: WELCOME_BONUS,
-        description: 'Welcome bonus for joining Cozon RQ',
-      });
     }
   };
 

@@ -665,13 +665,6 @@ export const SignUp: React.FC = () => {
           </DialogHeader>
 
           <div className="space-y-4 pt-4">
-            {/* Welcome Bonus Banner */}
-            <div className="bg-gradient-to-r from-gold/20 to-success/20 border border-gold/30 p-4 rounded-lg text-center">
-              <p className="text-2xl font-bold text-gold mb-1">🎉 Welcome Bonus!</p>
-              <p className="text-lg font-semibold text-foreground">1,000 Coins</p>
-              <p className="text-xs text-muted-foreground mt-1">Credited to your account</p>
-            </div>
-
             <div className="bg-muted/50 p-4 rounded-md text-sm text-muted-foreground">
               <p className="mb-2">📧 Check your email inbox</p>
               <p className="mb-2">🔍 Look in spam/junk folder if not found</p>
