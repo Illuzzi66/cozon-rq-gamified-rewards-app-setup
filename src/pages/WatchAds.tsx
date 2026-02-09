@@ -113,6 +113,12 @@ export const WatchAds: React.FC = () => {
         console.log('New balance:', data.new_balance);
         console.log('Coins earned:', data.coins_earned);
         
+        // Show immediate success toast
+        toast({
+          title: '🎉 Reward Claimed!',
+          description: `You earned ${data.coins_earned} coins! New balance: ${data.new_balance}`,
+        });
+        
         // Play win sound effect
         const { soundEffects } = await import('@/utils/soundEffects');
         soundEffects.playWinSound();
