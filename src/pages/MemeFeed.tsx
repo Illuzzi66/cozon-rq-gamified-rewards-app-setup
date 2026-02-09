@@ -9,6 +9,8 @@ import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { BannerAd } from '@/components/ads/BannerAd';
+import { InterstitialAd } from '@/components/ads/InterstitialAd';
+import { useAdTiming } from '@/hooks/useAdTiming';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -66,6 +68,7 @@ export const MemeFeed: React.FC = () => {
   const navigate = useNavigate();
   const { profile, refreshProfile } = useAuth();
   const { toast } = useToast();
+  const { shouldShowCommentAd, resetCommentCount, incrementCommentCount } = useAdTiming();
   const [memes, setMemes] = useState<MemeWithStats[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedMeme, setSelectedMeme] = useState<string | null>(null);
@@ -76,6 +79,14 @@ export const MemeFeed: React.FC = () => {
   const [reportingMeme, setReportingMeme] = useState<string | null>(null);
   const [reportReason, setReportReason] = useState('');
   const [submittingReport, setSubmittingReport] = useState(false);
+  const [showCommentAd, setShowCommentAd] = useState(false);
+
+  // Check if should show comment ad
+  useEffect(() => {
+    if (shouldShowCommentAd) {
+      setShowCommentAd(true);
+    }
+  }, [shouldShowCommentAd]);
 
   useEffect(() => {
     fetchMemes();
@@ -266,6 +277,9 @@ export const MemeFeed: React.FC = () => {
             m.id === memeId ? { ...m, comments_count: m.comments_count + 1 } : m
           )
         );
+
+        // Increment comment count for ad tracking
+        await incrementCommentCount();
 
         await fetchComments(memeId);
         await refreshProfile();
