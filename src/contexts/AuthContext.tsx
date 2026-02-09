@@ -32,7 +32,8 @@ interface AuthContextType {
   signUp: (data: SignUpData) => Promise<void>;
   signIn: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
   signOut: () => Promise<void>;
-  refreshProfile: () => Promise<void>;
+  refreshProfile: () => Promise<Profile | null>;
+  updateProfileOptimistic: (updates: Partial<Profile>) => void;
 }
 
 interface SignUpData {
@@ -186,8 +187,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (error) throw error;
   };
 
+  const updateProfileOptimistic = (updates: Partial<Profile>) => {
+    if (profile) {
+      setProfile({ ...profile, ...updates });
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signUp, signIn, signOut, refreshProfile }}>
+    <AuthContext.Provider value={{ user, profile, loading, signUp, signIn, signOut, refreshProfile, updateProfileOptimistic }}>
       {children}
     </AuthContext.Provider>
   );

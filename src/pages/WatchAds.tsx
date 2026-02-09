@@ -30,7 +30,7 @@ interface AdStats {
 
 export const WatchAds: React.FC = () => {
   const navigate = useNavigate();
-  const { profile, refreshProfile } = useAuth();
+  const { profile, refreshProfile, updateProfileOptimistic } = useAuth();
   const { toast } = useToast();
   const [stats, setStats] = useState<AdStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -92,7 +92,8 @@ export const WatchAds: React.FC = () => {
       setBalanceUpdating(true);
       
       // IMMEDIATELY update UI with optimistic balance
-      refreshProfile();
+      updateProfileOptimistic({ coin_balance: optimisticNewBalance });
+      
       const { soundEffects } = await import('@/utils/soundEffects');
       soundEffects.playWinSound();
       
