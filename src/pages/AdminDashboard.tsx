@@ -381,32 +381,6 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
-  const handleBanUser = async (userId: string, ban: boolean) => {
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ is_banned: ban })
-        .eq('user_id', userId);
-
-      if (error) throw error;
-
-      toast({
-        title: ban ? 'User Banned' : 'User Unbanned',
-        description: `User has been ${ban ? 'banned' : 'unbanned'} successfully`,
-      });
-
-      await fetchUsers();
-      setSelectedUser(null);
-    } catch (error) {
-      console.error('Error updating user:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to update user status',
-        variant: 'destructive',
-      });
-    }
-  };
-
   const handleProcessWithdrawal = async (withdrawalId: string, status: 'completed' | 'rejected') => {
     setProcessingWithdrawal(withdrawalId);
 
