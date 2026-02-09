@@ -594,11 +594,6 @@ export const SpinWheel: React.FC = () => {
               Available Spins: {spinsAvailable}
             </p>
           </div>
-          <img 
-            src="/src/assets/screenshot_20260208-235951.jpg" 
-            alt="Casino" 
-            className="w-16 h-16 rounded-lg object-cover shadow-lg border-2 border-gold/50"
-          />
         </div>
 
         {/* Balance Display */}
