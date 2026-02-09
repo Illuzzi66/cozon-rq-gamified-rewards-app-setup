@@ -82,11 +82,16 @@ export function RewardedVideoAd({
   };
 
   const handleClaimReward = async () => {
+    if (isClaiming) return; // Prevent double-claiming
+    
     setIsClaiming(true);
     try {
       await recordAdShown();
       await onRewardEarned({ type: rewardType, amount: rewardAmount });
-      onClose();
+      // Small delay to ensure state updates before closing
+      setTimeout(() => {
+        onClose();
+      }, 500);
     } catch (error) {
       console.error('Error claiming reward:', error);
       setIsClaiming(false);
@@ -140,8 +145,20 @@ export function RewardedVideoAd({
             <p className="text-center text-muted-foreground">
               You've earned {rewardAmount} {rewardType}!
             </p>
-            <Button onClick={handleClaimReward} className="w-full" size="lg" disabled={isClaiming}>
-              {isClaiming ? 'Claiming...' : 'Claim Reward'}
+            <Button 
+              onClick={handleClaimReward} 
+              className="w-full" 
+              size="lg" 
+              disabled={isClaiming}
+            >
+              {isClaiming ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                  Claiming...
+                </>
+              ) : (
+                'Claim Reward'
+              )}
             </Button>
           </div>
         ) : !isPlaying ? (

@@ -391,6 +391,9 @@ export const AdminDashboard: React.FC = () => {
     setProcessingWithdrawal(withdrawalId);
 
     try {
+      const withdrawal = withdrawals.find(w => w.id === withdrawalId);
+      if (!withdrawal) return;
+
       const { error } = await supabase
         .from('withdrawals')
         .update({
@@ -403,11 +406,36 @@ export const AdminDashboard: React.FC = () => {
 
       if (error) throw error;
 
+      // Create notification for user
+      if (status === 'completed') {
+        await supabase.from('notifications').insert({
+          user_id: withdrawal.user_id,
+          type: 'withdrawal_approved',
+          title: '🎉 Withdrawal Approved!',
+          message: `Your withdrawal of $${withdrawal.amount.toFixed(2)} has been approved and will be processed shortly.`,
+          data: {
+            withdrawal_id: withdrawalId,
+            amount: withdrawal.amount,
+          },
+        });
+      } else {
+        await supabase.from('notifications').insert({
+          user_id: withdrawal.user_id,
+          type: 'withdrawal_rejected',
+          title: 'Withdrawal Rejected',
+          message: `Your withdrawal of $${withdrawal.amount.toFixed(2)} was rejected. Please contact support for details.`,
+          data: {
+            withdrawal_id: withdrawalId,
+            amount: withdrawal.amount,
+          },
+        });
+      }
+
       toast({
         title: status === 'completed' ? 'Withdrawal Approved' : 'Withdrawal Rejected',
         description: status === 'completed'
-          ? 'The withdrawal has been approved and will be processed.'
-          : 'The withdrawal has been rejected.',
+          ? 'The withdrawal has been approved and user will be notified.'
+          : 'The withdrawal has been rejected and user will be notified.',
       });
 
       await fetchWithdrawals();

@@ -100,16 +100,19 @@ export const WatchAds: React.FC = () => {
         const { soundEffects } = await import('@/utils/soundEffects');
         soundEffects.playWinSound();
         
-        // Show celebration animation
+        // Refresh profile and stats first
+        await Promise.all([
+          refreshProfile(),
+          fetchStats()
+        ]);
+        
+        // Then show celebration animation
         setCelebrationData({
           amount: data.coins_earned,
           oldBalance: data.old_balance,
           newBalance: data.new_balance,
         });
         setShowCelebration(true);
-
-        await refreshProfile();
-        await fetchStats();
       } else {
         console.log('Reward claim failed:', data?.error);
         toast({
