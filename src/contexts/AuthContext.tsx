@@ -125,24 +125,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (authError) throw authError;
     if (!authData.user) throw new Error('Signup failed');
 
-    // Generate unique referral code
-    const referralCode = `REF${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+    // Check if profile already exists for this user
+    const { data: existingProfile } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('user_id', authData.user.id)
+      .single();
 
-    const { error: profileError } = await supabase.from('profiles').insert({
-      user_id: authData.user.id,
-      full_name: data.fullName,
-      username: data.username,
-      email: data.email,
-      device_id: data.deviceId,
-      referral_code: referralCode,
-      referred_by: data.referralCode || null,
-      is_premium: false,
-      coin_balance: 0,
-      locked_coins: 0,
-      last_daily_login: null,
-    });
+    // Only create profile if it doesn't exist
+    if (!existingProfile) {
+      // Generate unique referral code
+      const referralCode = `REF${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
 
-    if (profileError) throw profileError;
+      const { error: profileError } = await supabase.from('profiles').insert({
+        user_id: authData.user.id,
+        full_name: data.fullName,
+        username: data.username,
+        email: data.email,
+        device_id: data.deviceId,
+        referral_code: referralCode,
+        referred_by: data.referralCode || null,
+        is_premium: false,
+        coin_balance: 0,
+        locked_coins: 0,
+        last_daily_login: null,
+      });
+
+      if (profileError) throw profileError;
+    }
   };
 
   const signIn = async (email: string, password: string, rememberMe: boolean = false) => {
