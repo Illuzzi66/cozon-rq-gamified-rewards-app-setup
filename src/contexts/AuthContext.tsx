@@ -24,7 +24,7 @@ interface AuthContextType {
   profile: Profile | null;
   loading: boolean;
   signUp: (data: SignUpData) => Promise<void>;
-  signIn: (email: string, password: string) => Promise<void>;
+  signIn: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -145,10 +145,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (profileError) throw profileError;
   };
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string, rememberMe: boolean = false) => {
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
+      options: {
+        // If rememberMe is true, session persists; otherwise it's temporary
+        persistSession: rememberMe,
+      },
     });
     if (error) throw error;
   };

@@ -29,6 +29,7 @@ export const Login: React.FC = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
+    rememberMe: false,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -37,7 +38,7 @@ export const Login: React.FC = () => {
     setLoading(true);
 
     try {
-      await signIn(formData.email, formData.password);
+      await signIn(formData.email, formData.password, formData.rememberMe);
       navigate('/dashboard');
     } catch (err: any) {
       setError(err.message || 'Login failed');
@@ -126,6 +127,19 @@ export const Login: React.FC = () => {
             >
               Forgot Password?
             </button>
+          </div>
+
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              id="rememberMe"
+              checked={formData.rememberMe}
+              onChange={(e) => setFormData({ ...formData, rememberMe: e.target.checked })}
+              className="w-4 h-4 text-primary bg-background border-input rounded focus:ring-2 focus:ring-ring cursor-pointer"
+            />
+            <label htmlFor="rememberMe" className="ml-2 text-sm text-foreground cursor-pointer">
+              Remember me
+            </label>
           </div>
 
           {error && (
