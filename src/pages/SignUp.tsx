@@ -434,13 +434,58 @@ export const SignUp: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Password</label>
+            <label className="block text-sm font-medium mb-2 flex items-center gap-2">
+              Password
+              <button
+                type="button"
+                onMouseEnter={() => setShowPasswordTooltip(true)}
+                onMouseLeave={() => setShowPasswordTooltip(false)}
+                onClick={() => setShowPasswordTooltip(!showPasswordTooltip)}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </button>
+            </label>
+            
+            {/* Password Requirements Tooltip */}
+            {showPasswordTooltip && (
+              <div className="mb-3 p-3 bg-card border border-border rounded-lg shadow-lg">
+                <p className="text-xs font-semibold mb-2 text-foreground">Password Requirements:</p>
+                <ul className="space-y-1 text-xs text-muted-foreground">
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary mt-0.5">•</span>
+                    <span>At least 8 characters long</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary mt-0.5">•</span>
+                    <span>One lowercase letter (a-z)</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary mt-0.5">•</span>
+                    <span>One uppercase letter (A-Z)</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary mt-0.5">•</span>
+                    <span>One number (0-9)</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-muted-foreground/60 mt-0.5">•</span>
+                    <span className="text-muted-foreground/80">One special character (optional, for stronger password)</span>
+                  </li>
+                </ul>
+              </div>
+            )}
+            
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
                 required
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                onFocus={() => setShowPasswordTooltip(true)}
+                onBlur={() => setTimeout(() => setShowPasswordTooltip(false), 200)}
                 className="w-full px-4 py-2 pr-10 border border-input rounded-md bg-background focus:ring-2 focus:ring-ring"
               />
               <button
@@ -468,59 +513,58 @@ export const SignUp: React.FC = () => {
               </div>
             )}
 
-            {/* Password Requirements */}
+            {/* Password Requirements Checklist */}
             {formData.password && (
               <div className="mt-3 space-y-1">
-                <p className="text-xs font-medium text-muted-foreground mb-2">Password must contain:</p>
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 text-xs">
                     {passwordRequirements.minLength ? (
-                      <Check className="w-3 h-3 text-success" />
+                      <Check className="w-3 h-3 text-green-600" />
                     ) : (
-                      <X className="w-3 h-3 text-destructive" />
+                      <X className="w-3 h-3 text-red-600" />
                     )}
-                    <span className={passwordRequirements.minLength ? 'text-success' : 'text-muted-foreground'}>
+                    <span className={passwordRequirements.minLength ? 'text-green-600' : 'text-muted-foreground'}>
                       At least 8 characters
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-xs">
                     {passwordRequirements.hasLowercase ? (
-                      <Check className="w-3 h-3 text-success" />
+                      <Check className="w-3 h-3 text-green-600" />
                     ) : (
-                      <X className="w-3 h-3 text-destructive" />
+                      <X className="w-3 h-3 text-red-600" />
                     )}
-                    <span className={passwordRequirements.hasLowercase ? 'text-success' : 'text-muted-foreground'}>
+                    <span className={passwordRequirements.hasLowercase ? 'text-green-600' : 'text-muted-foreground'}>
                       One lowercase letter
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-xs">
                     {passwordRequirements.hasUppercase ? (
-                      <Check className="w-3 h-3 text-success" />
+                      <Check className="w-3 h-3 text-green-600" />
                     ) : (
-                      <X className="w-3 h-3 text-destructive" />
+                      <X className="w-3 h-3 text-red-600" />
                     )}
-                    <span className={passwordRequirements.hasUppercase ? 'text-success' : 'text-muted-foreground'}>
+                    <span className={passwordRequirements.hasUppercase ? 'text-green-600' : 'text-muted-foreground'}>
                       One uppercase letter
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-xs">
                     {passwordRequirements.hasNumber ? (
-                      <Check className="w-3 h-3 text-success" />
+                      <Check className="w-3 h-3 text-green-600" />
                     ) : (
-                      <X className="w-3 h-3 text-destructive" />
+                      <X className="w-3 h-3 text-red-600" />
                     )}
-                    <span className={passwordRequirements.hasNumber ? 'text-success' : 'text-muted-foreground'}>
+                    <span className={passwordRequirements.hasNumber ? 'text-green-600' : 'text-muted-foreground'}>
                       One number
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-xs">
                     {passwordRequirements.hasSpecial ? (
-                      <Check className="w-3 h-3 text-success" />
+                      <Check className="w-3 h-3 text-green-600" />
                     ) : (
-                      <X className="w-3 h-3 text-muted-foreground" />
+                      <span className="w-3 h-3" />
                     )}
-                    <span className={passwordRequirements.hasSpecial ? 'text-success' : 'text-muted-foreground'}>
-                      One special character (recommended)
+                    <span className={passwordRequirements.hasSpecial ? 'text-green-600' : 'text-muted-foreground/70'}>
+                      One special character (optional)
                     </span>
                   </div>
                 </div>
@@ -536,7 +580,13 @@ export const SignUp: React.FC = () => {
                 required
                 value={formData.confirmPassword}
                 onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                className="w-full px-4 py-2 pr-10 border border-input rounded-md bg-background focus:ring-2 focus:ring-ring"
+                className={`w-full px-4 py-2 pr-10 border rounded-md bg-background focus:ring-2 focus:ring-ring transition-colors ${
+                  formData.confirmPassword && passwordsMatch
+                    ? 'border-green-500'
+                    : formData.confirmPassword && !passwordsMatch
+                    ? 'border-red-500'
+                    : 'border-input'
+                }`}
               />
               <button
                 type="button"
@@ -552,13 +602,13 @@ export const SignUp: React.FC = () => {
               <div className="mt-2 flex items-center gap-2 text-xs">
                 {passwordsMatch ? (
                   <>
-                    <Check className="w-3 h-3 text-success" />
-                    <span className="text-success">Passwords match</span>
+                    <Check className="w-3 h-3 text-green-600" />
+                    <span className="text-green-600">Passwords match</span>
                   </>
                 ) : (
                   <>
-                    <X className="w-3 h-3 text-destructive" />
-                    <span className="text-destructive">Passwords do not match</span>
+                    <X className="w-3 h-3 text-red-600" />
+                    <span className="text-red-600">Passwords do not match</span>
                   </>
                 )}
               </div>
