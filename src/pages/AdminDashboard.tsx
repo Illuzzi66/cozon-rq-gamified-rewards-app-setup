@@ -92,6 +92,9 @@ interface UserData {
   is_banned: boolean;
   created_at: string;
   last_login: string;
+  account_status?: string;
+  suspension_until?: string;
+  ban_reason?: string;
 }
 
 interface WithdrawalRequest {
@@ -140,6 +143,11 @@ export const AdminDashboard: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
   const [processingWithdrawal, setProcessingWithdrawal] = useState<string | null>(null);
+  const [banDialogOpen, setBanDialogOpen] = useState(false);
+  const [banType, setBanType] = useState<'suspend' | 'ban'>('suspend');
+  const [banReason, setBanReason] = useState('');
+  const [suspensionDuration, setSuspensionDuration] = useState('24');
+  const [processingBan, setProcessingBan] = useState(false);
 
   useEffect(() => {
     // Check if user is admin
@@ -429,6 +437,112 @@ export const AdminDashboard: React.FC = () => {
       });
     } finally {
       setProcessingWithdrawal(null);
+    }
+  };
+
+  const handleBanUser = async () => {
+    if (!selectedUser || !banReason.trim()) {
+      toast({
+        title: 'Error',
+        description: 'Please provide a reason',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setProcessingBan(true);
+    try {
+      const suspensionUntil = banType === 'suspend' 
+        ? new Date(Date.now() + parseInt(suspensionDuration) * 60 * 60 * 1000).toISOString()
+        : null;
+
+      // Update user profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          account_status: banType === 'ban' ? 'banned' : 'suspended',
+          suspension_until: suspensionUntil,
+          ban_reason: banReason,
+          banned_by: profile?.user_id,
+          banned_at: new Date().toISOString(),
+        })
+        .eq('user_id', selectedUser.user_id);
+
+      if (profileError) throw profileError;
+
+      // Record in ban history
+      const { error: banError } = await supabase
+        .from('user_bans')
+        .insert({
+          user_id: selectedUser.user_id,
+          banned_by: profile?.user_id,
+          ban_type: banType,
+          reason: banReason,
+          duration_hours: banType === 'suspend' ? parseInt(suspensionDuration) : null,
+        });
+
+      if (banError) throw banError;
+
+      toast({
+        title: 'User Updated',
+        description: `User has been ${banType === 'ban' ? 'banned' : 'suspended'}`,
+      });
+
+      setBanDialogOpen(false);
+      setSelectedUser(null);
+      setBanReason('');
+      await fetchUsers();
+    } catch (error) {
+      console.error('Error banning user:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update user status',
+        variant: 'destructive',
+      });
+    } finally {
+      setProcessingBan(false);
+    }
+  };
+
+  const handleUnbanUser = async (userId: string) => {
+    try {
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          account_status: 'active',
+          suspension_until: null,
+          ban_reason: null,
+        })
+        .eq('user_id', userId);
+
+      if (profileError) throw profileError;
+
+      // Mark ban as inactive
+      const { error: banError } = await supabase
+        .from('user_bans')
+        .update({
+          is_active: false,
+          unbanned_at: new Date().toISOString(),
+          unbanned_by: profile?.user_id,
+        })
+        .eq('user_id', userId)
+        .eq('is_active', true);
+
+      if (banError) throw banError;
+
+      toast({
+        title: 'User Unbanned',
+        description: 'User account has been restored',
+      });
+
+      await fetchUsers();
+    } catch (error) {
+      console.error('Error unbanning user:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to unban user',
+        variant: 'destructive',
+      });
     }
   };
 
