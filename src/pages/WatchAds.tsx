@@ -45,7 +45,7 @@ export const WatchAds: React.FC = () => {
 
   useEffect(() => {
     fetchStats();
-  }, [profile?.coin_balance]); // Re-fetch stats when balance changes
+  }, []); // Only fetch on mount
 
   const fetchStats = async () => {
     if (!profile) return;
@@ -80,34 +80,11 @@ export const WatchAds: React.FC = () => {
       return;
     }
 
-    const baseReward = 5;
-    const expectedReward = profile.is_premium ? Math.floor(baseReward * 2.5) : baseReward;
-    const oldBalance = profile.coin_balance;
-    const optimisticNewBalance = oldBalance + expectedReward;
-    const oldStats = stats ? { ...stats } : null;
-
     try {
       console.log('=== Starting ad reward claim ===');
       console.log('Current balance:', profile.coin_balance);
       
       setBalanceUpdating(true);
-      
-      const { soundEffects } = await import('@/utils/soundEffects');
-      soundEffects.playWinSound();
-      
-      // Show immediate success toast
-      toast({
-        title: '🎉 Reward Claimed!',
-        description: `You earned ${expectedReward} coins! New balance: ${optimisticNewBalance}`,
-      });
-      
-      // Show celebration animation immediately
-      setCelebrationData({
-        amount: expectedReward,
-        oldBalance: oldBalance,
-        newBalance: optimisticNewBalance,
-      });
-      setShowCelebration(true);
       
       console.log('Calling record_ad_view with user_id:', profile.user_id);
       
@@ -134,23 +111,25 @@ export const WatchAds: React.FC = () => {
       if (data && data.success) {
         console.log('✅ Reward claimed successfully:', data);
         
-        // Update with ACTUAL values from database
+        // Get actual values from database
         const actualReward = data.coins_earned;
         const actualNewBalance = data.new_balance;
+        const actualOldBalance = data.old_balance;
         
-        // Update UI with actual values
+        // Update balance in profile
         updateProfileOptimistic({ coin_balance: actualNewBalance });
         
-        // Update stats with actual values
-        if (stats) {
-          setStats({
-            ...stats,
-            daily_count: stats.daily_count + 1,
-            daily_earnings: stats.daily_earnings + actualReward,
-            remaining: Math.max(0, stats.remaining - 1),
-          });
+        // Fetch fresh stats from database
+        const { data: freshStats, error: statsError } = await supabase.rpc('get_daily_ad_stats', {
+          p_user_id: profile.user_id,
+        });
+        
+        if (!statsError && freshStats) {
+          setStats(freshStats);
+          console.log('Stats updated:', freshStats);
         }
         
+        // Play sound and show celebration
         const { soundEffects } = await import('@/utils/soundEffects');
         soundEffects.playWinSound();
         
@@ -161,7 +140,7 @@ export const WatchAds: React.FC = () => {
         
         setCelebrationData({
           amount: actualReward,
-          oldBalance: data.old_balance,
+          oldBalance: actualOldBalance,
           newBalance: actualNewBalance,
         });
         setShowCelebration(true);
@@ -170,8 +149,6 @@ export const WatchAds: React.FC = () => {
         console.log('=== Ad reward claim complete ===');
       } else {
         console.log('❌ Reward claim failed:', data?.error);
-        // Revert on failure
-        if (oldStats) setStats(oldStats);
         setBalanceUpdating(false);
         toast({
           title: 'Limit Reached',
