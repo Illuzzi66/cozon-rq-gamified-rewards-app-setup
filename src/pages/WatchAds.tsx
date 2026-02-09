@@ -302,6 +302,18 @@ export const WatchAds: React.FC = () => {
         rewardAmount={rewardAmount}
         rewardType="coins"
       />
+
+      {/* Reward Celebration Animation */}
+      {celebrationData && (
+        <RewardCelebration
+          isOpen={showCelebration}
+          rewardType="coins"
+          amount={celebrationData.amount}
+          oldBalance={celebrationData.oldBalance}
+          newBalance={celebrationData.newBalance}
+          onComplete={() => setShowCelebration(false)}
+        />
+      )}
     </div>
   );
 };

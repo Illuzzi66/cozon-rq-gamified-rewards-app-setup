@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/card';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { RewardedVideoAd } from '@/components/ads/RewardedVideoAd';
+import { RewardCelebration } from '@/components/ui/reward-celebration';
 import { ArrowLeft, Coins, Sparkles, Video, Play, CheckCircle, Clock, ShoppingCart } from 'lucide-react';
 import {
   Dialog,
@@ -65,6 +66,13 @@ export const SpinWheel: React.FC = () => {
   const [timeRemaining, setTimeRemaining] = useState<string>('');
   const [showPurchaseDialog, setShowPurchaseDialog] = useState(false);
   const [purchaseAmount, setPurchaseAmount] = useState(1);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [celebrationData, setCelebrationData] = useState<{
+    type: 'coins' | 'money' | 'spins';
+    amount: number;
+    oldBalance?: number;
+    newBalance?: number;
+  } | null>(null);
 
   useEffect(() => {
     loadSpinData();
@@ -222,10 +230,12 @@ export const SpinWheel: React.FC = () => {
         if (result.success) {
           const newSpinCount = (profile.spins_available || 0) + result.spins_awarded;
           
-          toast({
-            title: '🎉 Daily Bonus Claimed!',
-            description: `You received ${result.spins_awarded} spins! Total spins: ${newSpinCount}`,
+          // Show celebration animation
+          setCelebrationData({
+            type: 'spins',
+            amount: result.spins_awarded,
           });
+          setShowCelebration(true);
 
           // Set next claim time to 24 hours from now
           const nextTime = new Date();
@@ -342,23 +352,28 @@ export const SpinWheel: React.FC = () => {
           await refreshProfile();
           await loadSpinData();
 
-          // Show appropriate toast
-          let toastMessage = '';
-          if (reward.rewardType === 'coins') {
-            toastMessage = `You won ${reward.rewardAmount} coins!`;
-          } else if (reward.rewardType === 'money') {
-            toastMessage = `You won $${reward.moneyAmount?.toFixed(2)}!`;
-          } else if (reward.rewardType === 'spins') {
-            toastMessage = `You won ${reward.rewardAmount} extra spins!`;
+          // Show celebration animation for wins
+          if (reward.rewardType !== 'loss') {
+            const oldBalance = profile.coin_balance;
+            const newBalance = reward.rewardType === 'coins' 
+              ? oldBalance + reward.rewardAmount 
+              : oldBalance;
+            
+            setCelebrationData({
+              type: reward.rewardType,
+              amount: reward.rewardType === 'money' ? (reward.moneyAmount || 0) : reward.rewardAmount,
+              oldBalance: reward.rewardType === 'coins' ? oldBalance : undefined,
+              newBalance: reward.rewardType === 'coins' ? newBalance : undefined,
+            });
+            setShowCelebration(true);
           } else {
-            toastMessage = 'Better luck next time!';
+            // Show toast for losses
+            toast({
+              title: '😢 Oh no!',
+              description: 'Better luck next time!',
+              variant: 'destructive',
+            });
           }
-
-          toast({
-            title: reward.rewardType === 'loss' ? '😢 Oh no!' : '🎉 Congratulations!',
-            description: toastMessage,
-            variant: reward.rewardType === 'loss' ? 'destructive' : 'default',
-          });
         } catch (error) {
           console.error('Error processing spin:', error);
           toast({
@@ -453,10 +468,12 @@ export const SpinWheel: React.FC = () => {
           // Refresh ad count
           await checkDailyAdCount();
 
-          toast({
-            title: '🎉 Reward Claimed!',
-            description: `You earned ${result.spins_awarded} spins! You now have ${newSpins} spins. (${adsRemaining - 1} ads remaining today)`,
+          // Show celebration animation
+          setCelebrationData({
+            type: 'spins',
+            amount: result.spins_awarded,
           });
+          setShowCelebration(true);
         } else {
           toast({
             title: 'Limit Reached',
