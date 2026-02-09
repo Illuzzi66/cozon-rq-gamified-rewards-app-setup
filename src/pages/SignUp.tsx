@@ -1,10 +1,10 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { getDeviceId } from '@/utils/deviceId';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Check, X } from 'lucide-react';
 
 export const SignUp: React.FC = () => {
   const navigate = useNavigate();
@@ -21,9 +21,71 @@ export const SignUp: React.FC = () => {
     referralCode: '',
   });
 
+  // Password strength calculation
+  const passwordStrength = useMemo(() => {
+    const password = formData.password;
+    if (!password) return { score: 0, label: '', color: '' };
+
+    let score = 0;
+    
+    // Length check
+    if (password.length >= 8) score += 25;
+    if (password.length >= 12) score += 10;
+    
+    // Character variety
+    if (/[a-z]/.test(password)) score += 15;
+    if (/[A-Z]/.test(password)) score += 15;
+    if (/[0-9]/.test(password)) score += 15;
+    if (/[^a-zA-Z0-9]/.test(password)) score += 20;
+
+    let label = '';
+    let color = '';
+
+    if (score < 30) {
+      label = 'Weak';
+      color = 'bg-destructive';
+    } else if (score < 60) {
+      label = 'Fair';
+      color = 'bg-warning';
+    } else if (score < 80) {
+      label = 'Good';
+      color = 'bg-primary';
+    } else {
+      label = 'Strong';
+      color = 'bg-success';
+    }
+
+    return { score, label, color };
+  }, [formData.password]);
+
+  // Password requirements
+  const passwordRequirements = useMemo(() => {
+    const password = formData.password;
+    return {
+      minLength: password.length >= 8,
+      hasLowercase: /[a-z]/.test(password),
+      hasUppercase: /[A-Z]/.test(password),
+      hasNumber: /[0-9]/.test(password),
+      hasSpecial: /[^a-zA-Z0-9]/.test(password),
+    };
+  }, [formData.password]);
+
+  const isPasswordValid = useMemo(() => {
+    return passwordRequirements.minLength && 
+           passwordRequirements.hasLowercase && 
+           passwordRequirements.hasUppercase && 
+           passwordRequirements.hasNumber;
+  }, [passwordRequirements]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (!isPasswordValid) {
+      setError('Please meet all password requirements');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -99,6 +161,81 @@ export const SignUp: React.FC = () => {
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
+
+            {/* Password Strength Indicator */}
+            {formData.password && (
+              <div className="mt-2">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs text-muted-foreground">Password Strength:</span>
+                  <span className="text-xs font-medium">{passwordStrength.label}</span>
+                </div>
+                <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                  <div
+                    className={`h-full transition-all duration-300 ${passwordStrength.color}`}
+                    style={{ width: `${passwordStrength.score}%` }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Password Requirements */}
+            {formData.password && (
+              <div className="mt-3 space-y-1">
+                <p className="text-xs font-medium text-muted-foreground mb-2">Password must contain:</p>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-xs">
+                    {passwordRequirements.minLength ? (
+                      <Check className="w-3 h-3 text-success" />
+                    ) : (
+                      <X className="w-3 h-3 text-destructive" />
+                    )}
+                    <span className={passwordRequirements.minLength ? 'text-success' : 'text-muted-foreground'}>
+                      At least 8 characters
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs">
+                    {passwordRequirements.hasLowercase ? (
+                      <Check className="w-3 h-3 text-success" />
+                    ) : (
+                      <X className="w-3 h-3 text-destructive" />
+                    )}
+                    <span className={passwordRequirements.hasLowercase ? 'text-success' : 'text-muted-foreground'}>
+                      One lowercase letter
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs">
+                    {passwordRequirements.hasUppercase ? (
+                      <Check className="w-3 h-3 text-success" />
+                    ) : (
+                      <X className="w-3 h-3 text-destructive" />
+                    )}
+                    <span className={passwordRequirements.hasUppercase ? 'text-success' : 'text-muted-foreground'}>
+                      One uppercase letter
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs">
+                    {passwordRequirements.hasNumber ? (
+                      <Check className="w-3 h-3 text-success" />
+                    ) : (
+                      <X className="w-3 h-3 text-destructive" />
+                    )}
+                    <span className={passwordRequirements.hasNumber ? 'text-success' : 'text-muted-foreground'}>
+                      One number
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs">
+                    {passwordRequirements.hasSpecial ? (
+                      <Check className="w-3 h-3 text-success" />
+                    ) : (
+                      <X className="w-3 h-3 text-muted-foreground" />
+                    )}
+                    <span className={passwordRequirements.hasSpecial ? 'text-success' : 'text-muted-foreground'}>
+                      One special character (recommended)
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div>

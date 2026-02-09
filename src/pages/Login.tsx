@@ -102,16 +102,7 @@ export const Login: React.FC = () => {
           </div>
 
           <div>
-            <div className="flex justify-between items-center mb-2">
-              <label className="block text-sm font-medium">Password</label>
-              <button
-                type="button"
-                onClick={() => setShowForgotPassword(true)}
-                className="text-xs text-primary hover:underline"
-              >
-                Forgot Password?
-              </button>
-            </div>
+            <label className="block text-sm font-medium mb-2">Password</label>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
@@ -128,6 +119,13 @@ export const Login: React.FC = () => {
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
+            <button
+              type="button"
+              onClick={() => setShowForgotPassword(true)}
+              className="text-xs text-primary hover:underline mt-1"
+            >
+              Forgot Password?
+            </button>
           </div>
 
           {error && (
