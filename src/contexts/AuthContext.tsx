@@ -67,12 +67,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const refreshProfile = async () => {
     if (user) {
+      console.log('Fetching fresh profile data for user:', user.id);
       const profileData = await fetchProfile(user.id);
       if (profileData) {
         console.log('Setting new profile data:', profileData);
-        setProfile({ ...profileData }); // Force new object reference
+        // Force new object reference to trigger re-renders
+        setProfile({ ...profileData });
+        return profileData;
       }
     }
+    return null;
   };
 
   useEffect(() => {

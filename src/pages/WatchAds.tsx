@@ -98,6 +98,11 @@ export const WatchAds: React.FC = () => {
       if (error) {
         console.error('Supabase error:', error);
         setBalanceUpdating(false);
+        toast({
+          title: 'Error',
+          description: 'Failed to claim reward. Please try again.',
+          variant: 'destructive',
+        });
         throw error;
       }
 
@@ -112,22 +117,33 @@ export const WatchAds: React.FC = () => {
         const { soundEffects } = await import('@/utils/soundEffects');
         soundEffects.playWinSound();
         
-        // Refresh profile and stats with retry
+        // Aggressively refresh profile to ensure balance updates
         console.log('Refreshing profile and stats...');
-        await refreshProfile();
-        await fetchStats();
+        let attempts = 0;
+        const maxAttempts = 5;
         
-        // Force another refresh after a short delay to ensure DB has updated
-        setTimeout(async () => {
-          console.log('Second refresh to ensure sync...');
-          await refreshProfile();
-        }, 1000);
+        while (attempts < maxAttempts) {
+          const updatedProfile = await refreshProfile();
+          console.log(`Refresh attempt ${attempts + 1}:`, updatedProfile?.coin_balance);
+          
+          if (updatedProfile && updatedProfile.coin_balance === data.new_balance) {
+            console.log('✅ Balance confirmed updated!');
+            break;
+          }
+          
+          attempts++;
+          if (attempts < maxAttempts) {
+            await new Promise(resolve => setTimeout(resolve, 300));
+          }
+        }
+        
+        await fetchStats();
         
         console.log('Profile refreshed. New balance should be:', data.new_balance);
         
         setBalanceUpdating(false);
         
-        // Then show celebration animation
+        // Show celebration animation
         setCelebrationData({
           amount: data.coins_earned,
           oldBalance: data.old_balance,
@@ -149,7 +165,7 @@ export const WatchAds: React.FC = () => {
       setBalanceUpdating(false);
       toast({
         title: 'Error',
-        description: 'Failed to claim reward',
+        description: 'Failed to claim reward. Please try again.',
         variant: 'destructive',
       });
     }

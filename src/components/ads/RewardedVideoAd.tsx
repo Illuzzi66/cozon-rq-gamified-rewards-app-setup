@@ -93,12 +93,11 @@ export function RewardedVideoAd({
       await recordAdShown();
       console.log('Ad shown recorded, calling onRewardEarned...');
       await onRewardEarned({ type: rewardType, amount: rewardAmount });
-      console.log('Reward earned callback completed');
-      // Small delay to ensure state updates before closing
-      setTimeout(() => {
-        console.log('Closing ad dialog');
-        onClose();
-      }, 500);
+      console.log('Reward earned callback completed, waiting for profile update...');
+      // Wait longer to ensure profile updates complete
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log('Closing ad dialog');
+      onClose();
     } catch (error) {
       console.error('Error in handleClaimReward:', error);
       setIsClaiming(false);
