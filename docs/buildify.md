@@ -95,4 +95,8 @@ Cozon RQ is a gamified rewards app where users earn coins through various activi
   - [x] Integrate banner ads in key pages
   - [x] Add interstitial ads for high-value actions
   - [x] Implement rewarded video ads
+- [x] Username availability checker
+  - [x] Add real-time username availability check during signup
+  - [x] Display visual feedback (available/taken/checking)
+  - [x] Debounce API calls for performance
 

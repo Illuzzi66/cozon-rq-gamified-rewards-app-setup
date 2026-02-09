@@ -1,10 +1,11 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { getDeviceId } from '@/utils/deviceId';
-import { Eye, EyeOff, Check, X, Mail } from 'lucide-react';
+import { Eye, EyeOff, Check, X, Mail, Loader2 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 import {
   Dialog,
   DialogContent,
@@ -21,6 +22,7 @@ export const SignUp: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showVerificationDialog, setShowVerificationDialog] = useState(false);
+  const [usernameStatus, setUsernameStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
   
   const [formData, setFormData] = useState({
     fullName: '',
@@ -93,6 +95,44 @@ export const SignUp: React.FC = () => {
     return formData.password === formData.confirmPassword;
   }, [formData.password, formData.confirmPassword]);
 
+  // Debounced username availability check
+  const checkUsernameAvailability = useCallback(async (username: string) => {
+    if (!username || username.length < 3) {
+      setUsernameStatus('idle');
+      return;
+    }
+
+    setUsernameStatus('checking');
+
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('username', username)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error checking username:', error);
+        setUsernameStatus('idle');
+        return;
+      }
+
+      setUsernameStatus(data ? 'taken' : 'available');
+    } catch (err) {
+      console.error('Error checking username:', err);
+      setUsernameStatus('idle');
+    }
+  }, []);
+
+  // Debounce username check
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      checkUsernameAvailability(formData.username);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [formData.username, checkUsernameAvailability]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -104,6 +144,16 @@ export const SignUp: React.FC = () => {
 
     if (!passwordsMatch) {
       setError('Passwords do not match');
+      return;
+    }
+
+    if (usernameStatus === 'taken') {
+      setError('Username is already taken');
+      return;
+    }
+
+    if (usernameStatus === 'checking') {
+      setError('Please wait while we check username availability');
       return;
     }
 
@@ -150,13 +200,53 @@ export const SignUp: React.FC = () => {
 
           <div>
             <label className="block text-sm font-medium mb-2">Username</label>
-            <input
-              type="text"
-              required
-              value={formData.username}
-              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-              className="w-full px-4 py-2 border border-input rounded-md bg-background focus:ring-2 focus:ring-ring"
-            />
+            <div className="relative">
+              <input
+                type="text"
+                required
+                minLength={3}
+                value={formData.username}
+                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                className="w-full px-4 py-2 pr-10 border border-input rounded-md bg-background focus:ring-2 focus:ring-ring"
+              />
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                {usernameStatus === 'checking' && (
+                  <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" />
+                )}
+                {usernameStatus === 'available' && (
+                  <Check className="w-4 h-4 text-success" />
+                )}
+                {usernameStatus === 'taken' && (
+                  <X className="w-4 h-4 text-destructive" />
+                )}
+              </div>
+            </div>
+            
+            {/* Username Status Message */}
+            {formData.username.length >= 3 && (
+              <div className="mt-2 text-xs">
+                {usernameStatus === 'checking' && (
+                  <span className="text-muted-foreground">Checking availability...</span>
+                )}
+                {usernameStatus === 'available' && (
+                  <span className="text-success flex items-center gap-1">
+                    <Check className="w-3 h-3" />
+                    Username is available
+                  </span>
+                )}
+                {usernameStatus === 'taken' && (
+                  <span className="text-destructive flex items-center gap-1">
+                    <X className="w-3 h-3" />
+                    Username is already taken
+                  </span>
+                )}
+              </div>
+            )}
+            {formData.username.length > 0 && formData.username.length < 3 && (
+              <div className="mt-2 text-xs text-muted-foreground">
+                Username must be at least 3 characters
+              </div>
+            )}
           </div>
 
           <div>
