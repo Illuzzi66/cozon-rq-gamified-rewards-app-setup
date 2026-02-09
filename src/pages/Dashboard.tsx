@@ -8,7 +8,7 @@ import { supabase } from '@/lib/supabase';
 import { BannerAd } from '@/components/ads/BannerAd';
 import { InterstitialAd } from '@/components/ads/InterstitialAd';
 import { useAdTiming } from '@/hooks/useAdTiming';
-import { Coins, Gift, Image, Video, Wallet, Crown, User as UserIcon } from 'lucide-react';
+import { Coins, Gift, Image, Video, Wallet, Crown, User as UserIcon, Trophy, Bell } from 'lucide-react';
 
 export const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -178,6 +178,24 @@ export const Dashboard: React.FC = () => {
           >
             <Wallet className="w-8 h-8 text-success" />
             <span>Withdraw</span>
+          </Button>
+
+          <Button
+            onClick={() => navigate('/leaderboard')}
+            variant="outline"
+            className="h-32 flex-col gap-3 text-lg bg-gradient-to-br from-yellow-500/10 to-purple-500/10 border-yellow-500/30"
+          >
+            <Trophy className="w-8 h-8 text-yellow-500" />
+            <span>Leaderboard</span>
+          </Button>
+
+          <Button
+            onClick={() => navigate('/notifications')}
+            variant="outline"
+            className="h-32 flex-col gap-3 text-lg"
+          >
+            <Bell className="w-8 h-8 text-primary" />
+            <span>Notifications</span>
           </Button>
 
           {!profile.is_premium && (
