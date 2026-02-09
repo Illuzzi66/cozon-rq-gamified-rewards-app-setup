@@ -124,11 +124,12 @@ Cozon RQ is a gamified rewards app where users earn coins through various activi
   - [x] Implement account suspension with duration
   - [x] Add ban reason tracking
   - [x] Create unban functionality with reason tracking
-- [ ] Withdrawal approval system
-  - [ ] Create withdrawal request queue for admins
-  - [ ] Add approve/reject withdrawal actions
-  - [ ] Implement withdrawal status tracking
-  - [ ] Add admin notifications for pending withdrawals
+- [x] Withdrawal approval system
+  - [x] Update withdrawal database schema for approval workflow
+  - [x] Create withdrawal request queue for admins
+  - [x] Add approve/reject withdrawal actions
+  - [x] Implement withdrawal status tracking
+  - [x] Update wallet page to show withdrawal status
 - [ ] Push notifications system
   - [ ] Set up notification infrastructure
   - [ ] Add notification preferences

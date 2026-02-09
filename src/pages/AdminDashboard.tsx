@@ -106,6 +106,9 @@ interface WithdrawalRequest {
   payment_details: any;
   created_at: string;
   processed_at: string | null;
+  admin_id: string | null;
+  admin_note: string | null;
+  reviewed_at: string | null;
   user: {
     username: string;
     email: string;
@@ -392,6 +395,8 @@ export const AdminDashboard: React.FC = () => {
         .from('withdrawals')
         .update({
           status,
+          admin_id: profile?.user_id,
+          reviewed_at: new Date().toISOString(),
           processed_at: new Date().toISOString(),
         })
         .eq('id', withdrawalId);
@@ -399,8 +404,10 @@ export const AdminDashboard: React.FC = () => {
       if (error) throw error;
 
       toast({
-        title: 'Withdrawal Updated',
-        description: `Withdrawal ${status}`,
+        title: status === 'completed' ? 'Withdrawal Approved' : 'Withdrawal Rejected',
+        description: status === 'completed'
+          ? 'The withdrawal has been approved and will be processed.'
+          : 'The withdrawal has been rejected.',
       });
 
       await fetchWithdrawals();
@@ -863,15 +870,20 @@ export const AdminDashboard: React.FC = () => {
 
               <TabsContent value="completed" className="space-y-4">
                 {completedWithdrawals.map((withdrawal) => (
-                  <Card key={withdrawal.id} className="p-4 opacity-60">
-                    <div className="flex items-center justify-between">
-                      <div>
+                  <Card key={withdrawal.id} className="p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-1">
                         <p className="font-semibold">@{withdrawal.user.username}</p>
                         <p className="text-sm text-muted-foreground">
                           ${(withdrawal.amount / 100).toFixed(2)} • {new Date(withdrawal.processed_at!).toLocaleDateString()}
                         </p>
+                        {withdrawal.admin_note && (
+                          <div className="mt-2 p-2 bg-muted rounded text-xs">
+                            <span className="font-semibold">Admin Note:</span> {withdrawal.admin_note}
+                          </div>
+                        )}
                       </div>
-                      <Badge variant="outline" className="text-success border-success">Completed</Badge>
+                      <Badge variant="outline" className="text-success border-success">Approved</Badge>
                     </div>
                   </Card>
                 ))}
@@ -879,13 +891,18 @@ export const AdminDashboard: React.FC = () => {
 
               <TabsContent value="rejected" className="space-y-4">
                 {rejectedWithdrawals.map((withdrawal) => (
-                  <Card key={withdrawal.id} className="p-4 opacity-60">
-                    <div className="flex items-center justify-between">
-                      <div>
+                  <Card key={withdrawal.id} className="p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-1">
                         <p className="font-semibold">@{withdrawal.user.username}</p>
                         <p className="text-sm text-muted-foreground">
                           ${(withdrawal.amount / 100).toFixed(2)} • {new Date(withdrawal.processed_at!).toLocaleDateString()}
                         </p>
+                        {withdrawal.admin_note && (
+                          <div className="mt-2 p-2 bg-muted rounded text-xs">
+                            <span className="font-semibold">Reason:</span> {withdrawal.admin_note}
+                          </div>
+                        )}
                       </div>
                       <Badge variant="destructive">Rejected</Badge>
                     </div>
