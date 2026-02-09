@@ -49,6 +49,15 @@ interface ActivityItem {
   activity_date: string;
 }
 
+interface TaskCompletionHistory {
+  id: string;
+  task_id: string;
+  task_type: string;
+  coins_earned: number;
+  completed_at: string;
+  task_title?: string;
+}
+
 interface DailyEarnings {
   date: string;
   earnings: number;
@@ -73,12 +82,14 @@ export const Analytics: React.FC = () => {
   const { profile } = useAuth();
   const { toast } = useToast();
   const [activities, setActivities] = useState<ActivityItem[]>([]);
+  const [taskHistory, setTaskHistory] = useState<TaskCompletionHistory[]>([]);
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | 'all'>('7d');
 
   useEffect(() => {
     if (profile) {
       fetchActivities();
+      fetchTaskHistory();
     }
   }, [profile]);
 
@@ -108,6 +119,42 @@ export const Analytics: React.FC = () => {
     }
   };
 
+  const fetchTaskHistory = async () => {
+    if (!profile) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('task_completions')
+        .select(`
+          id,
+          task_id,
+          task_type,
+          coins_earned,
+          completed_at,
+          tasks (
+            title
+          )
+        `)
+        .eq('user_id', profile.user_id)
+        .order('completed_at', { ascending: false });
+
+      if (error) throw error;
+
+      const formattedData = (data || []).map((item: any) => ({
+        id: item.id,
+        task_id: item.task_id,
+        task_type: item.task_type,
+        coins_earned: item.coins_earned,
+        completed_at: item.completed_at,
+        task_title: item.tasks?.title || 'Unknown Task',
+      }));
+
+      setTaskHistory(formattedData);
+    } catch (error: any) {
+      console.error('Error fetching task history:', error);
+    }
+  };
+
   const getFilteredActivities = () => {
     if (timeRange === 'all') return activities;
 
@@ -119,7 +166,19 @@ export const Analytics: React.FC = () => {
     );
   };
 
+  const getFilteredTaskHistory = () => {
+    if (timeRange === 'all') return taskHistory;
+
+    const days = timeRange === '7d' ? 7 : 30;
+    const cutoffDate = subDays(new Date(), days);
+
+    return taskHistory.filter(
+      (task) => new Date(task.completed_at) >= cutoffDate
+    );
+  };
+
   const filteredActivities = getFilteredActivities();
+  const filteredTaskHistory = getFilteredTaskHistory();
 
   // Calculate daily earnings for chart
   const getDailyEarnings = (): DailyEarnings[] => {
@@ -173,6 +232,14 @@ export const Analytics: React.FC = () => {
   const totalEarnings = filteredActivities
     .filter((a) => a.activity_type !== 'withdrawal')
     .reduce((sum, a) => sum + a.amount, 0);
+
+  const totalTaskEarnings = filteredTaskHistory.reduce((sum, t) => sum + t.coins_earned, 0);
+  const totalTasksCompleted = filteredTaskHistory.length;
+
+  const taskTypeBreakdown = filteredTaskHistory.reduce((acc, task) => {
+    acc[task.task_type] = (acc[task.task_type] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
 
   const totalWithdrawals = filteredActivities
     .filter((a) => a.activity_type === 'withdrawal')
@@ -356,9 +423,10 @@ export const Analytics: React.FC = () => {
 
         {/* Charts */}
         <Tabs defaultValue="earnings" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="earnings">Earnings Trend</TabsTrigger>
             <TabsTrigger value="breakdown">Activity Breakdown</TabsTrigger>
+            <TabsTrigger value="tasks">Task History</TabsTrigger>
           </TabsList>
 
           <TabsContent value="earnings" className="space-y-4">
@@ -477,6 +545,90 @@ export const Analytics: React.FC = () => {
                 </div>
               </Card>
             </div>
+          </TabsContent>
+
+          <TabsContent value="tasks" className="space-y-4">
+            <Card className="p-6">
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5" />
+                Task Completion History
+              </h3>
+              
+              {/* Task Stats Summary */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <Card className="p-4 bg-gradient-to-br from-success/10 to-success/5 border-success/20">
+                  <p className="text-sm text-muted-foreground mb-1">Total Tasks</p>
+                  <p className="text-2xl font-bold text-foreground">{totalTasksCompleted}</p>
+                </Card>
+                <Card className="p-4 bg-gradient-to-br from-gold/10 to-gold/5 border-gold/20">
+                  <p className="text-sm text-muted-foreground mb-1">Coins Earned</p>
+                  <p className="text-2xl font-bold text-gold">{totalTaskEarnings}</p>
+                </Card>
+                <Card className="p-4 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
+                  <p className="text-sm text-muted-foreground mb-1">Avg per Task</p>
+                  <p className="text-2xl font-bold text-foreground">
+                    {totalTasksCompleted > 0 ? Math.round(totalTaskEarnings / totalTasksCompleted) : 0}
+                  </p>
+                </Card>
+              </div>
+
+              {/* Task Type Breakdown */}
+              <div className="mb-6">
+                <h4 className="text-sm font-semibold mb-3">Tasks by Type</h4>
+                <div className="grid grid-cols-3 gap-3">
+                  <Card className="p-3 text-center">
+                    <p className="text-xs text-muted-foreground mb-1">Simple</p>
+                    <p className="text-xl font-bold text-primary">{taskTypeBreakdown.simple || 0}</p>
+                  </Card>
+                  <Card className="p-3 text-center">
+                    <p className="text-xs text-muted-foreground mb-1">Medium</p>
+                    <p className="text-xl font-bold text-secondary">{taskTypeBreakdown.medium || 0}</p>
+                  </Card>
+                  <Card className="p-3 text-center">
+                    <p className="text-xs text-muted-foreground mb-1">Weekly</p>
+                    <p className="text-xl font-bold text-gold">{taskTypeBreakdown.weekly || 0}</p>
+                  </Card>
+                </div>
+              </div>
+
+              {/* Task History List */}
+              <div className="space-y-2">
+                <h4 className="text-sm font-semibold mb-3">Recent Completions</h4>
+                {filteredTaskHistory.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">
+                    No task completions in this time period
+                  </p>
+                ) : (
+                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                    {filteredTaskHistory.map((task) => (
+                      <Card key={task.id} className="p-4 hover:shadow-md transition-shadow">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <CheckCircle2 className={`w-4 h-4 ${
+                                task.task_type === 'simple' ? 'text-primary' :
+                                task.task_type === 'medium' ? 'text-secondary' :
+                                'text-gold'
+                              }`} />
+                              <p className="font-semibold text-sm">{task.task_title}</p>
+                            </div>
+                            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                              <span className="capitalize">{task.task_type}</span>
+                              <span>•</span>
+                              <span>{format(new Date(task.completed_at), 'MMM d, yyyy h:mm a')}</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1 text-gold font-bold">
+                            <Coins className="w-4 h-4" />
+                            <span>+{task.coins_earned}</span>
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </Card>
           </TabsContent>
         </Tabs>
 
