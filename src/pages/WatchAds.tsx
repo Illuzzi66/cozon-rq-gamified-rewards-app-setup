@@ -45,7 +45,7 @@ export const WatchAds: React.FC = () => {
 
   useEffect(() => {
     fetchStats();
-  }, [profile]);
+  }, [profile?.coin_balance]); // Re-fetch stats when balance changes
 
   const fetchStats = async () => {
     if (!profile) return;
@@ -112,12 +112,17 @@ export const WatchAds: React.FC = () => {
         const { soundEffects } = await import('@/utils/soundEffects');
         soundEffects.playWinSound();
         
-        // Refresh profile and stats first
+        // Refresh profile and stats with retry
         console.log('Refreshing profile and stats...');
-        await Promise.all([
-          refreshProfile(),
-          fetchStats()
-        ]);
+        await refreshProfile();
+        await fetchStats();
+        
+        // Force another refresh after a short delay to ensure DB has updated
+        setTimeout(async () => {
+          console.log('Second refresh to ensure sync...');
+          await refreshProfile();
+        }, 1000);
+        
         console.log('Profile refreshed. New balance should be:', data.new_balance);
         
         setBalanceUpdating(false);

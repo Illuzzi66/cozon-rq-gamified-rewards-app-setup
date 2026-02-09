@@ -68,7 +68,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const refreshProfile = async () => {
     if (user) {
       const profileData = await fetchProfile(user.id);
-      setProfile(profileData);
+      if (profileData) {
+        console.log('Setting new profile data:', profileData);
+        setProfile({ ...profileData }); // Force new object reference
+      }
     }
   };
 
