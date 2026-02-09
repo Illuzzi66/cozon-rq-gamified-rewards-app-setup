@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import logo from '@/assets/screenshot_20260209-204916.png';
 
 export const SignUp: React.FC = () => {
   const navigate = useNavigate();
@@ -281,6 +282,11 @@ export const SignUp: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10 flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-card rounded-lg shadow-lg p-8">
         <div className="text-center mb-8">
+          <img 
+            src={logo} 
+            alt="Cozon RQ" 
+            className="w-32 h-32 mx-auto mb-4 rounded-full shadow-lg"
+          />
           <h1 className="text-3xl font-bold text-primary mb-2">Cozon RQ</h1>
           <p className="text-muted-foreground">Start your reward quest today!</p>
         </div>
