@@ -106,10 +106,10 @@ Cozon RQ is a gamified rewards app where users earn coins through various activi
   - [x] Add username suggestions when taken
   - [x] Create password strength requirements tooltip
 - [x] Remember me functionality on login
-- [ ] Advanced ad timing and withdrawal system
-  - [ ] Track comment count and show ad after 5 comments
-  - [ ] Show ad after 5 minutes of app usage
-  - [ ] Show ad before premium users post memes
-  - [ ] Update coin-to-dollar conversion (1500 coins = $1)
-  - [ ] Set minimum withdrawal to 7500 coins ($5)
+- [x] Advanced ad timing and withdrawal system
+  - [x] Track comment count and show ad after 5 comments
+  - [x] Show ad after 5 minutes of app usage
+  - [x] Show ad before premium users post memes
+  - [x] Update coin-to-dollar conversion (1500 coins = $1)
+  - [x] Set minimum withdrawal to 7500 coins ($5)
 

@@ -6,12 +6,41 @@ import { Button } from '@/components/ui/button';
 import { formatCoins } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 import { BannerAd } from '@/components/ads/BannerAd';
+import { InterstitialAd } from '@/components/ads/InterstitialAd';
+import { useAdTiming } from '@/hooks/useAdTiming';
 import { Coins, Gift, Image, Video, Wallet, Crown, User as UserIcon } from 'lucide-react';
 
 export const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { profile, refreshProfile } = useAuth();
+  const { shouldShowTimeAd, resetSessionTime } = useAdTiming();
   const [showConfetti, setShowConfetti] = useState(false);
+  const [showTimeAd, setShowTimeAd] = useState(false);
+
+  // Initialize session time on mount
+  useEffect(() => {
+    const initSessionTime = async () => {
+      if (!profile) return;
+      
+      // Set session start time if not already set
+      if (!profile.session_start_time) {
+        await supabase
+          .from('profiles')
+          .update({ session_start_time: new Date().toISOString() })
+          .eq('user_id', profile.user_id);
+        await refreshProfile();
+      }
+    };
+    
+    initSessionTime();
+  }, [profile?.user_id]);
+
+  // Check time-based ad
+  useEffect(() => {
+    if (shouldShowTimeAd) {
+      setShowTimeAd(true);
+    }
+  }, [shouldShowTimeAd]);
 
   useEffect(() => {
     if (!profile) return;
@@ -171,6 +200,19 @@ export const Dashboard: React.FC = () => {
           ⚠️ Earnings depend on ads and activity. Payouts subject to review and approval.
         </div>
       </div>
+
+      {/* Time-based Ad - Show after 5 minutes */}
+      <InterstitialAd
+        isOpen={showTimeAd}
+        onClose={async () => {
+          setShowTimeAd(false);
+          await resetSessionTime();
+        }}
+        onAdWatched={async () => {
+          setShowTimeAd(false);
+          await resetSessionTime();
+        }}
+      />
     </div>
   );
 };

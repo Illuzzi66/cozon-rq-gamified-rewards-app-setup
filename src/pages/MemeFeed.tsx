@@ -596,6 +596,19 @@ export const MemeFeed: React.FC = () => {
         <BannerAd className="my-4" />
       </div>
 
+      {/* Comment Ad - Show after 5 comments */}
+      <InterstitialAd
+        isOpen={showCommentAd}
+        onClose={async () => {
+          setShowCommentAd(false);
+          await resetCommentCount();
+        }}
+        onAdWatched={async () => {
+          setShowCommentAd(false);
+          await resetCommentCount();
+        }}
+      />
+
       {/* Report Meme Dialog */}
       <Dialog open={!!reportingMeme} onOpenChange={(open) => !open && setReportingMeme(null)}>
         <DialogContent>
