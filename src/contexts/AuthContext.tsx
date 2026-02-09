@@ -71,6 +71,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(session?.user ?? null);
       if (session?.user) {
         fetchProfile(session.user.id).then(setProfile);
+        // Log user login
+        supabase.rpc('log_user_login', { p_user_id: session.user.id });
       }
       setLoading(false);
     });
@@ -79,6 +81,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(session?.user ?? null);
       if (session?.user) {
         fetchProfile(session.user.id).then(setProfile);
+        // Log user login
+        supabase.rpc('log_user_login', { p_user_id: session.user.id });
       } else {
         setProfile(null);
       }
