@@ -1149,6 +1149,18 @@ export const SpinWheel: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Reward Celebration Animation */}
+      {celebrationData && (
+        <RewardCelebration
+          isOpen={showCelebration}
+          rewardType={celebrationData.type}
+          amount={celebrationData.amount}
+          oldBalance={celebrationData.oldBalance}
+          newBalance={celebrationData.newBalance}
+          onComplete={() => setShowCelebration(false)}
+        />
+      )}
     </div>
   );
 };
