@@ -56,6 +56,7 @@ import {
   UserCheck,
   Wallet,
   Clock,
+  Settings,
 } from 'lucide-react';
 
 interface ReportedMeme {
@@ -451,19 +452,25 @@ export const AdminDashboard: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10">
       <div className="max-w-7xl mx-auto p-4 space-y-6">
         {/* Header */}
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')}>
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-              <Shield className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold">Admin Control Panel</h1>
-              <p className="text-sm text-muted-foreground">Manage users, payments, and platform operations</p>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')}>
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                <Shield className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold">Admin Control Panel</h1>
+                <p className="text-sm text-muted-foreground">Manage users, payments, and platform operations</p>
+              </div>
             </div>
           </div>
+          <Button onClick={() => navigate('/admin/settings')} variant="outline">
+            <Settings className="w-4 h-4 mr-2" />
+            Settings
+          </Button>
         </div>
 
         {/* Stats Overview */}

@@ -19,6 +19,10 @@ interface Profile {
   spins_available: number;
   comment_count: number;
   session_start_time: string | null;
+  last_ad_shown_at: string | null;
+  ads_shown_today: number;
+  ads_shown_this_hour: number;
+  ad_hour_reset_at: string | null;
 }
 
 interface AuthContextType {

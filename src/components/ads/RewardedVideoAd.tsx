@@ -2,9 +2,10 @@
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Play, Gift, X } from 'lucide-react';
+import { Play, Gift, X, Clock } from 'lucide-react';
 import { ADMOB_CONFIG, trackAdImpression, trackAdReward, simulateAdLoad } from '@/lib/admob';
 import { Progress } from '@/components/ui/progress';
+import { useAdFrequency } from '@/hooks/useAdFrequency';
 
 interface RewardedVideoAdProps {
   isOpen: boolean;
@@ -26,12 +27,15 @@ export function RewardedVideoAd({
   const [progress, setProgress] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
   const [isClaiming, setIsClaiming] = useState(false);
+  const { canShowAd, timeUntilNextAd, recordAdShown } = useAdFrequency();
 
   const VIDEO_DURATION = 15; // 15 seconds
 
   useEffect(() => {
     if (isOpen) {
-      loadAd();
+      if (canShowAd) {
+        loadAd();
+      }
     } else {
       // Reset state when dialog closes
       setIsLoading(true);
@@ -40,7 +44,7 @@ export function RewardedVideoAd({
       setIsCompleted(false);
       setIsClaiming(false);
     }
-  }, [isOpen]);
+  }, [isOpen, canShowAd]);
 
   useEffect(() => {
     if (isPlaying && progress < 100) {
