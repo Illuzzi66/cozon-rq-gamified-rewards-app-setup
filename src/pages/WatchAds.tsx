@@ -80,18 +80,48 @@ export const WatchAds: React.FC = () => {
       return;
     }
 
+    const baseReward = 5;
+    const expectedReward = profile.is_premium ? Math.floor(baseReward * 2.5) : baseReward;
+    const oldBalance = profile.coin_balance;
+    const optimisticNewBalance = oldBalance + expectedReward;
+
     try {
       console.log('=== 🎬 Starting ad reward claim ===');
-      console.log('📊 Current profile state:', {
-        user_id: profile.user_id,
-        current_balance: profile.coin_balance,
-        is_premium: profile.is_premium
-      });
-      console.log('📊 Current stats state:', stats);
       
       setBalanceUpdating(true);
       
-      console.log('📞 Calling record_ad_view...');
+      // IMMEDIATE UI UPDATE - Show changes right away
+      updateProfileOptimistic({ coin_balance: optimisticNewBalance });
+      
+      if (stats) {
+        setStats({
+          ...stats,
+          daily_count: stats.daily_count + 1,
+          daily_earnings: stats.daily_earnings + expectedReward,
+          remaining: Math.max(0, stats.remaining - 1),
+        });
+      }
+      
+      // Show celebration immediately
+      const { soundEffects } = await import('@/utils/soundEffects');
+      soundEffects.playWinSound();
+      
+      toast({
+        title: '🎉 Reward Claimed!',
+        description: `You earned ${expectedReward} coins! New balance: ${optimisticNewBalance}`,
+      });
+      
+      setCelebrationData({
+        amount: expectedReward,
+        oldBalance: oldBalance,
+        newBalance: optimisticNewBalance,
+      });
+      setShowCelebration(true);
+      
+      console.log('✅ UI updated immediately');
+      
+      // Now sync with database in background
+      console.log('📞 Syncing with database...');
       
       const { data, error } = await supabase.rpc('record_ad_view', {
         p_user_id: profile.user_id,
@@ -99,78 +129,51 @@ export const WatchAds: React.FC = () => {
         p_view_duration: 15,
       });
 
-      console.log('📥 record_ad_view response:', { data, error });
+      console.log('📥 Database response:', { data, error });
 
       if (error) {
-        console.error('❌ Supabase error:', error);
-        setBalanceUpdating(false);
+        console.error('❌ Database sync failed, reverting...');
+        // Revert optimistic update
+        updateProfileOptimistic({ coin_balance: oldBalance });
+        if (stats) {
+          setStats({
+            ...stats,
+            daily_count: stats.daily_count,
+            daily_earnings: stats.daily_earnings,
+            remaining: stats.remaining,
+          });
+        }
         toast({
           title: 'Error',
-          description: 'Failed to claim reward. Please try again.',
+          description: 'Failed to save reward. Please try again.',
           variant: 'destructive',
         });
-        return;
-      }
-
-      if (data && data.success) {
-        console.log('✅ Reward claimed successfully!');
-        console.log('💰 Reward details:', {
-          coins_earned: data.coins_earned,
-          old_balance: data.old_balance,
-          new_balance: data.new_balance,
-          is_premium: data.is_premium,
-          daily_count: data.daily_count
-        });
-        
-        const actualReward = data.coins_earned;
-        const actualNewBalance = data.new_balance;
-        const actualOldBalance = data.old_balance;
-        
-        console.log('🔄 Updating profile balance to:', actualNewBalance);
-        updateProfileOptimistic({ coin_balance: actualNewBalance });
-        
-        console.log('📞 Fetching fresh stats...');
-        const { data: freshStats, error: statsError } = await supabase.rpc('get_daily_ad_stats', {
-          p_user_id: profile.user_id,
-        });
-        
-        console.log('📥 Fresh stats response:', { freshStats, statsError });
-        
-        if (!statsError && freshStats) {
-          console.log('✅ Setting new stats:', freshStats);
-          setStats(freshStats);
-        } else {
-          console.error('❌ Failed to fetch stats:', statsError);
+      } else if (data && data.success) {
+        console.log('✅ Database synced successfully');
+        // Update with actual values from database if different
+        if (data.new_balance !== optimisticNewBalance) {
+          console.log('🔄 Correcting balance:', data.new_balance);
+          updateProfileOptimistic({ coin_balance: data.new_balance });
         }
-        
-        const { soundEffects } = await import('@/utils/soundEffects');
-        soundEffects.playWinSound();
-        
-        toast({
-          title: '🎉 Reward Claimed!',
-          description: `You earned ${actualReward} coins! New balance: ${actualNewBalance}`,
-        });
-        
-        setCelebrationData({
-          amount: actualReward,
-          oldBalance: actualOldBalance,
-          newBalance: actualNewBalance,
-        });
-        setShowCelebration(true);
-        
-        setBalanceUpdating(false);
-        console.log('=== ✅ Ad reward claim complete ===');
-        console.log('📊 Final profile balance:', profile.coin_balance);
-        console.log('📊 Final stats:', stats);
       } else {
         console.log('❌ Reward claim failed:', data?.error);
-        setBalanceUpdating(false);
+        // Revert optimistic update
+        updateProfileOptimistic({ coin_balance: oldBalance });
         toast({
           title: 'Limit Reached',
           description: data?.error || 'Failed to claim reward',
           variant: 'destructive',
         });
       }
+      
+      setBalanceUpdating(false);
+      console.log('=== ✅ Complete ===');
+    } catch (err) {
+      console.error('❌ Error:', err);
+      // Revert on any error
+      updateProfileOptimistic({ coin_balance: oldBalance });
+      setBalanceUpdating(false);
+    }
     } catch (error) {
       console.error('❌ Error claiming reward:', error);
       setBalanceUpdating(false);
