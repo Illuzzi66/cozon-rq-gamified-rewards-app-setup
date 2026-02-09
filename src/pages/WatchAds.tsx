@@ -85,6 +85,8 @@ export const WatchAds: React.FC = () => {
       console.log('Current balance:', profile.coin_balance);
       console.log('Calling record_ad_view with user_id:', profile.user_id);
       
+      setBalanceUpdating(true);
+      
       const { data, error } = await supabase.rpc('record_ad_view', {
         p_user_id: profile.user_id,
         p_ad_type: 'video',
@@ -95,6 +97,7 @@ export const WatchAds: React.FC = () => {
 
       if (error) {
         console.error('Supabase error:', error);
+        setBalanceUpdating(false);
         throw error;
       }
 
@@ -117,6 +120,8 @@ export const WatchAds: React.FC = () => {
         ]);
         console.log('Profile refreshed. New balance should be:', data.new_balance);
         
+        setBalanceUpdating(false);
+        
         // Then show celebration animation
         setCelebrationData({
           amount: data.coins_earned,
@@ -127,6 +132,7 @@ export const WatchAds: React.FC = () => {
         console.log('=== Ad reward claim complete ===');
       } else {
         console.log('❌ Reward claim failed:', data?.error);
+        setBalanceUpdating(false);
         toast({
           title: 'Limit Reached',
           description: data?.error || 'Failed to claim reward',
@@ -135,6 +141,7 @@ export const WatchAds: React.FC = () => {
       }
     } catch (error) {
       console.error('❌ Error claiming reward:', error);
+      setBalanceUpdating(false);
       toast({
         title: 'Error',
         description: 'Failed to claim reward',
@@ -164,9 +171,10 @@ export const WatchAds: React.FC = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2 bg-gold/10 px-3 py-2 rounded-full">
+            <div className={`flex items-center gap-2 bg-gold/10 px-3 py-2 rounded-full transition-all ${balanceUpdating ? 'animate-pulse ring-2 ring-gold' : ''}`}>
               <Coins className="w-5 h-5 text-gold" />
               <span className="font-bold text-gold">{profile.coin_balance.toLocaleString()}</span>
+              {balanceUpdating && <span className="text-xs text-gold">Updating...</span>}
             </div>
             <Button 
               variant="outline" 
