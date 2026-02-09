@@ -4,7 +4,14 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { getDeviceId } from '@/utils/deviceId';
-import { Eye, EyeOff, Check, X } from 'lucide-react';
+import { Eye, EyeOff, Check, X, Mail } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 export const SignUp: React.FC = () => {
   const navigate = useNavigate();
@@ -12,12 +19,15 @@ export const SignUp: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showVerificationDialog, setShowVerificationDialog] = useState(false);
   
   const [formData, setFormData] = useState({
     fullName: '',
     username: '',
     email: '',
     password: '',
+    confirmPassword: '',
     referralCode: '',
   });
 
@@ -77,6 +87,12 @@ export const SignUp: React.FC = () => {
            passwordRequirements.hasNumber;
   }, [passwordRequirements]);
 
+  // Password match validation
+  const passwordsMatch = useMemo(() => {
+    if (!formData.confirmPassword) return null;
+    return formData.password === formData.confirmPassword;
+  }, [formData.password, formData.confirmPassword]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -86,14 +102,25 @@ export const SignUp: React.FC = () => {
       return;
     }
 
+    if (!passwordsMatch) {
+      setError('Passwords do not match');
+      return;
+    }
+
     setLoading(true);
 
     try {
       await signUp({
-        ...formData,
+        fullName: formData.fullName,
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+        referralCode: formData.referralCode,
         deviceId: getDeviceId(),
       });
-      navigate('/dashboard');
+      
+      // Show email verification dialog
+      setShowVerificationDialog(true);
     } catch (err: any) {
       setError(err.message || 'Signup failed');
     } finally {
@@ -239,6 +266,43 @@ export const SignUp: React.FC = () => {
           </div>
 
           <div>
+            <label className="block text-sm font-medium mb-2">Confirm Password</label>
+            <div className="relative">
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                required
+                value={formData.confirmPassword}
+                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                className="w-full px-4 py-2 pr-10 border border-input rounded-md bg-background focus:ring-2 focus:ring-ring"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+
+            {/* Password Match Indicator */}
+            {formData.confirmPassword && (
+              <div className="mt-2 flex items-center gap-2 text-xs">
+                {passwordsMatch ? (
+                  <>
+                    <Check className="w-3 h-3 text-success" />
+                    <span className="text-success">Passwords match</span>
+                  </>
+                ) : (
+                  <>
+                    <X className="w-3 h-3 text-destructive" />
+                    <span className="text-destructive">Passwords do not match</span>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div>
             <label className="block text-sm font-medium mb-2">Referral Code (Optional)</label>
             <input
               type="text"
@@ -266,6 +330,43 @@ export const SignUp: React.FC = () => {
           </Link>
         </div>
       </div>
+
+      {/* Email Verification Dialog */}
+      <Dialog open={showVerificationDialog} onOpenChange={(open) => {
+        if (!open) {
+          navigate('/login');
+        }
+      }}>
+        <DialogContent>
+          <DialogHeader>
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+                <Mail className="w-8 h-8 text-primary" />
+              </div>
+            </div>
+            <DialogTitle className="text-center">Verify Your Email</DialogTitle>
+            <DialogDescription className="text-center">
+              We've sent a verification link to <strong>{formData.email}</strong>. 
+              Please check your inbox and click the link to verify your account.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 pt-4">
+            <div className="bg-muted/50 p-4 rounded-md text-sm text-muted-foreground">
+              <p className="mb-2">📧 Check your email inbox</p>
+              <p className="mb-2">🔍 Look in spam/junk folder if not found</p>
+              <p>✅ Click the verification link to activate your account</p>
+            </div>
+
+            <Button 
+              onClick={() => navigate('/login')} 
+              className="w-full"
+            >
+              Go to Login
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
