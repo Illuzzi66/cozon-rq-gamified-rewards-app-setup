@@ -84,8 +84,13 @@ export const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10 flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-card rounded-lg shadow-lg p-8">
+    <div className="min-h-screen auth-bg-gradient flex items-center justify-center p-4">
+      <div className="floating-orbs">
+        <div className="orb orb-1"></div>
+        <div className="orb orb-2"></div>
+        <div className="orb orb-3"></div>
+      </div>
+      <div className="w-full max-w-md bg-card/95 backdrop-blur-sm rounded-lg shadow-2xl p-8 relative z-10">
         <div className="text-center mb-8">
           <img 
             src={logo} 
