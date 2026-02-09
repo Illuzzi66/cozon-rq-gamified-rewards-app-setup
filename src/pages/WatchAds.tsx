@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { RewardedVideoAd } from '@/components/ads/RewardedVideoAd';
 import { BannerAd } from '@/components/ads/BannerAd';
+import { RewardCelebration } from '@/components/ui/reward-celebration';
 import { 
   ArrowLeft, 
   Video, 
@@ -34,6 +35,12 @@ export const WatchAds: React.FC = () => {
   const [stats, setStats] = useState<AdStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [showRewardedAd, setShowRewardedAd] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [celebrationData, setCelebrationData] = useState<{
+    amount: number;
+    oldBalance: number;
+    newBalance: number;
+  } | null>(null);
 
   useEffect(() => {
     fetchStats();
@@ -93,10 +100,13 @@ export const WatchAds: React.FC = () => {
         const { soundEffects } = await import('@/utils/soundEffects');
         soundEffects.playWinSound();
         
-        toast({
-          title: '🎉 Reward Claimed!',
-          description: `You earned ${data.coins_earned} coins! Balance: ${data.old_balance} → ${data.new_balance}`,
+        // Show celebration animation
+        setCelebrationData({
+          amount: data.coins_earned,
+          oldBalance: data.old_balance,
+          newBalance: data.new_balance,
         });
+        setShowCelebration(true);
 
         await refreshProfile();
         await fetchStats();
