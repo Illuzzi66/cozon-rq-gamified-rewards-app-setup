@@ -35,6 +35,7 @@ interface Task {
 }
 
 interface TaskCompletion {
+  task_id: string;
   task_type: 'simple' | 'medium' | 'weekly';
   completed_at: string;
 }
@@ -95,7 +96,7 @@ export const Tasks: React.FC = () => {
     try {
       const { data, error } = await supabase
         .from('task_completions')
-        .select('task_type, completed_at')
+        .select('task_id, task_type, completed_at')
         .eq('user_id', profile.user_id);
 
       if (error) throw error;
@@ -113,7 +114,8 @@ export const Tasks: React.FC = () => {
     startOfWeek.setHours(0, 0, 0, 0);
 
     return completions.some((completion) => {
-      if (completion.task_type !== task.task_type) return false;
+      // Check if this specific task was completed
+      if (completion.task_id !== task.id) return false;
 
       const completionDate = new Date(completion.completed_at);
 
