@@ -149,16 +149,14 @@ export const WatchAds: React.FC = () => {
         console.log('New balance:', data.new_balance);
         console.log('Coins earned:', data.coins_earned);
         
-        // Sync with actual database values
-        console.log('Syncing with database...');
-        await refreshProfile();
-        await fetchStats();
-        
-        console.log('Profile synced. Actual balance:', data.new_balance);
+        // Keep optimistic updates - don't refetch to avoid overwriting
         setBalanceUpdating(false);
         console.log('=== Ad reward claim complete ===');
       } else {
         console.log('❌ Reward claim failed:', data?.error);
+        // Revert optimistic updates on failure
+        updateProfileOptimistic({ coin_balance: oldBalance });
+        await fetchStats();
         setBalanceUpdating(false);
         toast({
           title: 'Limit Reached',
