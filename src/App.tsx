@@ -15,6 +15,7 @@ import { Premium } from '@/pages/Premium';
 import { Profile } from '@/pages/Profile';
 import { ActivityLog } from '@/pages/ActivityLog';
 import { AdminDashboard } from '@/pages/AdminDashboard';
+import { AdminSettings } from '@/pages/AdminSettings';
 import { Analytics } from '@/pages/Analytics';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -120,6 +121,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/settings"
+            element={
+              <ProtectedRoute>
+                <AdminSettings />
               </ProtectedRoute>
             }
           />

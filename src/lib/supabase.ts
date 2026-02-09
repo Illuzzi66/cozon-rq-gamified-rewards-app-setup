@@ -24,6 +24,12 @@ export type Database = {
           locked_coins: number;
           spins_available: number;
           last_daily_login: string | null;
+          last_ad_shown_at: string | null;
+          ads_shown_today: number;
+          ads_shown_this_hour: number;
+          ad_hour_reset_at: string | null;
+          session_start_time: string | null;
+          comment_count: number;
           created_at: string;
           updated_at: string;
         };
