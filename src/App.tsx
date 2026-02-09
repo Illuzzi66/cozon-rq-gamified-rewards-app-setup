@@ -17,6 +17,8 @@ import { ActivityLog } from '@/pages/ActivityLog';
 import { AdminDashboard } from '@/pages/AdminDashboard';
 import AdminSettings from '@/pages/AdminSettings';
 import { Analytics } from '@/pages/Analytics';
+import { Leaderboard } from '@/pages/Leaderboard';
+import { Notifications } from '@/pages/Notifications';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
