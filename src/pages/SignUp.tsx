@@ -23,6 +23,9 @@ export const SignUp: React.FC = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showVerificationDialog, setShowVerificationDialog] = useState(false);
   const [usernameStatus, setUsernameStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
+  const [emailStatus, setEmailStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
+  const [usernameSuggestions, setUsernameSuggestions] = useState<string[]>([]);
+  const [showPasswordTooltip, setShowPasswordTooltip] = useState(false);
   
   const [formData, setFormData] = useState({
     fullName: '',
@@ -95,10 +98,40 @@ export const SignUp: React.FC = () => {
     return formData.password === formData.confirmPassword;
   }, [formData.password, formData.confirmPassword]);
 
+  // Username format validation
+  const isUsernameFormatValid = useCallback((username: string) => {
+    // Only alphanumeric characters, no spaces
+    return /^[a-zA-Z0-9]+$/.test(username);
+  }, []);
+
+  // Generate username suggestions
+  const generateUsernameSuggestions = useCallback((baseUsername: string) => {
+    const suggestions: string[] = [];
+    const cleanBase = baseUsername.replace(/[^a-zA-Z0-9]/g, '');
+    
+    if (cleanBase.length >= 3) {
+      suggestions.push(`${cleanBase}${Math.floor(Math.random() * 100)}`);
+      suggestions.push(`${cleanBase}${Math.floor(Math.random() * 1000)}`);
+      suggestions.push(`${cleanBase}_${Math.floor(Math.random() * 100)}`);
+      suggestions.push(`the_${cleanBase}`);
+      suggestions.push(`${cleanBase}_official`);
+    }
+    
+    return suggestions.slice(0, 3);
+  }, []);
+
   // Debounced username availability check
   const checkUsernameAvailability = useCallback(async (username: string) => {
     if (!username || username.length < 3) {
       setUsernameStatus('idle');
+      setUsernameSuggestions([]);
+      return;
+    }
+
+    // Check format first
+    if (!isUsernameFormatValid(username)) {
+      setUsernameStatus('idle');
+      setUsernameSuggestions([]);
       return;
     }
 
@@ -114,13 +147,50 @@ export const SignUp: React.FC = () => {
       if (error) {
         console.error('Error checking username:', error);
         setUsernameStatus('idle');
+        setUsernameSuggestions([]);
         return;
       }
 
-      setUsernameStatus(data ? 'taken' : 'available');
+      if (data) {
+        setUsernameStatus('taken');
+        setUsernameSuggestions(generateUsernameSuggestions(username));
+      } else {
+        setUsernameStatus('available');
+        setUsernameSuggestions([]);
+      }
     } catch (err) {
       console.error('Error checking username:', err);
       setUsernameStatus('idle');
+      setUsernameSuggestions([]);
+    }
+  }, [isUsernameFormatValid, generateUsernameSuggestions]);
+
+  // Debounced email availability check
+  const checkEmailAvailability = useCallback(async (email: string) => {
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setEmailStatus('idle');
+      return;
+    }
+
+    setEmailStatus('checking');
+
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', email)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error checking email:', error);
+        setEmailStatus('idle');
+        return;
+      }
+
+      setEmailStatus(data ? 'taken' : 'available');
+    } catch (err) {
+      console.error('Error checking email:', err);
+      setEmailStatus('idle');
     }
   }, []);
 
@@ -132,6 +202,15 @@ export const SignUp: React.FC = () => {
 
     return () => clearTimeout(timer);
   }, [formData.username, checkUsernameAvailability]);
+
+  // Debounce email check
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      checkEmailAvailability(formData.email);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [formData.email, checkEmailAvailability]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -154,6 +233,26 @@ export const SignUp: React.FC = () => {
 
     if (usernameStatus === 'checking') {
       setError('Please wait while we check username availability');
+      return;
+    }
+
+    if (emailStatus === 'taken') {
+      setError('Email is already registered');
+      return;
+    }
+
+    if (emailStatus === 'checking') {
+      setError('Please wait while we check email availability');
+      return;
+    }
+
+    if (!isUsernameFormatValid(formData.username)) {
+      setError('Username can only contain letters and numbers (no spaces or special characters)');
+      return;
+    }
+
+    if (!isPasswordValid) {
+      setError('Password must meet all requirements');
       return;
     }
 
@@ -207,17 +306,26 @@ export const SignUp: React.FC = () => {
                 minLength={3}
                 value={formData.username}
                 onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                className="w-full px-4 py-2 pr-10 border border-input rounded-md bg-background focus:ring-2 focus:ring-ring"
+                className={`w-full px-4 py-2 pr-10 border rounded-md bg-background focus:ring-2 focus:ring-ring transition-colors ${
+                  formData.username.length >= 3 && usernameStatus === 'available' 
+                    ? 'border-green-500' 
+                    : formData.username.length >= 3 && (usernameStatus === 'taken' || !isUsernameFormatValid(formData.username))
+                    ? 'border-red-500'
+                    : 'border-input'
+                }`}
               />
               <div className="absolute right-3 top-1/2 -translate-y-1/2">
                 {usernameStatus === 'checking' && (
                   <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" />
                 )}
                 {usernameStatus === 'available' && (
-                  <Check className="w-4 h-4 text-success" />
+                  <Check className="w-4 h-4 text-green-600" />
                 )}
                 {usernameStatus === 'taken' && (
-                  <X className="w-4 h-4 text-destructive" />
+                  <X className="w-4 h-4 text-red-600" />
+                )}
+                {formData.username.length >= 3 && !isUsernameFormatValid(formData.username) && usernameStatus !== 'checking' && (
+                  <X className="w-4 h-4 text-red-600" />
                 )}
               </div>
             </div>
@@ -228,17 +336,42 @@ export const SignUp: React.FC = () => {
                 {usernameStatus === 'checking' && (
                   <span className="text-muted-foreground">Checking availability...</span>
                 )}
-                {usernameStatus === 'available' && (
-                  <span className="text-success flex items-center gap-1">
+                {!isUsernameFormatValid(formData.username) && usernameStatus !== 'checking' && (
+                  <span className="text-red-600 flex items-center gap-1">
+                    <X className="w-3 h-3" />
+                    Only letters and numbers allowed (no spaces or special characters)
+                  </span>
+                )}
+                {isUsernameFormatValid(formData.username) && usernameStatus === 'available' && (
+                  <span className="text-green-600 flex items-center gap-1">
                     <Check className="w-3 h-3" />
                     Username is available
                   </span>
                 )}
-                {usernameStatus === 'taken' && (
-                  <span className="text-destructive flex items-center gap-1">
-                    <X className="w-3 h-3" />
-                    Username is already taken
-                  </span>
+                {isUsernameFormatValid(formData.username) && usernameStatus === 'taken' && (
+                  <div className="space-y-2">
+                    <span className="text-red-600 flex items-center gap-1">
+                      <X className="w-3 h-3" />
+                      Username is already taken
+                    </span>
+                    {usernameSuggestions.length > 0 && (
+                      <div className="mt-2">
+                        <p className="text-muted-foreground mb-1">Try these suggestions:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {usernameSuggestions.map((suggestion) => (
+                            <button
+                              key={suggestion}
+                              type="button"
+                              onClick={() => setFormData({ ...formData, username: suggestion })}
+                              className="px-2 py-1 text-xs bg-primary/10 text-primary rounded hover:bg-primary/20 transition-colors"
+                            >
+                              {suggestion}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
             )}
@@ -251,13 +384,53 @@ export const SignUp: React.FC = () => {
 
           <div>
             <label className="block text-sm font-medium mb-2">Email</label>
-            <input
-              type="email"
-              required
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full px-4 py-2 border border-input rounded-md bg-background focus:ring-2 focus:ring-ring"
-            />
+            <div className="relative">
+              <input
+                type="email"
+                required
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                className={`w-full px-4 py-2 pr-10 border rounded-md bg-background focus:ring-2 focus:ring-ring transition-colors ${
+                  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) && emailStatus === 'available' 
+                    ? 'border-green-500' 
+                    : /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) && emailStatus === 'taken'
+                    ? 'border-red-500'
+                    : 'border-input'
+                }`}
+              />
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                {emailStatus === 'checking' && (
+                  <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" />
+                )}
+                {emailStatus === 'available' && (
+                  <Check className="w-4 h-4 text-green-600" />
+                )}
+                {emailStatus === 'taken' && (
+                  <X className="w-4 h-4 text-red-600" />
+                )}
+              </div>
+            </div>
+            
+            {/* Email Status Message */}
+            {/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) && (
+              <div className="mt-2 text-xs">
+                {emailStatus === 'checking' && (
+                  <span className="text-muted-foreground">Checking availability...</span>
+                )}
+                {emailStatus === 'available' && (
+                  <span className="text-green-600 flex items-center gap-1">
+                    <Check className="w-3 h-3" />
+                    Email is available
+                  </span>
+                )}
+                {emailStatus === 'taken' && (
+                  <span className="text-red-600 flex items-center gap-1">
+                    <X className="w-3 h-3" />
+                    Email is already registered
+                  </span>
+                )}
+              </div>
+            )}
           </div>
 
           <div>
