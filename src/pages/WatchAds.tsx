@@ -76,17 +76,22 @@ export const WatchAds: React.FC = () => {
 
   const handleRewardEarned = async (reward: { type: string; amount: number }) => {
     if (!profile) {
-      console.error('No profile found');
+      console.error('❌ No profile found');
       return;
     }
 
     try {
-      console.log('=== Starting ad reward claim ===');
-      console.log('Current balance:', profile.coin_balance);
+      console.log('=== 🎬 Starting ad reward claim ===');
+      console.log('📊 Current profile state:', {
+        user_id: profile.user_id,
+        current_balance: profile.coin_balance,
+        is_premium: profile.is_premium
+      });
+      console.log('📊 Current stats state:', stats);
       
       setBalanceUpdating(true);
       
-      console.log('Calling record_ad_view with user_id:', profile.user_id);
+      console.log('📞 Calling record_ad_view...');
       
       const { data, error } = await supabase.rpc('record_ad_view', {
         p_user_id: profile.user_id,
@@ -94,42 +99,50 @@ export const WatchAds: React.FC = () => {
         p_view_duration: 15,
       });
 
-      console.log('record_ad_view response:', { data, error });
+      console.log('📥 record_ad_view response:', { data, error });
 
       if (error) {
-        console.error('Supabase error:', error);
+        console.error('❌ Supabase error:', error);
         setBalanceUpdating(false);
         toast({
           title: 'Error',
           description: 'Failed to claim reward. Please try again.',
           variant: 'destructive',
         });
-        throw error;
+        return;
       }
 
-      // record_ad_view returns JSON object directly
       if (data && data.success) {
-        console.log('✅ Reward claimed successfully:', data);
+        console.log('✅ Reward claimed successfully!');
+        console.log('💰 Reward details:', {
+          coins_earned: data.coins_earned,
+          old_balance: data.old_balance,
+          new_balance: data.new_balance,
+          is_premium: data.is_premium,
+          daily_count: data.daily_count
+        });
         
-        // Get actual values from database
         const actualReward = data.coins_earned;
         const actualNewBalance = data.new_balance;
         const actualOldBalance = data.old_balance;
         
-        // Update balance in profile
+        console.log('🔄 Updating profile balance to:', actualNewBalance);
         updateProfileOptimistic({ coin_balance: actualNewBalance });
         
-        // Fetch fresh stats from database
+        console.log('📞 Fetching fresh stats...');
         const { data: freshStats, error: statsError } = await supabase.rpc('get_daily_ad_stats', {
           p_user_id: profile.user_id,
         });
         
+        console.log('📥 Fresh stats response:', { freshStats, statsError });
+        
         if (!statsError && freshStats) {
+          console.log('✅ Setting new stats:', freshStats);
           setStats(freshStats);
-          console.log('Stats updated:', freshStats);
+        } else {
+          console.error('❌ Failed to fetch stats:', statsError);
         }
         
-        // Play sound and show celebration
         const { soundEffects } = await import('@/utils/soundEffects');
         soundEffects.playWinSound();
         
@@ -146,7 +159,9 @@ export const WatchAds: React.FC = () => {
         setShowCelebration(true);
         
         setBalanceUpdating(false);
-        console.log('=== Ad reward claim complete ===');
+        console.log('=== ✅ Ad reward claim complete ===');
+        console.log('📊 Final profile balance:', profile.coin_balance);
+        console.log('📊 Final stats:', stats);
       } else {
         console.log('❌ Reward claim failed:', data?.error);
         setBalanceUpdating(false);
