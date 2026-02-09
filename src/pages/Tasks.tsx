@@ -135,14 +135,21 @@ export const Tasks: React.FC = () => {
     setCompletingTask(task.id);
 
     try {
+      console.log('Completing task:', { task_id: task.id, user_id: profile.user_id });
+      
       const { data, error } = await supabase.rpc('complete_task', {
         p_user_id: profile.user_id,
         p_task_id: task.id,
       });
 
-      if (error) throw error;
+      console.log('Complete task response:', { data, error });
 
-      if (data.success) {
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+
+      if (data?.success) {
         setShowConfetti(true);
         setTimeout(() => setShowConfetti(false), 3000);
 
@@ -154,9 +161,10 @@ export const Tasks: React.FC = () => {
         await fetchCompletions();
         await refreshProfile();
       } else {
+        console.warn('Task completion failed:', data);
         toast({
           title: 'Cannot Complete',
-          description: data.error || 'Task already completed for this period',
+          description: data?.error || 'Task already completed for this period',
           variant: 'destructive',
         });
       }
@@ -164,7 +172,7 @@ export const Tasks: React.FC = () => {
       console.error('Error completing task:', error);
       toast({
         title: 'Error',
-        description: 'Failed to complete task. Please try again.',
+        description: error instanceof Error ? error.message : 'Failed to complete task. Please try again.',
         variant: 'destructive',
       });
     } finally {
