@@ -173,10 +173,6 @@ export const WatchAds: React.FC = () => {
       // Revert on any error
       updateProfileOptimistic({ coin_balance: oldBalance });
       setBalanceUpdating(false);
-    }
-    } catch (error) {
-      console.error('❌ Error claiming reward:', error);
-      setBalanceUpdating(false);
       toast({
         title: 'Error',
         description: 'Failed to claim reward. Please try again.',
