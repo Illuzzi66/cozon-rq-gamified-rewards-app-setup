@@ -9,6 +9,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
 import {
+  subscribeToPushNotifications,
+  unsubscribeFromPushNotifications,
+  isPushNotificationSubscribed,
+  sendTestNotification,
+} from '@/lib/notifications';
+import {
   ArrowLeft,
   User,
   Mail,
@@ -69,6 +75,7 @@ export const Profile: React.FC = () => {
     spinReminders: true,
     rewardAlerts: true,
     promotions: false,
+    pushEnabled: false,
   });
 
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -90,8 +97,14 @@ export const Profile: React.FC = () => {
     if (profile) {
       fetchReferralStats();
       fetchUserMemes();
+      checkPushSubscription();
     }
   }, [profile]);
+
+  const checkPushSubscription = async () => {
+    const isSubscribed = await isPushNotificationSubscribed();
+    setNotifications((prev) => ({ ...prev, pushEnabled: isSubscribed }));
+  };
 
   const fetchReferralStats = async () => {
     if (!profile) return;
