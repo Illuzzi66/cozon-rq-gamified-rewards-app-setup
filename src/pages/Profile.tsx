@@ -945,6 +945,64 @@ export const Profile: React.FC = () => {
                 }
               />
             </div>
+
+            <Separator />
+
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium">Push Notifications</p>
+                <p className="text-sm text-muted-foreground">
+                  Get instant alerts for rewards and updates
+                </p>
+              </div>
+              <Switch
+                checked={notifications.pushEnabled}
+                onCheckedChange={async (checked) => {
+                  if (checked) {
+                    const success = await subscribeToPushNotifications();
+                    if (success) {
+                      setNotifications({ ...notifications, pushEnabled: true });
+                      toast({
+                        title: 'Push Notifications Enabled',
+                        description: 'You will now receive instant notifications!',
+                      });
+                    } else {
+                      toast({
+                        title: 'Failed to Enable',
+                        description: 'Please allow notifications in your browser settings.',
+                        variant: 'destructive',
+                      });
+                    }
+                  } else {
+                    const success = await unsubscribeFromPushNotifications();
+                    if (success) {
+                      setNotifications({ ...notifications, pushEnabled: false });
+                      toast({
+                        title: 'Push Notifications Disabled',
+                        description: 'You will no longer receive push notifications.',
+                      });
+                    }
+                  }
+                }}
+              />
+            </div>
+
+            {notifications.pushEnabled && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  await sendTestNotification();
+                  toast({
+                    title: 'Test Notification Sent',
+                    description: 'Check your notifications!',
+                  });
+                }}
+                className="w-full"
+              >
+                Send Test Notification
+              </Button>
+            )}
           </div>
         </Card>
 

@@ -19,6 +19,8 @@ import AdminSettings from '@/pages/AdminSettings';
 import { Analytics } from '@/pages/Analytics';
 import { Leaderboard } from '@/pages/Leaderboard';
 import { Notifications } from '@/pages/Notifications';
+import { useEffect } from 'react';
+import { subscribeToNotifications } from '@/lib/notifications';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
@@ -30,9 +32,28 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return user ? <>{children}</> : <Navigate to="/login" />;
 };
 
+const NotificationListener = () => {
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (!user) return;
+
+    const unsubscribe = subscribeToNotifications(user.id, (notification) => {
+      console.log('New notification received:', notification);
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [user]);
+
+  return null;
+};
+
 function App() {
   return (
     <AuthProvider>
+      <NotificationListener />
       <BrowserRouter>
         <Routes>
           <Route path="/signup" element={<SignUp />} />
