@@ -70,23 +70,32 @@ export const WatchAds: React.FC = () => {
     if (!profile) return;
 
     try {
+      console.log('Calling record_ad_view with user_id:', profile.user_id);
+      
       const { data, error } = await supabase.rpc('record_ad_view', {
         p_user_id: profile.user_id,
         p_ad_type: 'video',
         p_view_duration: 15,
       });
 
-      if (error) throw error;
+      console.log('record_ad_view response:', { data, error });
+
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
 
       if (data.success) {
+        console.log('Reward claimed successfully:', data);
         toast({
           title: '🎉 Reward Claimed!',
-          description: `You earned ${data.coins_earned} coins!`,
+          description: `You earned ${data.coins_earned} coins! Balance: ${data.old_balance} → ${data.new_balance}`,
         });
 
         await refreshProfile();
         await fetchStats();
       } else {
+        console.log('Reward claim failed:', data.error);
         toast({
           title: 'Limit Reached',
           description: data.error,
