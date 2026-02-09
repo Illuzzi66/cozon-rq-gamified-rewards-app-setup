@@ -7,6 +7,15 @@ import { Card } from '@/components/ui/card';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,6 +33,13 @@ import {
   TabsTrigger,
 } from '@/components/ui/tabs';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   ArrowLeft,
   Shield,
   Flag,
@@ -31,6 +47,15 @@ import {
   AlertTriangle,
   CheckCircle,
   XCircle,
+  Users,
+  DollarSign,
+  TrendingUp,
+  Activity,
+  Search,
+  Ban,
+  UserCheck,
+  Wallet,
+  Clock,
 } from 'lucide-react';
 
 interface ReportedMeme {
@@ -56,15 +81,64 @@ interface ReportedMeme {
   };
 }
 
+interface UserData {
+  user_id: string;
+  username: string;
+  email: string;
+  coins: number;
+  is_premium: boolean;
+  is_admin: boolean;
+  is_banned: boolean;
+  created_at: string;
+  last_login: string;
+}
+
+interface WithdrawalRequest {
+  id: string;
+  user_id: string;
+  amount: number;
+  status: string;
+  payment_method: string;
+  payment_details: any;
+  created_at: string;
+  processed_at: string | null;
+  user: {
+    username: string;
+    email: string;
+  };
+}
+
+interface AdminStats {
+  totalUsers: number;
+  premiumUsers: number;
+  totalCoins: number;
+  pendingWithdrawals: number;
+  totalWithdrawals: number;
+  totalRevenue: number;
+}
+
 export const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { profile } = useAuth();
   const { toast } = useToast();
   const [reports, setReports] = useState<ReportedMeme[]>([]);
+  const [users, setUsers] = useState<UserData[]>([]);
+  const [withdrawals, setWithdrawals] = useState<WithdrawalRequest[]>([]);
+  const [stats, setStats] = useState<AdminStats>({
+    totalUsers: 0,
+    premiumUsers: 0,
+    totalCoins: 0,
+    pendingWithdrawals: 0,
+    totalWithdrawals: 0,
+    totalRevenue: 0,
+  });
   const [loading, setLoading] = useState(true);
   const [deletingMeme, setDeletingMeme] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [processingReport, setProcessingReport] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
+  const [processingWithdrawal, setProcessingWithdrawal] = useState<string | null>(null);
 
   useEffect(() => {
     // Check if user is admin
@@ -79,9 +153,100 @@ export const AdminDashboard: React.FC = () => {
     }
 
     if (profile?.is_admin) {
-      fetchReports();
+      fetchAllData();
     }
   }, [profile]);
+
+  const fetchAllData = async () => {
+    setLoading(true);
+    await Promise.all([
+      fetchReports(),
+      fetchUsers(),
+      fetchWithdrawals(),
+      fetchStats(),
+    ]);
+    setLoading(false);
+  };
+
+  const fetchStats = async () => {
+    try {
+      // Get total users and premium users
+      const { data: usersData, error: usersError } = await supabase
+        .from('profiles')
+        .select('is_premium, coins');
+
+      if (usersError) throw usersError;
+
+      const totalUsers = usersData?.length || 0;
+      const premiumUsers = usersData?.filter((u) => u.is_premium).length || 0;
+      const totalCoins = usersData?.reduce((sum, u) => sum + (u.coins || 0), 0) || 0;
+
+      // Get withdrawal stats
+      const { data: withdrawalsData, error: withdrawalsError } = await supabase
+        .from('withdrawals')
+        .select('status, amount');
+
+      if (withdrawalsError) throw withdrawalsError;
+
+      const pendingWithdrawals = withdrawalsData?.filter((w) => w.status === 'pending').length || 0;
+      const totalWithdrawals = withdrawalsData?.length || 0;
+      const totalRevenue = withdrawalsData
+        ?.filter((w) => w.status === 'completed')
+        .reduce((sum, w) => sum + w.amount, 0) || 0;
+
+      setStats({
+        totalUsers,
+        premiumUsers,
+        totalCoins,
+        pendingWithdrawals,
+        totalWithdrawals,
+        totalRevenue,
+      });
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setUsers(data || []);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load users',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const fetchWithdrawals = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('withdrawals')
+        .select(`
+          *,
+          user:profiles(username, email)
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setWithdrawals(data || []);
+    } catch (error) {
+      console.error('Error fetching withdrawals:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load withdrawals',
+        variant: 'destructive',
+      });
+    }
+  };
 
   const fetchReports = async () => {
     try {
@@ -207,11 +372,80 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
+  const handleBanUser = async (userId: string, ban: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ is_banned: ban })
+        .eq('user_id', userId);
+
+      if (error) throw error;
+
+      toast({
+        title: ban ? 'User Banned' : 'User Unbanned',
+        description: `User has been ${ban ? 'banned' : 'unbanned'} successfully`,
+      });
+
+      await fetchUsers();
+      setSelectedUser(null);
+    } catch (error) {
+      console.error('Error updating user:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update user status',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleProcessWithdrawal = async (withdrawalId: string, status: 'completed' | 'rejected') => {
+    setProcessingWithdrawal(withdrawalId);
+
+    try {
+      const { error } = await supabase
+        .from('withdrawals')
+        .update({
+          status,
+          processed_at: new Date().toISOString(),
+        })
+        .eq('id', withdrawalId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Withdrawal Updated',
+        description: `Withdrawal ${status}`,
+      });
+
+      await fetchWithdrawals();
+      await fetchStats();
+    } catch (error) {
+      console.error('Error processing withdrawal:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to process withdrawal',
+        variant: 'destructive',
+      });
+    } finally {
+      setProcessingWithdrawal(null);
+    }
+  };
+
   if (!profile?.is_admin) return null;
 
   const pendingReports = reports.filter((r) => r.status === 'pending');
   const resolvedReports = reports.filter((r) => r.status === 'resolved');
   const dismissedReports = reports.filter((r) => r.status === 'dismissed');
+
+  const filteredUsers = users.filter(
+    (user) =>
+      user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const pendingWithdrawals = withdrawals.filter((w) => w.status === 'pending');
+  const completedWithdrawals = withdrawals.filter((w) => w.status === 'completed');
+  const rejectedWithdrawals = withdrawals.filter((w) => w.status === 'rejected');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10">
