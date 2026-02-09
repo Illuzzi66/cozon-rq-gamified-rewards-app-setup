@@ -94,6 +94,16 @@ export const WatchAds: React.FC = () => {
       // IMMEDIATELY update UI with optimistic balance
       updateProfileOptimistic({ coin_balance: optimisticNewBalance });
       
+      // Update stats optimistically
+      if (stats) {
+        setStats({
+          ...stats,
+          daily_count: stats.daily_count + 1,
+          daily_earnings: stats.daily_earnings + expectedReward,
+          remaining: stats.remaining - 1,
+        });
+      }
+      
       const { soundEffects } = await import('@/utils/soundEffects');
       soundEffects.playWinSound();
       
