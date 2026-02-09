@@ -85,8 +85,11 @@ export const WatchAds: React.FC = () => {
         throw error;
       }
 
-      if (data.success) {
-        console.log('Reward claimed successfully:', data);
+      // Check if data is an array
+      const result = Array.isArray(data) ? data[0] : data;
+
+      if (result && result.success) {
+        console.log('Reward claimed successfully:', result);
         
         // Play win sound effect
         const { soundEffects } = await import('@/utils/soundEffects');
@@ -94,16 +97,16 @@ export const WatchAds: React.FC = () => {
         
         toast({
           title: '🎉 Reward Claimed!',
-          description: `You earned ${data.coins_earned} coins! Balance: ${data.old_balance} → ${data.new_balance}`,
+          description: `You earned ${result.coins_earned} coins! Balance: ${result.old_balance} → ${result.new_balance}`,
         });
 
         await refreshProfile();
         await fetchStats();
       } else {
-        console.log('Reward claim failed:', data.error);
+        console.log('Reward claim failed:', result?.error);
         toast({
           title: 'Limit Reached',
-          description: data.error,
+          description: result?.error || 'Failed to claim reward',
           variant: 'destructive',
         });
       }

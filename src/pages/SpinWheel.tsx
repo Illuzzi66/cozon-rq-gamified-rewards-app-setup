@@ -426,49 +426,45 @@ export const SpinWheel: React.FC = () => {
         throw error;
       }
 
-      if (data && data.length > 0) {
-        const result = data[0];
-        console.log('Claim Result:', result);
+      // Handle both array and object responses
+      const result = Array.isArray(data) ? data[0] : data;
+      console.log('Claim Result:', result);
+      
+      if (result && result.success) {
+        // Play sound
+        soundEffects.playBonusSound();
+
+        // Reset ad UI state
+        setWatchingAd(false);
+        setAdProgress(0);
+        setAdCompleted(false);
+
+        // Force refresh profile and spin data
+        console.log('Refreshing profile and spin data...');
+        await refreshProfile();
         
-        if (result.success) {
-          // Play sound
-          soundEffects.playBonusSound();
+        // Wait a moment for database to update
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        const newSpins = await loadSpinData(true);
+        console.log('Spins after refresh:', newSpins);
 
-          // Reset ad UI state
-          setWatchingAd(false);
-          setAdProgress(0);
-          setAdCompleted(false);
+        // Refresh ad count
+        await checkDailyAdCount();
 
-          // Force refresh profile and spin data
-          console.log('Refreshing profile and spin data...');
-          await refreshProfile();
-          
-          // Wait a moment for database to update
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
-          const newSpins = await loadSpinData(true);
-          console.log('Spins after refresh:', newSpins);
-
-          // Refresh ad count
-          await checkDailyAdCount();
-
-          toast({
-            title: '🎉 Reward Claimed!',
-            description: `You earned ${result.spins_awarded} spins! You now have ${newSpins} spins. (${adsRemaining - 1} ads remaining today)`,
-          });
-        } else {
-          toast({
-            title: 'Limit Reached',
-            description: result.error || 'Daily limit reached',
-            variant: 'destructive',
-          });
-          setWatchingAd(false);
-          setAdProgress(0);
-          setAdCompleted(false);
-        }
+        toast({
+          title: '🎉 Reward Claimed!',
+          description: `You earned ${result.spins_awarded} spins! You now have ${newSpins} spins. (${adsRemaining - 1} ads remaining today)`,
+        });
       } else {
-        console.error('No data returned from RPC');
-        throw new Error('No data returned from server');
+        toast({
+          title: 'Limit Reached',
+          description: result?.error || 'Daily limit reached',
+          variant: 'destructive',
+        });
+        setWatchingAd(false);
+        setAdProgress(0);
+        setAdCompleted(false);
       }
     } catch (error: any) {
       console.error('=== AD CLAIM ERROR ===', error);
