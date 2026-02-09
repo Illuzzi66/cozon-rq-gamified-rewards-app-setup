@@ -84,6 +84,7 @@ export function RewardedVideoAd({
   const handleClaimReward = async () => {
     setIsClaiming(true);
     try {
+      await recordAdShown();
       await onRewardEarned({ type: rewardType, amount: rewardAmount });
       onClose();
     } catch (error) {
@@ -110,7 +111,22 @@ export function RewardedVideoAd({
           </DialogTitle>
         </DialogHeader>
 
-        {isLoading ? (
+        {!canShowAd ? (
+          <div className="py-8 flex flex-col items-center justify-center space-y-4">
+            <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center">
+              <Clock className="w-10 h-10 text-muted-foreground" />
+            </div>
+            <h3 className="text-xl font-bold">Ad Limit Reached</h3>
+            <p className="text-center text-muted-foreground">
+              {timeUntilNextAd > 0
+                ? `Please wait ${Math.floor(timeUntilNextAd / 60)} minutes before watching another ad.`
+                : 'You\'ve reached your daily ad limit. Try again tomorrow!'}
+            </p>
+            <Button onClick={onClose} variant="outline" className="w-full">
+              Close
+            </Button>
+          </div>
+        ) : isLoading ? (
           <div className="py-8 flex flex-col items-center justify-center space-y-4">
             <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin" />
             <p className="text-sm text-muted-foreground">Loading video ad...</p>
