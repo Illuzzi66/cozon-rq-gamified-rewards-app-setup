@@ -355,12 +355,25 @@ export const MemeFeed: React.FC = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {profile.is_premium && (
-              <Button onClick={() => navigate('/post-meme')} size="sm" variant="default">
-                <Plus className="w-4 h-4 mr-1" />
-                Post
-              </Button>
-            )}
+            <Button 
+              onClick={() => {
+                if (profile.is_premium) {
+                  navigate('/post-meme');
+                } else {
+                  toast({
+                    title: 'Premium Required',
+                    description: 'Upgrade to Premium to post memes and earn 5¢ per post!',
+                    variant: 'destructive',
+                  });
+                  navigate('/premium');
+                }
+              }} 
+              size="sm" 
+              variant={profile.is_premium ? "default" : "outline"}
+            >
+              <Plus className="w-4 h-4 mr-1" />
+              Post
+            </Button>
             <div className="flex items-center gap-2 bg-gold/10 px-3 py-2 rounded-full">
               <Coins className="w-5 h-5 text-gold" />
               <span className="font-bold text-gold">{profile.coin_balance.toLocaleString()}</span>
