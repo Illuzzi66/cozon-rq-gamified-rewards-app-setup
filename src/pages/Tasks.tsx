@@ -143,6 +143,7 @@ export const Tasks: React.FC = () => {
       });
 
       console.log('Complete task response:', { data, error });
+      alert(`Response: ${JSON.stringify({ data, error }, null, 2)}`);
 
       if (error) {
         console.error('Supabase error:', error);
