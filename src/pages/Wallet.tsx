@@ -57,8 +57,8 @@ export const Wallet: React.FC = () => {
   const [accountNumber, setAccountNumber] = useState('');
   const [accountName, setAccountName] = useState('');
 
-  const COIN_TO_USD = 0.001; // 1000 coins = $1
-  const MIN_WITHDRAWAL_COINS = 5000; // $5 minimum
+  const COIN_TO_USD = 1 / 1500; // 1500 coins = $1
+  const MIN_WITHDRAWAL_COINS = 7500; // $5 minimum
   const MIN_WITHDRAWAL_USD = 5;
 
   useEffect(() => {

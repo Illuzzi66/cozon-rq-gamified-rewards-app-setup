@@ -17,6 +17,8 @@ interface Profile {
   avatar_url?: string;
   last_daily_login?: string;
   spins_available: number;
+  comment_count: number;
+  session_start_time: string | null;
 }
 
 interface AuthContextType {
