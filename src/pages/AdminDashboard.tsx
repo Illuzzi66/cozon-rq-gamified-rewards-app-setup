@@ -449,7 +449,7 @@ export const AdminDashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10">
-      <div className="max-w-6xl mx-auto p-4 space-y-6">
+      <div className="max-w-7xl mx-auto p-4 space-y-6">
         {/* Header */}
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')}>
@@ -460,58 +460,310 @@ export const AdminDashboard: React.FC = () => {
               <Shield className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-              <p className="text-sm text-muted-foreground">Manage reported content</p>
+              <h1 className="text-2xl font-bold">Admin Control Panel</h1>
+              <p className="text-sm text-muted-foreground">Manage users, payments, and platform operations</p>
             </div>
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="grid md:grid-cols-3 gap-4">
+        {/* Stats Overview */}
+        <div className="grid md:grid-cols-3 lg:grid-cols-6 gap-4">
           <Card className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Pending Reports</p>
+                <p className="text-xs text-muted-foreground">Total Users</p>
+                <p className="text-2xl font-bold">{stats.totalUsers}</p>
+              </div>
+              <Users className="w-8 h-8 text-primary" />
+            </div>
+          </Card>
+          <Card className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-muted-foreground">Premium Users</p>
+                <p className="text-2xl font-bold text-accent">{stats.premiumUsers}</p>
+              </div>
+              <TrendingUp className="w-8 h-8 text-accent" />
+            </div>
+          </Card>
+          <Card className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-muted-foreground">Total Coins</p>
+                <p className="text-2xl font-bold text-warning">{stats.totalCoins.toLocaleString()}</p>
+              </div>
+              <DollarSign className="w-8 h-8 text-warning" />
+            </div>
+          </Card>
+          <Card className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-muted-foreground">Pending Withdrawals</p>
+                <p className="text-2xl font-bold text-destructive">{stats.pendingWithdrawals}</p>
+              </div>
+              <Clock className="w-8 h-8 text-destructive" />
+            </div>
+          </Card>
+          <Card className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-muted-foreground">Total Withdrawals</p>
+                <p className="text-2xl font-bold">{stats.totalWithdrawals}</p>
+              </div>
+              <Wallet className="w-8 h-8 text-primary" />
+            </div>
+          </Card>
+          <Card className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-muted-foreground">Pending Reports</p>
                 <p className="text-2xl font-bold text-destructive">{pendingReports.length}</p>
               </div>
               <AlertTriangle className="w-8 h-8 text-destructive" />
             </div>
           </Card>
-          <Card className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Resolved</p>
-                <p className="text-2xl font-bold text-success">{resolvedReports.length}</p>
-              </div>
-              <CheckCircle className="w-8 h-8 text-success" />
-            </div>
-          </Card>
-          <Card className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Dismissed</p>
-                <p className="text-2xl font-bold text-muted-foreground">{dismissedReports.length}</p>
-              </div>
-              <XCircle className="w-8 h-8 text-muted-foreground" />
-            </div>
-          </Card>
         </div>
 
-        {/* Reports Tabs */}
-        <Tabs defaultValue="pending" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="pending">
-              Pending ({pendingReports.length})
+        {/* Main Tabs */}
+        <Tabs defaultValue="overview" className="space-y-4">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="overview">
+              <Activity className="w-4 h-4 mr-2" />
+              Overview
             </TabsTrigger>
-            <TabsTrigger value="resolved">
-              Resolved ({resolvedReports.length})
+            <TabsTrigger value="users">
+              <Users className="w-4 h-4 mr-2" />
+              Users ({users.length})
             </TabsTrigger>
-            <TabsTrigger value="dismissed">
-              Dismissed ({dismissedReports.length})
+            <TabsTrigger value="withdrawals">
+              <Wallet className="w-4 h-4 mr-2" />
+              Withdrawals ({pendingWithdrawals.length})
+            </TabsTrigger>
+            <TabsTrigger value="reports">
+              <Flag className="w-4 h-4 mr-2" />
+              Reports ({pendingReports.length})
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="pending" className="space-y-4">
+          {/* Overview Tab */}
+          <TabsContent value="overview" className="space-y-4">
+            <div className="grid md:grid-cols-2 gap-4">
+              <Card className="p-6">
+                <h3 className="text-lg font-semibold mb-4">Recent Activity</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">New Users (24h)</span>
+                    <span className="font-semibold">{users.filter(u => new Date(u.created_at) > new Date(Date.now() - 86400000)).length}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Active Premium</span>
+                    <span className="font-semibold text-accent">{stats.premiumUsers}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Pending Actions</span>
+                    <span className="font-semibold text-destructive">{stats.pendingWithdrawals + pendingReports.length}</span>
+                  </div>
+                </div>
+              </Card>
+
+              <Card className="p-6">
+                <h3 className="text-lg font-semibold mb-4">Financial Overview</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Total Platform Coins</span>
+                    <span className="font-semibold">{stats.totalCoins.toLocaleString()}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Completed Withdrawals</span>
+                    <span className="font-semibold text-success">${(stats.totalRevenue / 100).toFixed(2)}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Pending Payouts</span>
+                    <span className="font-semibold text-warning">
+                      ${(pendingWithdrawals.reduce((sum, w) => sum + w.amount, 0) / 100).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Users Tab */}
+          <TabsContent value="users" className="space-y-4">
+            <Card className="p-4">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search users by username or email..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Username</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Coins</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Joined</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredUsers.map((user) => (
+                      <TableRow key={user.user_id}>
+                        <TableCell className="font-medium">@{user.username}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{user.email}</TableCell>
+                        <TableCell>
+                          <span className="font-semibold text-warning">{user.coins}</span>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-1">
+                            {user.is_premium && <Badge variant="default">Premium</Badge>}
+                            {user.is_admin && <Badge variant="secondary">Admin</Badge>}
+                            {user.is_banned && <Badge variant="destructive">Banned</Badge>}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {new Date(user.created_at).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setSelectedUser(user)}
+                          >
+                            Manage
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </Card>
+          </TabsContent>
+
+          {/* Withdrawals Tab */}
+          <TabsContent value="withdrawals" className="space-y-4">
+            <Tabs defaultValue="pending" className="space-y-4">
+              <TabsList>
+                <TabsTrigger value="pending">Pending ({pendingWithdrawals.length})</TabsTrigger>
+                <TabsTrigger value="completed">Completed ({completedWithdrawals.length})</TabsTrigger>
+                <TabsTrigger value="rejected">Rejected ({rejectedWithdrawals.length})</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="pending" className="space-y-4">
+                {pendingWithdrawals.length === 0 ? (
+                  <Card className="p-12 text-center">
+                    <CheckCircle className="w-12 h-12 text-success mx-auto mb-4" />
+                    <p className="text-muted-foreground">No pending withdrawals</p>
+                  </Card>
+                ) : (
+                  pendingWithdrawals.map((withdrawal) => (
+                    <Card key={withdrawal.id} className="p-6">
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold">@{withdrawal.user.username}</span>
+                            <Badge variant="outline">{withdrawal.payment_method}</Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground">{withdrawal.user.email}</p>
+                          <div className="text-2xl font-bold text-success">
+                            ${(withdrawal.amount / 100).toFixed(2)}
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Requested: {new Date(withdrawal.created_at).toLocaleString()}
+                          </p>
+                          {withdrawal.payment_details && (
+                            <div className="mt-2 p-3 bg-muted rounded-lg text-sm">
+                              <p className="font-semibold mb-1">Payment Details:</p>
+                              <pre className="text-xs">{JSON.stringify(withdrawal.payment_details, null, 2)}</pre>
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <Button
+                            variant="default"
+                            size="sm"
+                            onClick={() => handleProcessWithdrawal(withdrawal.id, 'completed')}
+                            disabled={processingWithdrawal === withdrawal.id}
+                          >
+                            <CheckCircle className="w-4 h-4 mr-2" />
+                            Approve
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleProcessWithdrawal(withdrawal.id, 'rejected')}
+                            disabled={processingWithdrawal === withdrawal.id}
+                          >
+                            <XCircle className="w-4 h-4 mr-2" />
+                            Reject
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  ))
+                )}
+              </TabsContent>
+
+              <TabsContent value="completed" className="space-y-4">
+                {completedWithdrawals.map((withdrawal) => (
+                  <Card key={withdrawal.id} className="p-4 opacity-60">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-semibold">@{withdrawal.user.username}</p>
+                        <p className="text-sm text-muted-foreground">
+                          ${(withdrawal.amount / 100).toFixed(2)} • {new Date(withdrawal.processed_at!).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <Badge variant="outline" className="text-success border-success">Completed</Badge>
+                    </div>
+                  </Card>
+                ))}
+              </TabsContent>
+
+              <TabsContent value="rejected" className="space-y-4">
+                {rejectedWithdrawals.map((withdrawal) => (
+                  <Card key={withdrawal.id} className="p-4 opacity-60">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-semibold">@{withdrawal.user.username}</p>
+                        <p className="text-sm text-muted-foreground">
+                          ${(withdrawal.amount / 100).toFixed(2)} • {new Date(withdrawal.processed_at!).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <Badge variant="destructive">Rejected</Badge>
+                    </div>
+                  </Card>
+                ))}
+              </TabsContent>
+            </Tabs>
+          </TabsContent>
+
+          {/* Reports Tab */}
+          <TabsContent value="reports" className="space-y-4">
+            <Tabs defaultValue="pending" className="space-y-4">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="pending">
+                  Pending ({pendingReports.length})
+                </TabsTrigger>
+                <TabsTrigger value="resolved">
+                  Resolved ({resolvedReports.length})
+                </TabsTrigger>
+                <TabsTrigger value="dismissed">
+                  Dismissed ({dismissedReports.length})
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="pending" className="space-y-4">
             {loading ? (
               <div className="text-center py-12">
                 <p className="text-muted-foreground">Loading reports...</p>
@@ -667,8 +919,64 @@ export const AdminDashboard: React.FC = () => {
               ))
             )}
           </TabsContent>
+            </Tabs>
+          </TabsContent>
         </Tabs>
       </div>
+
+      {/* User Management Dialog */}
+      <AlertDialog open={!!selectedUser} onOpenChange={(open) => !open && setSelectedUser(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Manage User: @{selectedUser?.username}</AlertDialogTitle>
+            <AlertDialogDescription>
+              <div className="space-y-3 mt-4">
+                <div className="flex justify-between text-sm">
+                  <span>Email:</span>
+                  <span className="font-semibold">{selectedUser?.email}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span>Coins:</span>
+                  <span className="font-semibold text-warning">{selectedUser?.coins}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span>Status:</span>
+                  <div className="flex gap-1">
+                    {selectedUser?.is_premium && <Badge variant="default">Premium</Badge>}
+                    {selectedUser?.is_admin && <Badge variant="secondary">Admin</Badge>}
+                    {selectedUser?.is_banned && <Badge variant="destructive">Banned</Badge>}
+                  </div>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span>Joined:</span>
+                  <span>{selectedUser && new Date(selectedUser.created_at).toLocaleDateString()}</span>
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Close</AlertDialogCancel>
+            {selectedUser && !selectedUser.is_admin && (
+              <AlertDialogAction
+                onClick={() => handleBanUser(selectedUser.user_id, !selectedUser.is_banned)}
+                className={selectedUser.is_banned ? 'bg-success hover:bg-success/90' : 'bg-destructive hover:bg-destructive/90'}
+              >
+                {selectedUser.is_banned ? (
+                  <>
+                    <UserCheck className="w-4 h-4 mr-2" />
+                    Unban User
+                  </>
+                ) : (
+                  <>
+                    <Ban className="w-4 h-4 mr-2" />
+                    Ban User
+                  </>
+                )}
+              </AlertDialogAction>
+            )}
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={!!confirmDelete} onOpenChange={(open) => !open && setConfirmDelete(null)}>
