@@ -84,25 +84,13 @@ export const WatchAds: React.FC = () => {
     const expectedReward = profile.is_premium ? Math.floor(baseReward * 2.5) : baseReward;
     const oldBalance = profile.coin_balance;
     const optimisticNewBalance = oldBalance + expectedReward;
+    const oldStats = stats ? { ...stats } : null;
 
     try {
       console.log('=== Starting ad reward claim ===');
       console.log('Current balance:', profile.coin_balance);
       
       setBalanceUpdating(true);
-      
-      // IMMEDIATELY update UI with optimistic balance
-      updateProfileOptimistic({ coin_balance: optimisticNewBalance });
-      
-      // Update stats optimistically
-      if (stats) {
-        setStats({
-          ...stats,
-          daily_count: stats.daily_count + 1,
-          daily_earnings: stats.daily_earnings + expectedReward,
-          remaining: stats.remaining - 1,
-        });
-      }
       
       const { soundEffects } = await import('@/utils/soundEffects');
       soundEffects.playWinSound();
@@ -145,18 +133,45 @@ export const WatchAds: React.FC = () => {
       // record_ad_view returns JSON object directly
       if (data && data.success) {
         console.log('✅ Reward claimed successfully:', data);
-        console.log('Old balance:', data.old_balance);
-        console.log('New balance:', data.new_balance);
-        console.log('Coins earned:', data.coins_earned);
         
-        // Keep optimistic updates - don't refetch to avoid overwriting
+        // Update with ACTUAL values from database
+        const actualReward = data.coins_earned;
+        const actualNewBalance = data.new_balance;
+        
+        // Update UI with actual values
+        updateProfileOptimistic({ coin_balance: actualNewBalance });
+        
+        // Update stats with actual values
+        if (stats) {
+          setStats({
+            ...stats,
+            daily_count: stats.daily_count + 1,
+            daily_earnings: stats.daily_earnings + actualReward,
+            remaining: Math.max(0, stats.remaining - 1),
+          });
+        }
+        
+        const { soundEffects } = await import('@/utils/soundEffects');
+        soundEffects.playWinSound();
+        
+        toast({
+          title: '🎉 Reward Claimed!',
+          description: `You earned ${actualReward} coins! New balance: ${actualNewBalance}`,
+        });
+        
+        setCelebrationData({
+          amount: actualReward,
+          oldBalance: data.old_balance,
+          newBalance: actualNewBalance,
+        });
+        setShowCelebration(true);
+        
         setBalanceUpdating(false);
         console.log('=== Ad reward claim complete ===');
       } else {
         console.log('❌ Reward claim failed:', data?.error);
-        // Revert optimistic updates on failure
-        updateProfileOptimistic({ coin_balance: oldBalance });
-        await fetchStats();
+        // Revert on failure
+        if (oldStats) setStats(oldStats);
         setBalanceUpdating(false);
         toast({
           title: 'Limit Reached',
