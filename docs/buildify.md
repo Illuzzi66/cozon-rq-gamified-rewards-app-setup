@@ -140,7 +140,7 @@ Cozon RQ is a gamified rewards app where users earn coins through various activi
   - [ ] Build leaderboard UI (daily/weekly/all-time)
   - [ ] Add user ranking display
   - [ ] Implement leaderboard rewards
-- [ ] Initial signup bonus
-  - [ ] Award welcome bonus coins on signup
-  - [ ] Update signup flow to show bonus notification
+- [x] Initial signup bonus
+  - [x] Award welcome bonus coins on signup
+  - [x] Update signup flow to show bonus notification
 
