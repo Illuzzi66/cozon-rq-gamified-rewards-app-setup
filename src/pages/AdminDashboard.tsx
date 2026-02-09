@@ -148,6 +148,9 @@ export const AdminDashboard: React.FC = () => {
   const [banReason, setBanReason] = useState('');
   const [suspensionDuration, setSuspensionDuration] = useState('24');
   const [processingBan, setProcessingBan] = useState(false);
+  const [unbanDialogOpen, setUnbanDialogOpen] = useState(false);
+  const [unbanReason, setUnbanReason] = useState('');
+  const [processingUnban, setProcessingUnban] = useState(false);
 
   useEffect(() => {
     // Check if user is admin
@@ -478,7 +481,17 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
-  const handleUnbanUser = async (userId: string) => {
+  const handleUnbanUser = async () => {
+    if (!selectedUser || !unbanReason.trim()) {
+      toast({
+        title: 'Error',
+        description: 'Please provide a reason for unbanning',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setProcessingUnban(true);
     try {
       const { error: profileError } = await supabase
         .from('profiles')
@@ -487,19 +500,20 @@ export const AdminDashboard: React.FC = () => {
           suspension_until: null,
           ban_reason: null,
         })
-        .eq('user_id', userId);
+        .eq('user_id', selectedUser.user_id);
 
       if (profileError) throw profileError;
 
-      // Mark ban as inactive
+      // Mark ban as inactive with reason
       const { error: banError } = await supabase
         .from('user_bans')
         .update({
           is_active: false,
           unbanned_at: new Date().toISOString(),
           unbanned_by: profile?.user_id,
+          unban_reason: unbanReason,
         })
-        .eq('user_id', userId)
+        .eq('user_id', selectedUser.user_id)
         .eq('is_active', true);
 
       if (banError) throw banError;
@@ -509,6 +523,9 @@ export const AdminDashboard: React.FC = () => {
         description: 'User account has been restored',
       });
 
+      setUnbanDialogOpen(false);
+      setSelectedUser(null);
+      setUnbanReason('');
       await fetchUsers();
     } catch (error) {
       console.error('Error unbanning user:', error);
@@ -517,6 +534,8 @@ export const AdminDashboard: React.FC = () => {
         description: 'Failed to unban user',
         variant: 'destructive',
       });
+    } finally {
+      setProcessingUnban(false);
     }
   };
 
@@ -729,13 +748,46 @@ export const AdminDashboard: React.FC = () => {
                           {new Date(user.created_at).toLocaleDateString()}
                         </TableCell>
                         <TableCell>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setSelectedUser(user)}
-                          >
-                            Manage
-                          </Button>
+                          <div className="flex gap-2">
+                            {!user.is_admin && (
+                              <>
+                                {(user.account_status === 'banned' || user.account_status === 'suspended') ? (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                      setSelectedUser(user);
+                                      setUnbanDialogOpen(true);
+                                    }}
+                                    className="text-success border-success hover:bg-success/10"
+                                  >
+                                    <UserCheck className="w-4 h-4 mr-1" />
+                                    Unban
+                                  </Button>
+                                ) : (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                      setSelectedUser(user);
+                                      setBanDialogOpen(true);
+                                    }}
+                                    className="text-destructive border-destructive hover:bg-destructive/10"
+                                  >
+                                    <Ban className="w-4 h-4 mr-1" />
+                                    Ban
+                                  </Button>
+                                )}
+                              </>
+                            )}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setSelectedUser(user)}
+                            >
+                              View
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
