@@ -9,7 +9,7 @@ import { Progress } from '@/components/ui/progress';
 interface RewardedVideoAdProps {
   isOpen: boolean;
   onClose: () => void;
-  onRewardEarned: (reward: { type: string; amount: number }) => void;
+  onRewardEarned: (reward: { type: string; amount: number }) => Promise<void>;
   rewardAmount?: number;
   rewardType?: string;
 }
@@ -25,6 +25,7 @@ export function RewardedVideoAd({
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [isClaiming, setIsClaiming] = useState(false);
 
   const VIDEO_DURATION = 15; // 15 seconds
 
@@ -37,6 +38,7 @@ export function RewardedVideoAd({
       setIsPlaying(false);
       setProgress(0);
       setIsCompleted(false);
+      setIsClaiming(false);
     }
   }, [isOpen]);
 
@@ -75,9 +77,15 @@ export function RewardedVideoAd({
     setIsPlaying(true);
   };
 
-  const handleClaimReward = () => {
-    onRewardEarned({ type: rewardType, amount: rewardAmount });
-    onClose();
+  const handleClaimReward = async () => {
+    setIsClaiming(true);
+    try {
+      await onRewardEarned({ type: rewardType, amount: rewardAmount });
+      onClose();
+    } catch (error) {
+      console.error('Error claiming reward:', error);
+      setIsClaiming(false);
+    }
   };
 
   const handleSkip = () => {
@@ -112,8 +120,8 @@ export function RewardedVideoAd({
             <p className="text-center text-muted-foreground">
               You've earned {rewardAmount} {rewardType}!
             </p>
-            <Button onClick={handleClaimReward} className="w-full" size="lg">
-              Claim Reward
+            <Button onClick={handleClaimReward} className="w-full" size="lg" disabled={isClaiming}>
+              {isClaiming ? 'Claiming...' : 'Claim Reward'}
             </Button>
           </div>
         ) : !isPlaying ? (
