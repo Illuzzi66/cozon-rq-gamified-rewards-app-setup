@@ -1125,6 +1125,115 @@ export const AdminDashboard: React.FC = () => {
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Ban User Dialog */}
+      <AlertDialog open={banDialogOpen} onOpenChange={setBanDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Ban User: @{selectedUser?.username}</AlertDialogTitle>
+            <AlertDialogDescription>
+              Choose the type of ban and provide a reason. This action will restrict the user's access.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-semibold">Ban Type</label>
+              <Select value={banType} onValueChange={(value: 'suspend' | 'ban') => setBanType(value)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="suspend">Temporary Suspension</SelectItem>
+                  <SelectItem value="ban">Permanent Ban</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {banType === 'suspend' && (
+              <div className="space-y-2">
+                <label className="text-sm font-semibold">Duration (hours)</label>
+                <Select value={suspensionDuration} onValueChange={setSuspensionDuration}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">1 hour</SelectItem>
+                    <SelectItem value="6">6 hours</SelectItem>
+                    <SelectItem value="24">24 hours</SelectItem>
+                    <SelectItem value="72">3 days</SelectItem>
+                    <SelectItem value="168">1 week</SelectItem>
+                    <SelectItem value="720">30 days</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold">Reason *</label>
+              <Input
+                placeholder="Enter reason for ban..."
+                value={banReason}
+                onChange={(e) => setBanReason(e.target.value)}
+              />
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setBanReason('');
+              setBanType('suspend');
+              setSuspensionDuration('24');
+            }}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBanUser}
+              disabled={processingBan || !banReason.trim()}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              {processingBan ? 'Processing...' : `${banType === 'ban' ? 'Ban' : 'Suspend'} User`}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Unban User Dialog */}
+      <AlertDialog open={unbanDialogOpen} onOpenChange={setUnbanDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Unban User: @{selectedUser?.username}</AlertDialogTitle>
+            <AlertDialogDescription>
+              Provide a reason for unbanning this user. Their account will be restored to active status.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-4 py-4">
+            {selectedUser?.ban_reason && (
+              <div className="space-y-2">
+                <label className="text-sm font-semibold">Original Ban Reason</label>
+                <div className="bg-muted p-3 rounded-lg text-sm">
+                  {selectedUser.ban_reason}
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold">Unban Reason *</label>
+              <Input
+                placeholder="Enter reason for unbanning..."
+                value={unbanReason}
+                onChange={(e) => setUnbanReason(e.target.value)}
+              />
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setUnbanReason('')}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleUnbanUser}
+              disabled={processingUnban || !unbanReason.trim()}
+              className="bg-success hover:bg-success/90"
+            >
+              {processingUnban ? 'Processing...' : 'Unban User'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={!!confirmDelete} onOpenChange={(open) => !open && setConfirmDelete(null)}>
         <AlertDialogContent>
