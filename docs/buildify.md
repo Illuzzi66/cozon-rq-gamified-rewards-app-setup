@@ -112,10 +112,10 @@ Cozon RQ is a gamified rewards app where users earn coins through various activi
   - [x] Show ad before premium users post memes
   - [x] Update coin-to-dollar conversion (1500 coins = $1)
   - [x] Set minimum withdrawal to 7500 coins ($5)
-- [ ] Ad frequency capping and admin controls
-  - [ ] Add ad frequency limits (max ads per hour/day)
-  - [ ] Track last ad shown timestamp
-  - [ ] Create admin settings page for ad parameters
-  - [ ] Allow admins to configure ad timing thresholds
-  - [ ] Add admin controls for coin conversion rates
+- [x] Ad frequency capping and admin controls
+  - [x] Add ad frequency limits (max ads per hour/day)
+  - [x] Track last ad shown timestamp
+  - [x] Create admin settings page for ad parameters
+  - [x] Allow admins to configure ad timing thresholds
+  - [x] Add admin controls for coin conversion rates
 
