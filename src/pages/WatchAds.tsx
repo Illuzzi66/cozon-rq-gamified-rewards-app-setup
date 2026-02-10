@@ -421,3 +421,5 @@ export const WatchAds: React.FC = () => {
     </div>
   );
 };
+
+export default WatchAds;
