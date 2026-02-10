@@ -36,7 +36,7 @@ declare global {
   }
 }
 
-export const Premium: React.FC = () => {
+const Premium: React.FC = () => {
   const navigate = useNavigate();
   const { profile, refreshProfile } = useAuth();
   const { toast } = useToast();
@@ -355,3 +355,5 @@ export const Premium: React.FC = () => {
     </div>
   );
 };
+
+export default Premium;
