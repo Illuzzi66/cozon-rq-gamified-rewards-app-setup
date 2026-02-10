@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/dialog';
 import logo from '@/assets/screenshot_20260209-204916.png';
 
-export const Login: React.FC = () => {
+const Login: React.FC = () => {
   const navigate = useNavigate();
   const { signIn } = useAuth();
   const { toast } = useToast();
@@ -211,3 +211,5 @@ export const Login: React.FC = () => {
     </div>
   );
 };
+
+export default Login;
