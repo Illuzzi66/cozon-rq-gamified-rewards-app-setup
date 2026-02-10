@@ -56,7 +56,7 @@ const activityBgColors = {
   withdrawal: 'bg-blue-500/10',
 };
 
-export const ActivityLog: React.FC = () => {
+const ActivityLog: React.FC = () => {
   const navigate = useNavigate();
   const { profile } = useAuth();
   const { toast } = useToast();
@@ -485,3 +485,5 @@ export const ActivityLog: React.FC = () => {
     </div>
   );
 };
+
+export default ActivityLog;
