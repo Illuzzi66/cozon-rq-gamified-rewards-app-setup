@@ -124,7 +124,7 @@ interface AdminStats {
   totalRevenue: number;
 }
 
-export const AdminDashboard: React.FC = () => {
+const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { profile } = useAuth();
   const { toast } = useToast();
@@ -1302,3 +1302,5 @@ export const AdminDashboard: React.FC = () => {
     </div>
   );
 };
+
+export default AdminDashboard;
