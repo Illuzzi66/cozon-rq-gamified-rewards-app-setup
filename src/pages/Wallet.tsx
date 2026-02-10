@@ -43,7 +43,7 @@ interface Withdrawal {
   rejection_reason: string | null;
 }
 
-export const Wallet: React.FC = () => {
+const Wallet: React.FC = () => {
   const navigate = useNavigate();
   const { profile, refreshProfile } = useAuth();
   const { toast } = useToast();
@@ -437,3 +437,5 @@ export const Wallet: React.FC = () => {
     </div>
   );
 };
+
+export default Wallet;
