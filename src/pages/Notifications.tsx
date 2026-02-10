@@ -33,7 +33,7 @@ interface Notification {
   created_at: string;
 }
 
-export const Notifications: React.FC = () => {
+const Notifications: React.FC = () => {
   const navigate = useNavigate();
   const { profile } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -326,3 +326,5 @@ export const Notifications: React.FC = () => {
     </div>
   );
 };
+
+export default Notifications;
