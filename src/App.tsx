@@ -4,11 +4,11 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from './components/ui/toaster';
 import Login from './pages/Login';
-import Signup from './pages/Signup';
+import SignUp from './pages/SignUp';
 import Dashboard from './pages/Dashboard';
 import SpinWheel from './pages/SpinWheel';
 import Tasks from './pages/Tasks';
-import MemesFeed from './pages/MemesFeed';
+import MemesFeed from './pages/MemeFeed';
 import WatchAds from './pages/WatchAds';
 import Wallet from './pages/Wallet';
 import Premium from './pages/Premium';
@@ -55,7 +55,7 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
-      <Route path="/signup" element={user ? <Navigate to="/" /> : <Signup />} />
+      <Route path="/signup" element={user ? <Navigate to="/" /> : <SignUp />} />
       <Route
         path="/"
         element={
