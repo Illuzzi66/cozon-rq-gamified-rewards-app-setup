@@ -10,7 +10,7 @@ import { InterstitialAd } from '@/components/ads/InterstitialAd';
 import { useAdTiming } from '@/hooks/useAdTiming';
 import { Coins, Gift, Image, Video, Wallet, Crown, User as UserIcon, Trophy, Bell } from 'lucide-react';
 
-export const Dashboard: React.FC = () => {
+const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { profile, refreshProfile } = useAuth();
   const { shouldShowTimeAd, resetSessionTime } = useAdTiming();
@@ -234,3 +234,5 @@ export const Dashboard: React.FC = () => {
     </div>
   );
 };
+
+export default Dashboard;
