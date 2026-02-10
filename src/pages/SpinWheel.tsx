@@ -614,29 +614,64 @@ export const SpinWheel: React.FC = () => {
           await checkDailyAdCount();
         } else {
           console.log('❌ Claim failed:', result.error);
-          toast({
-            title: 'Limit Reached',
-            description: result.error || 'Daily limit reached',
-            variant: 'destructive',
-          });
+          
+          // Check if it's a limit error
+          if (result.error && result.error.includes('limit')) {
+            toast({
+              title: 'Daily Limit Reached',
+              description: 'You\'ve watched all available ads today. Come back tomorrow for more!',
+              variant: 'default',
+            });
+          } else {
+            toast({
+              title: 'Already Claimed',
+              description: 'You\'ve already claimed this reward. Watch another ad to earn more spins!',
+              variant: 'default',
+            });
+          }
+          
           setWatchingAd(false);
           setAdProgress(0);
           setAdCompleted(false);
+          
+          // Refresh counts
+          await checkDailyAdCount();
         }
       } else {
         console.error('❌ No data returned from RPC');
-        throw new Error('No data returned from server');
+        toast({
+          title: 'Please Try Again',
+          description: 'Something went wrong. Please watch another ad to earn spins!',
+          variant: 'default',
+        });
+        setWatchingAd(false);
+        setAdProgress(0);
+        setAdCompleted(false);
       }
     } catch (error: any) {
       console.error('❌ === AD CLAIM ERROR ===', error);
+      
+      // More friendly error messages
+      let errorTitle = 'Please Try Again';
+      let errorDescription = 'Watch another ad to earn your spins!';
+      
+      if (error.message && error.message.includes('limit')) {
+        errorTitle = 'Daily Limit Reached';
+        errorDescription = 'You\'ve watched all available ads today. Come back tomorrow!';
+      }
+      
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to claim reward. Please try again.',
-        variant: 'destructive',
+        title: errorTitle,
+        description: errorDescription,
+        variant: 'default',
       });
+      
       setWatchingAd(false);
       setAdProgress(0);
       setAdCompleted(false);
+      
+      // Refresh counts to show accurate remaining ads
+      await checkDailyAdCount();
     } finally {
       setClaimingReward(false);
       console.log('✅ === AD CLAIM COMPLETE ===');
