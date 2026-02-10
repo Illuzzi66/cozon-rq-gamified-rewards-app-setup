@@ -285,31 +285,43 @@ export const SpinWheel: React.FC = () => {
 
   const handleSpin = async () => {
     if (!profile || spinsAvailable < 1 || spinning) {
-      console.log('Cannot spin:', { profile: !!profile, spinsAvailable, spinning });
+      console.log('❌ Cannot spin:', { 
+        hasProfile: !!profile, 
+        spinsAvailable, 
+        spinning,
+        userId: profile?.user_id 
+      });
       return;
     }
 
+    console.log('🎰 === STARTING SPIN ===');
+    console.log('User:', profile.user_id);
+    console.log('Current spins:', spinsAvailable);
+    
     setSpinning(true);
     soundEffects.playSpinSound();
 
     try {
-      console.log('=== STARTING SPIN ===');
-      console.log('Current spins:', spinsAvailable);
-      
       // Deduct one spin
+      console.log('📞 Calling deduct_spin...');
       const { data: deductData, error: deductError } = await supabase.rpc('deduct_spin', {
         p_user_id: profile.user_id,
       });
 
-      console.log('Deduct spin response:', { deductData, deductError });
+      console.log('📥 Deduct spin response:', { 
+        data: deductData, 
+        error: deductError,
+        dataType: typeof deductData 
+      });
 
       if (deductError) {
-        console.error('Deduct error:', deductError);
+        console.error('❌ Deduct error:', deductError);
         throw deductError;
       }
       
       // Handle both object and direct response
       const result = typeof deductData === 'object' && deductData !== null ? deductData : { success: false };
+      console.log('✅ Parsed result:', result);
       
       if (!result.success) {
         throw new Error(result.error || 'Failed to deduct spin');
@@ -318,10 +330,10 @@ export const SpinWheel: React.FC = () => {
       // Update spins immediately
       const newSpins = result.spins_available;
       setSpinsAvailable(newSpins);
-      console.log('Spins after deduction:', newSpins);
+      console.log('✅ Spins after deduction:', newSpins);
 
       const reward = selectReward();
-      console.log('Selected reward:', reward);
+      console.log('🎁 Selected reward:', reward);
       
       const segmentAngle = 360 / wheelSegments.length;
       
@@ -332,11 +344,12 @@ export const SpinWheel: React.FC = () => {
       const fullRotations = 5 + Math.floor(Math.random() * 3);
       const targetRotation = 360 * fullRotations - segmentCenterAngle;
 
+      console.log('🔄 Starting rotation:', targetRotation);
       setRotation(targetRotation);
 
       setTimeout(async () => {
         try {
-          console.log('Recording spin result...');
+          console.log('📞 Recording spin result...');
           
           // Record spin result
           const { data: recordData, error: recordError } = await supabase.rpc('record_spin_result', {
@@ -347,15 +360,20 @@ export const SpinWheel: React.FC = () => {
             p_money_amount: reward.moneyAmount || 0,
           });
 
-          console.log('Record spin response:', { recordData, recordError });
+          console.log('📥 Record spin response:', { 
+            data: recordData, 
+            error: recordError,
+            dataType: typeof recordData 
+          });
 
           if (recordError) {
-            console.error('Record error:', recordError);
+            console.error('❌ Record error:', recordError);
             throw recordError;
           }
           
           // Handle both object and direct response
           const recordResult = typeof recordData === 'object' && recordData !== null ? recordData : { success: false };
+          console.log('✅ Parsed record result:', recordResult);
           
           if (!recordResult.success) {
             throw new Error('Failed to record spin result');
@@ -379,6 +397,7 @@ export const SpinWheel: React.FC = () => {
           }
 
           // Refresh profile to get updated balance
+          console.log('🔄 Refreshing profile...');
           await refreshProfile();
           await loadSpinData();
 
@@ -404,8 +423,10 @@ export const SpinWheel: React.FC = () => {
               variant: 'destructive',
             });
           }
+          
+          console.log('✅ Spin complete!');
         } catch (error) {
-          console.error('Error processing spin:', error);
+          console.error('❌ Error processing spin:', error);
           toast({
             title: 'Error',
             description: 'Failed to process spin. Please try again.',
@@ -416,7 +437,7 @@ export const SpinWheel: React.FC = () => {
         }
       }, 6000);
     } catch (error) {
-      console.error('Error deducting spin:', error);
+      console.error('❌ Error deducting spin:', error);
       toast({
         title: 'Error',
         description: 'Failed to start spin. Please try again.',
@@ -448,26 +469,36 @@ export const SpinWheel: React.FC = () => {
 
   const claimAdReward = async () => {
     if (!profile || !adCompleted || claimingReward) {
-      console.log('Cannot claim:', { profile: !!profile, adCompleted, claimingReward });
+      console.log('❌ Cannot claim:', { 
+        hasProfile: !!profile, 
+        adCompleted, 
+        claimingReward 
+      });
       return;
     }
 
     setClaimingReward(true);
-    console.log('=== STARTING AD CLAIM ===');
+    console.log('🎁 === STARTING AD CLAIM ===');
     console.log('User ID:', profile.user_id);
     console.log('Current spins before claim:', spinsAvailable);
 
     try {
+      console.log('📞 Calling record_spin_ad_view...');
       const { data, error } = await supabase.rpc('record_spin_ad_view', {
         p_user_id: profile.user_id,
         p_ad_type: 'spin_video',
         p_view_duration: 30,
       });
 
-      console.log('RPC Response:', { data, error });
+      console.log('📥 RPC Response:', { 
+        data, 
+        error,
+        dataType: typeof data,
+        isArray: Array.isArray(data)
+      });
 
       if (error) {
-        console.error('RPC Error:', error);
+        console.error('❌ RPC Error:', error);
         throw error;
       }
 
@@ -476,22 +507,23 @@ export const SpinWheel: React.FC = () => {
       
       if (data && Array.isArray(data) && data.length > 0) {
         const result = data[0];
-        console.log('Claim Result:', result);
+        console.log('✅ Claim Result:', result);
+        console.log('Success value:', result.success, 'Type:', typeof result.success);
         
-        if (result.success === true || result.success === 't') {
+        if (result.success === true || result.success === 't' || result.success === 'true') {
           // Play sound
           soundEffects.playBonusSound();
 
           // Show success toast
           toast({
             title: '🎉 Spins Earned!',
-            description: `You earned ${result.spins_awarded} spins!`,
+            description: `You earned ${result.spins_awarded || 3} spins!`,
           });
 
           // Show celebration animation
           setCelebrationData({
             type: 'spins',
-            amount: result.spins_awarded,
+            amount: result.spins_awarded || 3,
           });
           setShowCelebration(true);
 
@@ -501,18 +533,19 @@ export const SpinWheel: React.FC = () => {
           setAdCompleted(false);
 
           // Force refresh profile and spin data
-          console.log('Refreshing profile and spin data...');
+          console.log('🔄 Refreshing profile and spin data...');
           await refreshProfile();
           
           // Wait a moment for database to update
           await new Promise(resolve => setTimeout(resolve, 300));
           
           const newSpins = await loadSpinData(true);
-          console.log('Spins after refresh:', newSpins);
+          console.log('✅ Spins after refresh:', newSpins);
 
           // Refresh ad count
           await checkDailyAdCount();
         } else {
+          console.log('❌ Claim failed:', result.error);
           toast({
             title: 'Limit Reached',
             description: result.error || 'Daily limit reached',
@@ -523,11 +556,11 @@ export const SpinWheel: React.FC = () => {
           setAdCompleted(false);
         }
       } else {
-        console.error('No data returned from RPC');
+        console.error('❌ No data returned from RPC');
         throw new Error('No data returned from server');
       }
     } catch (error: any) {
-      console.error('=== AD CLAIM ERROR ===', error);
+      console.error('❌ === AD CLAIM ERROR ===', error);
       toast({
         title: 'Error',
         description: error.message || 'Failed to claim reward. Please try again.',
@@ -538,7 +571,7 @@ export const SpinWheel: React.FC = () => {
       setAdCompleted(false);
     } finally {
       setClaimingReward(false);
-      console.log('=== AD CLAIM COMPLETE ===');
+      console.log('✅ === AD CLAIM COMPLETE ===');
     }
   };
 
