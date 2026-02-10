@@ -1235,3 +1235,5 @@ export const SpinWheel: React.FC = () => {
     </div>
   );
 };
+
+export default SpinWheel;
