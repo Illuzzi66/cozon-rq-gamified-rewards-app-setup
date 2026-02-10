@@ -52,7 +52,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Users,
 };
 
-export const Tasks: React.FC = () => {
+const Tasks: React.FC = () => {
   const navigate = useNavigate();
   const { profile, refreshProfile } = useAuth();
   const { toast } = useToast();
@@ -370,3 +370,5 @@ export const Tasks: React.FC = () => {
     </div>
   );
 };
+
+export default Tasks;
