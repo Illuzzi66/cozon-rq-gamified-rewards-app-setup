@@ -85,8 +85,14 @@ export const WatchAds: React.FC = () => {
       return;
     }
 
+    // CRITICAL: Prevent duplicate submissions
     if (balanceUpdating) {
-      console.log('⏳ Already updating balance, skipping...');
+      console.log('⏳ Already updating balance, skipping duplicate request...');
+      toast({
+        title: 'Please Wait',
+        description: 'Processing your previous reward...',
+        variant: 'default',
+      });
       return;
     }
 
@@ -193,11 +199,22 @@ export const WatchAds: React.FC = () => {
       // Revert on any error
       updateProfileOptimistic({ coin_balance: oldBalance });
       setBalanceUpdating(false);
-      toast({
-        title: 'Error',
-        description: 'Failed to claim reward. Please try again.',
-        variant: 'destructive',
-      });
+      
+      // Check if it's a duplicate error
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      if (errorMessage.includes('Duplicate ad view') || errorMessage.includes('Please wait')) {
+        toast({
+          title: 'Too Fast!',
+          description: 'Please wait a moment before watching another ad.',
+          variant: 'default',
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: 'Failed to claim reward. Please try again.',
+          variant: 'destructive',
+        });
+      }
     }
   };
 

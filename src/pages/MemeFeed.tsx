@@ -183,7 +183,17 @@ const MemeFeed: React.FC = () => {
   };
 
   const handleLike = async (meme: MemeWithStats) => {
-    if (!profile || processingLike) return;
+    if (!profile) return;
+    
+    // CRITICAL: Prevent duplicate submissions
+    if (processingLike) {
+      toast({
+        title: 'Please Wait',
+        description: 'Processing your previous action...',
+        variant: 'default',
+      });
+      return;
+    }
 
     setProcessingLike(meme.id);
 
@@ -241,18 +251,39 @@ const MemeFeed: React.FC = () => {
       }
     } catch (error) {
       console.error('Error liking meme:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to like meme',
-        variant: 'destructive',
-      });
+      
+      // Check if it's a duplicate error
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes('Already liked')) {
+        toast({
+          title: 'Already Liked',
+          description: 'You have already liked this meme.',
+          variant: 'default',
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: 'Failed to like meme',
+          variant: 'destructive',
+        });
+      }
     } finally {
       setProcessingLike(null);
     }
   };
 
   const handleComment = async (memeId: string) => {
-    if (!profile || processingComment || !commentText[memeId]?.trim()) return;
+    if (!profile || !commentText[memeId]?.trim()) return;
+    
+    // CRITICAL: Prevent duplicate submissions
+    if (processingComment) {
+      toast({
+        title: 'Please Wait',
+        description: 'Processing your previous comment...',
+        variant: 'default',
+      });
+      return;
+    }
 
     setProcessingComment(memeId);
 
@@ -292,11 +323,22 @@ const MemeFeed: React.FC = () => {
       }
     } catch (error) {
       console.error('Error commenting:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to post comment',
-        variant: 'destructive',
-      });
+      
+      // Check if it's a duplicate error
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes('Please wait before commenting')) {
+        toast({
+          title: 'Too Fast!',
+          description: 'Please wait a moment before commenting again.',
+          variant: 'default',
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: 'Failed to post comment',
+          variant: 'destructive',
+        });
+      }
     } finally {
       setProcessingComment(null);
     }

@@ -284,7 +284,15 @@ export const SpinWheel: React.FC = () => {
   };
 
   const handleSpin = async () => {
+    // CRITICAL: Prevent duplicate spins
     if (!profile || spinsAvailable < 1 || spinning) {
+      if (spinning) {
+        toast({
+          title: 'Please Wait',
+          description: 'Current spin is still in progress...',
+          variant: 'default',
+        });
+      }
       console.log('❌ Cannot spin:', { 
         hasProfile: !!profile, 
         spinsAvailable, 
