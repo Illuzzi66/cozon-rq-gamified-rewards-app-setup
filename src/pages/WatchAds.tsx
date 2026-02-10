@@ -169,12 +169,16 @@ export const WatchAds: React.FC = () => {
           console.log('🔄 Correcting balance:', data.new_balance);
           updateProfileOptimistic({ coin_balance: data.new_balance });
         }
-        // Force refresh profile to ensure sync
+        // Force refresh profile and stats to ensure sync
         await refreshProfile();
+        await fetchStats();
       } else {
         console.log('❌ Reward claim failed:', data?.error);
         // Revert optimistic update
         updateProfileOptimistic({ coin_balance: oldBalance });
+        if (stats) {
+          await fetchStats();
+        }
         toast({
           title: 'Limit Reached',
           description: data?.error || 'Failed to claim reward',
