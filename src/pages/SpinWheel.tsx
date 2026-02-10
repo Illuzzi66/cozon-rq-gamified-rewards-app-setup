@@ -342,7 +342,7 @@ export const SpinWheel: React.FC = () => {
       
       // Add multiple full rotations for dramatic effect (5-8 full spins)
       const fullRotations = 5 + Math.floor(Math.random() * 3);
-      const targetRotation = rotation + (360 * fullRotations) - segmentCenterAngle;
+      const targetRotation = 360 * fullRotations - segmentCenterAngle;
 
       console.log('🔄 Starting rotation:', targetRotation);
       setRotation(targetRotation);
