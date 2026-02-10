@@ -129,7 +129,17 @@ const Tasks: React.FC = () => {
   };
 
   const handleCompleteTask = async (task: Task) => {
-    if (!profile || completingTask) return;
+    if (!profile) return;
+    
+    // CRITICAL: Prevent duplicate submissions
+    if (completingTask) {
+      toast({
+        title: 'Please Wait',
+        description: 'Processing your previous task...',
+        variant: 'default',
+      });
+      return;
+    }
 
     setCompletingTask(task.id);
 
@@ -169,11 +179,28 @@ const Tasks: React.FC = () => {
       }
     } catch (error) {
       console.error('Error completing task:', error);
-      toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to complete task. Please try again.',
-        variant: 'destructive',
-      });
+      
+      // Check if it's a duplicate error
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes('Please wait before completing')) {
+        toast({
+          title: 'Too Fast!',
+          description: 'Please wait a moment before completing another task.',
+          variant: 'default',
+        });
+      } else if (errorMessage.includes('already completed')) {
+        toast({
+          title: 'Already Completed',
+          description: 'You have already completed this task for this period.',
+          variant: 'default',
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: error instanceof Error ? error.message : 'Failed to complete task. Please try again.',
+          variant: 'destructive',
+        });
+      }
     } finally {
       setCompletingTask(null);
     }

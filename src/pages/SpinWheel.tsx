@@ -473,22 +473,44 @@ export const SpinWheel: React.FC = () => {
           console.log('✅ Spin complete!');
         } catch (error) {
           console.error('❌ Error processing spin:', error);
-          toast({
-            title: 'Error',
-            description: 'Failed to process spin. Please try again.',
-            variant: 'destructive',
-          });
+          
+          // Check if it's a duplicate error
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          if (errorMessage.includes('Please wait for the current spin')) {
+            toast({
+              title: 'Too Fast!',
+              description: 'Please wait for the current spin to complete.',
+              variant: 'default',
+            });
+          } else {
+            toast({
+              title: 'Error',
+              description: 'Failed to process spin. Please try again.',
+              variant: 'destructive',
+            });
+          }
         } finally {
           setSpinning(false);
         }
       }, 6000);
     } catch (error) {
       console.error('❌ Error deducting spin:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to start spin. Please try again.',
-        variant: 'destructive',
-      });
+      
+      // Check if it's a duplicate error
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes('Please wait for the current spin')) {
+        toast({
+          title: 'Too Fast!',
+          description: 'Please wait for the current spin to complete.',
+          variant: 'default',
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: 'Failed to start spin. Please try again.',
+          variant: 'destructive',
+        });
+      }
       setSpinning(false);
     }
   };
