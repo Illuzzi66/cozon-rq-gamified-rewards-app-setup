@@ -77,7 +77,7 @@ const COLORS = {
   withdrawal: '#3b82f6',
 };
 
-export const Analytics: React.FC = () => {
+const Analytics: React.FC = () => {
   const navigate = useNavigate();
   const { profile } = useAuth();
   const { toast } = useToast();
@@ -708,3 +708,5 @@ export const Analytics: React.FC = () => {
     </div>
   );
 };
+
+export default Analytics;
