@@ -77,6 +77,16 @@ export const WatchAds: React.FC = () => {
   const handleRewardEarned = async (reward: { type: string; amount: number }) => {
     if (!profile) {
       console.error('❌ No profile found');
+      toast({
+        title: 'Error',
+        description: 'Profile not loaded. Please refresh the page.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (balanceUpdating) {
+      console.log('⏳ Already updating balance, skipping...');
       return;
     }
 
@@ -87,6 +97,9 @@ export const WatchAds: React.FC = () => {
 
     try {
       console.log('=== 🎬 Starting ad reward claim ===');
+      console.log('User ID:', profile.user_id);
+      console.log('Expected reward:', expectedReward);
+      console.log('Old balance:', oldBalance);
       
       setBalanceUpdating(true);
       

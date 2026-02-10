@@ -284,29 +284,41 @@ export const SpinWheel: React.FC = () => {
   };
 
   const handleSpin = async () => {
-    if (!profile || spinsAvailable < 1 || spinning) return;
+    if (!profile || spinsAvailable < 1 || spinning) {
+      console.log('Cannot spin:', { profile: !!profile, spinsAvailable, spinning });
+      return;
+    }
 
     setSpinning(true);
     soundEffects.playSpinSound();
 
     try {
+      console.log('=== STARTING SPIN ===');
+      console.log('Current spins:', spinsAvailable);
+      
       // Deduct one spin
       const { data: deductData, error: deductError } = await supabase.rpc('deduct_spin', {
         p_user_id: profile.user_id,
       });
+
+      console.log('Deduct spin response:', { deductData, deductError });
 
       if (deductError) throw deductError;
       if (!deductData.success) {
         throw new Error(deductData.error || 'Failed to deduct spin');
       }
 
+      // Update spins immediately
+      const newSpins = deductData.spins_available;
+      setSpinsAvailable(newSpins);
+      console.log('Spins after deduction:', newSpins);
+
       const reward = selectReward();
+      console.log('Selected reward:', reward);
+      
       const segmentAngle = 360 / wheelSegments.length;
       
       // Calculate rotation to align winning segment with top pointer
-      // The pointer is at top (0 degrees), so we need to rotate the wheel
-      // so that the center of the winning segment is at the top
-      // Since segments start at -90 degrees, we need to account for that
       const segmentCenterAngle = reward.id * segmentAngle;
       
       // Add multiple full rotations for dramatic effect (5-8 full spins)
@@ -317,6 +329,8 @@ export const SpinWheel: React.FC = () => {
 
       setTimeout(async () => {
         try {
+          console.log('Recording spin result...');
+          
           // Record spin result
           const { data: recordData, error: recordError } = await supabase.rpc('record_spin_result', {
             p_user_id: profile.user_id,
@@ -325,6 +339,8 @@ export const SpinWheel: React.FC = () => {
             p_reward_subtype: reward.rewardSubtype || null,
             p_money_amount: reward.moneyAmount || 0,
           });
+
+          console.log('Record spin response:', { recordData, recordError });
 
           if (recordError) throw recordError;
           if (!recordData.success) {
@@ -348,7 +364,7 @@ export const SpinWheel: React.FC = () => {
             setTimeout(() => setShowConfetti(false), 3000);
           }
 
-          setSpinsAvailable(deductData.spins_available);
+          // Refresh profile to get updated balance
           await refreshProfile();
           await loadSpinData();
 
@@ -450,6 +466,19 @@ export const SpinWheel: React.FC = () => {
           // Play sound
           soundEffects.playBonusSound();
 
+          // Show success toast
+          toast({
+            title: '🎉 Spins Earned!',
+            description: `You earned ${result.spins_awarded} spins!`,
+          });
+
+          // Show celebration animation
+          setCelebrationData({
+            type: 'spins',
+            amount: result.spins_awarded,
+          });
+          setShowCelebration(true);
+
           // Reset ad UI state
           setWatchingAd(false);
           setAdProgress(0);
@@ -460,20 +489,13 @@ export const SpinWheel: React.FC = () => {
           await refreshProfile();
           
           // Wait a moment for database to update
-          await new Promise(resolve => setTimeout(resolve, 500));
+          await new Promise(resolve => setTimeout(resolve, 300));
           
           const newSpins = await loadSpinData(true);
           console.log('Spins after refresh:', newSpins);
 
           // Refresh ad count
           await checkDailyAdCount();
-
-          // Show celebration animation
-          setCelebrationData({
-            type: 'spins',
-            amount: result.spins_awarded,
-          });
-          setShowCelebration(true);
         } else {
           toast({
             title: 'Limit Reached',
