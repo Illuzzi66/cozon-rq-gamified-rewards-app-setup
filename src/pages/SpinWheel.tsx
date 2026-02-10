@@ -303,13 +303,20 @@ export const SpinWheel: React.FC = () => {
 
       console.log('Deduct spin response:', { deductData, deductError });
 
-      if (deductError) throw deductError;
-      if (!deductData.success) {
-        throw new Error(deductData.error || 'Failed to deduct spin');
+      if (deductError) {
+        console.error('Deduct error:', deductError);
+        throw deductError;
+      }
+      
+      // Handle both object and direct response
+      const result = typeof deductData === 'object' && deductData !== null ? deductData : { success: false };
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to deduct spin');
       }
 
       // Update spins immediately
-      const newSpins = deductData.spins_available;
+      const newSpins = result.spins_available;
       setSpinsAvailable(newSpins);
       console.log('Spins after deduction:', newSpins);
 
@@ -342,8 +349,15 @@ export const SpinWheel: React.FC = () => {
 
           console.log('Record spin response:', { recordData, recordError });
 
-          if (recordError) throw recordError;
-          if (!recordData.success) {
+          if (recordError) {
+            console.error('Record error:', recordError);
+            throw recordError;
+          }
+          
+          // Handle both object and direct response
+          const recordResult = typeof recordData === 'object' && recordData !== null ? recordData : { success: false };
+          
+          if (!recordResult.success) {
             throw new Error('Failed to record spin result');
           }
 
@@ -458,11 +472,13 @@ export const SpinWheel: React.FC = () => {
       }
 
       // record_spin_ad_view returns TABLE, so data is an array
+      console.log('Data type:', typeof data, 'Is array:', Array.isArray(data));
+      
       if (data && Array.isArray(data) && data.length > 0) {
         const result = data[0];
         console.log('Claim Result:', result);
         
-        if (result.success) {
+        if (result.success === true || result.success === 't') {
           // Play sound
           soundEffects.playBonusSound();
 

@@ -143,9 +143,10 @@ export const WatchAds: React.FC = () => {
       });
 
       console.log('📥 Database response:', { data, error });
+      console.log('Data type:', typeof data, 'Data value:', JSON.stringify(data));
 
       if (error) {
-        console.error('❌ Database sync failed, reverting...');
+        console.error('❌ Database sync failed, reverting...', error);
         // Revert optimistic update
         updateProfileOptimistic({ coin_balance: oldBalance });
         if (stats) {
@@ -161,13 +162,15 @@ export const WatchAds: React.FC = () => {
           description: 'Failed to save reward. Please try again.',
           variant: 'destructive',
         });
-      } else if (data && data.success) {
+      } else if (data && (data.success === true || data.success === 't')) {
         console.log('✅ Database synced successfully');
         // Update with actual values from database if different
-        if (data.new_balance !== optimisticNewBalance) {
+        if (data.new_balance && data.new_balance !== optimisticNewBalance) {
           console.log('🔄 Correcting balance:', data.new_balance);
           updateProfileOptimistic({ coin_balance: data.new_balance });
         }
+        // Force refresh profile to ensure sync
+        await refreshProfile();
       } else {
         console.log('❌ Reward claim failed:', data?.error);
         // Revert optimistic update
