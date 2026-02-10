@@ -64,7 +64,7 @@ interface Comment {
   username: string;
 }
 
-export const MemeFeed: React.FC = () => {
+const MemeFeed: React.FC = () => {
   const navigate = useNavigate();
   const { profile, refreshProfile } = useAuth();
   const { toast } = useToast();
@@ -655,3 +655,5 @@ export const MemeFeed: React.FC = () => {
     </div>
   );
 };
+
+export default MemeFeed;
