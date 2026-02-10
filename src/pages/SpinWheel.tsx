@@ -294,34 +294,45 @@ export const SpinWheel: React.FC = () => {
       return;
     }
 
-    console.log('🎰 === STARTING SPIN ===');
-    console.log('User:', profile.user_id);
-    console.log('Current spins:', spinsAvailable);
+    console.log('🎰 === SPIN TEST START ===');
+    console.log('Initial state:', { 
+      spinsAvailable, 
+      spinning, 
+      userId: profile.user_id,
+      timestamp: new Date().toISOString()
+    });
     
     setSpinning(true);
     soundEffects.playSpinSound();
 
     try {
       // Deduct one spin
-      console.log('📞 Calling deduct_spin...');
+      console.log('📞 Step 1: Calling deduct_spin RPC...');
       const { data: deductData, error: deductError } = await supabase.rpc('deduct_spin', {
         p_user_id: profile.user_id,
       });
 
-      console.log('📥 Deduct spin response:', { 
+      console.log('📥 Step 2: Deduct spin response:', { 
         data: deductData, 
         error: deductError,
-        dataType: typeof deductData 
+        dataType: typeof deductData,
+        isNull: deductData === null,
+        keys: deductData ? Object.keys(deductData) : []
       });
 
       if (deductError) {
-        console.error('❌ Deduct error:', deductError);
+        console.error('❌ Deduct error details:', {
+          message: deductError.message,
+          details: deductError.details,
+          hint: deductError.hint,
+          code: deductError.code
+        });
         throw deductError;
       }
       
       // Handle both object and direct response
       const result = typeof deductData === 'object' && deductData !== null ? deductData : { success: false };
-      console.log('✅ Parsed result:', result);
+      console.log('✅ Step 3: Parsed result:', result);
       
       if (!result.success) {
         throw new Error(result.error || 'Failed to deduct spin');
@@ -330,10 +341,21 @@ export const SpinWheel: React.FC = () => {
       // Update spins immediately
       const newSpins = result.spins_available;
       setSpinsAvailable(newSpins);
-      console.log('✅ Spins after deduction:', newSpins);
+      console.log('✅ Step 4: Spins updated:', { 
+        before: spinsAvailable, 
+        after: newSpins,
+        difference: spinsAvailable - newSpins
+      });
 
       const reward = selectReward();
-      console.log('🎁 Selected reward:', reward);
+      console.log('🎁 Step 5: Selected reward:', {
+        id: reward.id,
+        label: reward.label,
+        type: reward.rewardType,
+        amount: reward.rewardAmount,
+        moneyAmount: reward.moneyAmount,
+        probability: reward.probability
+      });
       
       const segmentAngle = 360 / wheelSegments.length;
       
@@ -344,12 +366,18 @@ export const SpinWheel: React.FC = () => {
       const fullRotations = 5 + Math.floor(Math.random() * 3);
       const targetRotation = 360 * fullRotations - segmentCenterAngle;
 
-      console.log('🔄 Starting rotation:', targetRotation);
+      console.log('🔄 Step 6: Animation details:', {
+        segmentAngle,
+        segmentCenterAngle,
+        fullRotations,
+        targetRotation,
+        duration: '5s'
+      });
       setRotation(targetRotation);
 
       setTimeout(async () => {
         try {
-          console.log('📞 Recording spin result...');
+          console.log('📞 Step 7: Recording spin result...');
           
           // Record spin result
           const { data: recordData, error: recordError } = await supabase.rpc('record_spin_result', {
@@ -360,25 +388,33 @@ export const SpinWheel: React.FC = () => {
             p_money_amount: reward.moneyAmount || 0,
           });
 
-          console.log('📥 Record spin response:', { 
+          console.log('📥 Step 8: Record spin response:', { 
             data: recordData, 
             error: recordError,
-            dataType: typeof recordData 
+            dataType: typeof recordData,
+            isNull: recordData === null,
+            keys: recordData ? Object.keys(recordData) : []
           });
 
           if (recordError) {
-            console.error('❌ Record error:', recordError);
+            console.error('❌ Record error details:', {
+              message: recordError.message,
+              details: recordError.details,
+              hint: recordError.hint,
+              code: recordError.code
+            });
             throw recordError;
           }
           
           // Handle both object and direct response
           const recordResult = typeof recordData === 'object' && recordData !== null ? recordData : { success: false };
-          console.log('✅ Parsed record result:', recordResult);
+          console.log('✅ Step 9: Parsed record result:', recordResult);
           
           if (!recordResult.success) {
             throw new Error('Failed to record spin result');
           }
 
+          console.log('🎉 Step 10: Showing reward and playing sounds...');
           setLastReward(reward);
           setShowReward(true);
           
@@ -397,9 +433,11 @@ export const SpinWheel: React.FC = () => {
           }
 
           // Refresh profile to get updated balance
-          console.log('🔄 Refreshing profile...');
+          console.log('🔄 Step 11: Refreshing profile...');
           await refreshProfile();
           await loadSpinData();
+          console.log('✅ Step 12: Profile and spin data refreshed');
+          console.log('🎯 === SPIN TEST COMPLETE ===\n');
 
           // Show celebration animation for wins
           if (reward.rewardType !== 'loss') {
