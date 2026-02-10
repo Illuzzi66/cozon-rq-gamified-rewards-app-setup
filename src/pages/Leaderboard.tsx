@@ -38,7 +38,7 @@ interface LeaderboardReward {
   created_at: string;
 }
 
-export const Leaderboard: React.FC = () => {
+const Leaderboard: React.FC = () => {
   const navigate = useNavigate();
   const { profile } = useAuth();
   const [activeTab, setActiveTab] = useState<'daily' | 'weekly' | 'alltime'>('daily');
@@ -356,3 +356,5 @@ export const Leaderboard: React.FC = () => {
     </div>
   );
 };
+
+export default Leaderboard;
