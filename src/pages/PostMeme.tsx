@@ -55,7 +55,7 @@ export const PostMeme: React.FC = () => {
       <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10">
         <div className="max-w-2xl mx-auto p-4 space-y-6">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/memes')}>
+            <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <h1 className="text-2xl font-bold">Post Meme</h1>
@@ -164,7 +164,7 @@ export const PostMeme: React.FC = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/memes')}>
+            <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
