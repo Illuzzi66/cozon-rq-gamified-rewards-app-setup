@@ -484,9 +484,9 @@ export const SpinWheel: React.FC = () => {
             });
           } else {
             toast({
-              title: 'Error',
-              description: 'Failed to process spin. Please try again.',
-              variant: 'destructive',
+              title: 'Please Try Again',
+              description: 'Something went wrong. Try spinning again!',
+              variant: 'default',
             });
           }
         } finally {
@@ -506,9 +506,9 @@ export const SpinWheel: React.FC = () => {
         });
       } else {
         toast({
-          title: 'Error',
-          description: 'Failed to start spin. Please try again.',
-          variant: 'destructive',
+          title: 'Please Try Again',
+          description: 'Something went wrong. Try spinning again!',
+          variant: 'default',
         });
       }
       setSpinning(false);
@@ -567,7 +567,19 @@ export const SpinWheel: React.FC = () => {
 
       if (error) {
         console.error('❌ RPC Error:', error);
-        throw error;
+        
+        // Show friendly message instead of throwing
+        toast({
+          title: 'Please Try Again',
+          description: 'Watch another ad to earn your spins!',
+          variant: 'default',
+        });
+        
+        setWatchingAd(false);
+        setAdProgress(0);
+        setAdCompleted(false);
+        setClaimingReward(false);
+        return;
       }
 
       // record_spin_ad_view returns TABLE, so data is an array
@@ -735,21 +747,25 @@ export const SpinWheel: React.FC = () => {
           setPurchaseAmount(0);
         } else {
           toast({
-            title: 'Purchase Failed',
-            description: result.error || 'Unable to complete purchase',
-            variant: 'destructive',
+            title: 'Purchase Not Completed',
+            description: result.error || 'Please check your balance and try again.',
+            variant: 'default',
           });
         }
       } else {
         console.error('No data returned from purchase');
-        throw new Error('No data returned from server');
+        toast({
+          title: 'Please Try Again',
+          description: 'Something went wrong. Try purchasing again!',
+          variant: 'default',
+        });
       }
     } catch (error: any) {
       console.error('Error purchasing spins:', error);
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to purchase spins. Please try again.',
-        variant: 'destructive',
+        title: 'Please Try Again',
+        description: 'Something went wrong with your purchase. Try again!',
+        variant: 'default',
       });
     }
   };
