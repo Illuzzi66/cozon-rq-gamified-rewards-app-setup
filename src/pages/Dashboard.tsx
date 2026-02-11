@@ -95,25 +95,13 @@ const Dashboard: React.FC = () => {
       <div className="max-w-4xl mx-auto p-4 space-y-6">
         {/* Header */}
         <div className="bg-card rounded-lg shadow-lg p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-lg font-bold">Welcome, {profile.full_name}!</h1>
-              <p className="text-sm text-muted-foreground">@{profile.username}</p>
-            </div>
-            <div className="flex items-center gap-2">
-              {profile.is_premium && (
-                <div className="flex items-center gap-2 bg-premium/10 text-premium px-4 py-2 rounded-full premium-glow">
-                  <Crown className="w-5 h-5" />
-                  <span className="font-semibold">Premium</span>
-                </div>
-              )}
-              <button
-                onClick={() => navigate('/profile')}
-                className="w-14 h-14 rounded-full bg-blue-500 hover:bg-blue-600 transition-colors flex items-center justify-center shadow-lg"
-              >
-                <UserIcon className="w-7 h-7 text-white" />
-              </button>
-            </div>
+          <div className="flex items-center justify-end mb-4">
+            {profile.is_premium && (
+              <div className="flex items-center gap-2 bg-premium/10 text-premium px-4 py-2 rounded-full premium-glow">
+                <Crown className="w-5 h-5" />
+                <span className="font-semibold">Premium</span>
+              </div>
+            )}
           </div>
 
           <div className="bg-gradient-to-r from-gold/20 to-gold/10 rounded-lg p-6 border-2 border-gold/30">
