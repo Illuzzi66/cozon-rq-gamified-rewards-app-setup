@@ -55,6 +55,8 @@ export function RewardedVideoAd({
             setIsPlaying(false);
             setIsCompleted(true);
             trackAdReward('rewarded', rewardAmount);
+            // Auto-claim reward after completion
+            handleAutoClaimReward();
             return 100;
           }
           return newProgress;
@@ -79,6 +81,29 @@ export function RewardedVideoAd({
 
   const handlePlayVideo = () => {
     setIsPlaying(true);
+  };
+
+  const handleAutoClaimReward = async () => {
+    if (isClaiming) {
+      console.log('Already claiming, preventing double-claim');
+      return;
+    }
+    
+    console.log('Auto-claiming reward after video completion...');
+    setIsClaiming(true);
+    try {
+      await recordAdShown();
+      console.log('Ad shown recorded, calling onRewardEarned...');
+      await onRewardEarned({ type: rewardType, amount: rewardAmount });
+      console.log('Reward earned callback completed');
+      // Close immediately after reward is processed
+      setTimeout(() => {
+        onClose();
+      }, 1500); // Brief delay to show success state
+    } catch (error) {
+      console.error('Error in handleAutoClaimReward:', error);
+      setIsClaiming(false);
+    }
   };
 
   const handleClaimReward = async () => {
@@ -142,28 +167,17 @@ export function RewardedVideoAd({
           </div>
         ) : isCompleted ? (
           <div className="py-8 flex flex-col items-center justify-center space-y-4">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center animate-pulse">
               <Gift className="w-10 h-10 text-white" />
             </div>
-            <h3 className="text-xl font-bold">Congratulations!</h3>
+            <h3 className="text-xl font-bold">Reward Claimed!</h3>
             <p className="text-center text-muted-foreground">
               You've earned {rewardAmount} {rewardType}!
             </p>
-            <Button 
-              onClick={handleClaimReward} 
-              className="w-full" 
-              size="lg" 
-              disabled={isClaiming}
-            >
-              {isClaiming ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                  Claiming...
-                </>
-              ) : (
-                'Claim Reward'
-              )}
-            </Button>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              <span>Processing...</span>
+            </div>
           </div>
         ) : !isPlaying ? (
           <div className="space-y-4">
