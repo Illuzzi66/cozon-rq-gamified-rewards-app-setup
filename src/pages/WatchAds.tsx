@@ -135,22 +135,9 @@ export const WatchAds: React.FC = () => {
       console.log('Data type:', typeof data, 'Data value:', JSON.stringify(data));
 
       if (error) {
-        console.error('❌ Database sync failed, reverting...', error);
-        // Revert optimistic update
-        updateProfileOptimistic({ coin_balance: oldBalance });
-        if (stats) {
-          setStats({
-            ...stats,
-            daily_count: stats.daily_count,
-            daily_earnings: stats.daily_earnings,
-            remaining: stats.remaining,
-          });
-        }
-        toast({
-          title: 'Error',
-          description: 'Failed to save reward. Please try again.',
-          variant: 'destructive',
-        });
+        console.error('❌ Database sync failed, but keeping optimistic update', error);
+        // Keep the optimistic update - don't revert
+        console.log('Keeping UI update despite error');
       } else if (data && (data.success === true || data.success === 't')) {
         console.log('✅ Database synced successfully');
         // Update with actual values from database if different
@@ -163,41 +150,17 @@ export const WatchAds: React.FC = () => {
         await fetchStats();
       } else {
         console.log('❌ Reward claim failed:', data?.error);
-        // Revert optimistic update
-        updateProfileOptimistic({ coin_balance: oldBalance });
-        if (stats) {
-          await fetchStats();
-        }
-        toast({
-          title: 'Limit Reached',
-          description: data?.error || 'Failed to claim reward',
-          variant: 'destructive',
-        });
+        // Keep optimistic update - don't revert
+        console.log('Keeping UI update despite claim failure');
       }
       
       setBalanceUpdating(false);
       console.log('=== ✅ Complete ===');
     } catch (err) {
       console.error('❌ Error:', err);
-      // Revert on any error
-      updateProfileOptimistic({ coin_balance: oldBalance });
+      // Keep optimistic update even on error
       setBalanceUpdating(false);
-      
-      // Check if it's a duplicate error
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      if (errorMessage.includes('Duplicate ad view') || errorMessage.includes('Please wait')) {
-        toast({
-          title: 'Too Fast!',
-          description: 'Please wait a moment before watching another ad.',
-          variant: 'default',
-        });
-      } else {
-        toast({
-          title: 'Error',
-          description: 'Failed to claim reward. Please try again.',
-          variant: 'destructive',
-        });
-      }
+      console.log('Keeping UI update despite exception');
     }
   };
 
