@@ -96,9 +96,12 @@ const Dashboard: React.FC = () => {
         {/* Header */}
         <div className="bg-card rounded-lg shadow-lg p-6">
           <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-lg font-bold">Welcome!</h1>
-              <p className="text-sm text-muted-foreground">@{profile.username}</p>
+            <div className="flex items-center gap-3">
+              <Coins className="w-10 h-10 text-gold" />
+              <div>
+                <h1 className="text-lg font-bold">Welcome!</h1>
+                <p className="text-sm text-muted-foreground">@{profile.username}</p>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               {profile.is_premium && (
