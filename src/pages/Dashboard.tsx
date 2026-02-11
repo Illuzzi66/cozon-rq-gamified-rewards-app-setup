@@ -107,6 +107,12 @@ const Dashboard: React.FC = () => {
                   <span className="font-semibold">Premium</span>
                 </div>
               )}
+              <button
+                onClick={() => navigate('/profile')}
+                className="w-14 h-14 rounded-full bg-blue-500 hover:bg-blue-600 transition-colors flex items-center justify-center shadow-lg"
+              >
+                <UserIcon className="w-7 h-7 text-white" />
+              </button>
             </div>
           </div>
 
