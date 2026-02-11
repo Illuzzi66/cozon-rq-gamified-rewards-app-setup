@@ -307,11 +307,7 @@ const AdminDashboard: React.FC = () => {
       setReports(formattedReports);
     } catch (error) {
       console.error('Error fetching reports:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load reports',
-        variant: 'destructive',
-      });
+      // Silently handle error - reports will be empty
     } finally {
       setLoading(false);
     }
