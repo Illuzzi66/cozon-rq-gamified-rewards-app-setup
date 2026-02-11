@@ -316,8 +316,8 @@ export const SpinWheel: React.FC = () => {
         throw deductError;
       }
       
-      // Handle both object and direct response
-      const result = typeof deductData === 'object' && deductData !== null ? deductData : { success: false };
+      // Handle JSONB response
+      const result = deductData as { success: boolean; spins_available?: number; error?: string };
       console.log('✅ Step 3: Parsed result:', result);
       
       if (!result.success) {
@@ -325,7 +325,7 @@ export const SpinWheel: React.FC = () => {
       }
 
       // Update spins immediately
-      const newSpins = result.spins_available;
+      const newSpins = result.spins_available || 0;
       setSpinsAvailable(newSpins);
       console.log('✅ Step 4: Spins updated:', { 
         before: spinsAvailable, 
@@ -386,8 +386,8 @@ export const SpinWheel: React.FC = () => {
             throw recordError;
           }
           
-          // Handle both object and direct response
-          const recordResult = typeof recordData === 'object' && recordData !== null ? recordData : { success: false };
+          // Handle JSONB response
+          const recordResult = recordData as { success: boolean; error?: string };
           console.log('✅ Step 9: Parsed record result:', recordResult);
           
           if (!recordResult.success) {
