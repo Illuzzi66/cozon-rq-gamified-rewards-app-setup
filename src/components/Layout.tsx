@@ -31,7 +31,10 @@ export default function Layout({ children }: LayoutProps) {
       {/* Top Bar */}
       <header className="sticky top-0 z-50 bg-card border-b border-border">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <h1 className="text-xl font-bold text-foreground">Cozon RQ</h1>
+          <div className="flex items-center gap-2">
+            <Coins className="w-8 h-8 text-gold" />
+            <span className="text-xl font-bold text-foreground">Cozon</span>
+          </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 bg-primary/10 px-3 py-1.5 rounded-full">
               <Coins className="w-4 h-4 text-primary" />
