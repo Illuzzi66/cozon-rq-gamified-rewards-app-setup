@@ -154,7 +154,6 @@ export const SpinWheel: React.FC = () => {
         setTimeRemaining('0h 0m 0s');
       }
     } catch (error) {
-      console.error('Error checking daily bonus:', error);
       // On error, assume available to allow user to try
       setDailyBonusAvailable(true);
       setNextClaimTime(null);
@@ -201,7 +200,7 @@ export const SpinWheel: React.FC = () => {
         setAdsRemaining(result.remaining_ads || 0);
       }
     } catch (error) {
-      console.error('Error checking daily ad count:', error);
+      // Silent fail
     }
   };
 
@@ -320,12 +319,6 @@ export const SpinWheel: React.FC = () => {
       });
 
       if (deductError) {
-        console.error('❌ Deduct error details:', {
-          message: deductError.message,
-          details: deductError.details,
-          hint: deductError.hint,
-          code: deductError.code
-        });
         throw deductError;
       }
       
@@ -396,12 +389,6 @@ export const SpinWheel: React.FC = () => {
           });
 
           if (recordError) {
-            console.error('❌ Record error details:', {
-              message: recordError.message,
-              details: recordError.details,
-              hint: recordError.hint,
-              code: recordError.code
-            });
             throw recordError;
           }
           
@@ -700,10 +687,7 @@ export const SpinWheel: React.FC = () => {
         p_spin_count: purchaseAmount,
       });
 
-      console.log('Purchase RPC response:', { data, error });
-
       if (error) {
-        console.error('Purchase error:', error);
         throw error;
       }
 
