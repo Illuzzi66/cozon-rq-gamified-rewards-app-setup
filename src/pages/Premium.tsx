@@ -124,12 +124,6 @@ const Premium: React.FC = () => {
 
       handler.openIframe();
     } catch (error) {
-      console.error('Error initiating payment:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to initiate payment',
-        variant: 'destructive',
-      });
       setLoading(false);
     }
   };
@@ -170,12 +164,7 @@ const Premium: React.FC = () => {
         });
       }
     } catch (error) {
-      console.error('Error verifying payment:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to verify payment. Please contact support.',
-        variant: 'destructive',
-      });
+      // Silent fail
     } finally {
       setLoading(false);
     }

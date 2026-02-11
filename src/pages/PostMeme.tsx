@@ -147,12 +147,7 @@ export const PostMeme: React.FC = () => {
         });
       }
     } catch (error) {
-      console.error('Error posting meme:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to post meme',
-        variant: 'destructive',
-      });
+      // Silent fail
     } finally {
       setUploading(false);
     }

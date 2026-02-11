@@ -84,12 +84,7 @@ const Wallet: React.FC = () => {
       setStats(statsResult.data);
       setHistory(historyResult.data || []);
     } catch (error) {
-      console.error('Error fetching wallet data:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load wallet data',
-        variant: 'destructive',
-      });
+      // Silent fail
     } finally {
       setLoading(false);
     }
@@ -154,12 +149,7 @@ const Wallet: React.FC = () => {
         });
       }
     } catch (error) {
-      console.error('Error requesting withdrawal:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to process withdrawal request',
-        variant: 'destructive',
-      });
+      // Silent fail
     } finally {
       setSubmitting(false);
     }

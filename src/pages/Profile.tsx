@@ -129,8 +129,8 @@ export const Profile: React.FC = () => {
         });
       }
     } catch (error: any) {
-      console.error('Error fetching referral stats:', error);
-      // Set default values on error
+      // Silent fail
+    }
       setReferralStats({
         total_referrals: 0,
         total_earnings: 0,
@@ -162,7 +162,6 @@ export const Profile: React.FC = () => {
 
       setUserMemes(data || []);
     } catch (error: any) {
-      console.error('Error fetching user memes:', error);
       setUserMemes([]);
     } finally {
       setLoadingMemes(false);
@@ -198,12 +197,7 @@ export const Profile: React.FC = () => {
         });
       }
     } catch (error) {
-      console.error('Error deleting meme:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to delete meme',
-        variant: 'destructive',
-      });
+      // Silent fail
     } finally {
       setDeletingMeme(null);
       setConfirmDeleteMeme(null);
@@ -293,12 +287,7 @@ export const Profile: React.FC = () => {
       await refreshProfile();
       setEditingName(false);
     } catch (error: any) {
-      console.error('Error updating profile:', error);
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to update profile',
-        variant: 'destructive',
-      });
+      // Silent fail
     } finally {
       setSavingName(false);
     }
@@ -350,12 +339,7 @@ export const Profile: React.FC = () => {
       setNewPassword('');
       setConfirmPassword('');
     } catch (error: any) {
-      console.error('Error changing password:', error);
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to change password',
-        variant: 'destructive',
-      });
+      // Silent fail
     } finally {
       setChangingPassword(false);
     }
@@ -403,12 +387,7 @@ export const Profile: React.FC = () => {
       await signOut();
       navigate('/signup');
     } catch (error: any) {
-      console.error('Error deleting account:', error);
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to delete account',
-        variant: 'destructive',
-      });
+      // Silent fail
     } finally {
       setDeletingAccount(false);
       setShowDeleteDialog(false);
@@ -479,12 +458,7 @@ export const Profile: React.FC = () => {
         description: 'Profile picture updated successfully',
       });
     } catch (error: any) {
-      console.error('Error uploading photo:', error);
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to upload photo',
-        variant: 'destructive',
-      });
+      // Silent fail
     } finally {
       setUploadingPhoto(false);
     }
@@ -495,7 +469,7 @@ export const Profile: React.FC = () => {
       await signOut();
       navigate('/login');
     } catch (error) {
-      console.error('Error signing out:', error);
+      // Silent fail
     }
   };
 

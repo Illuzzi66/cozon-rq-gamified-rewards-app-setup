@@ -52,12 +52,7 @@ export const WatchAds: React.FC = () => {
       if (error) throw error;
       setStats(data);
     } catch (error) {
-      console.error('Error fetching ad stats:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load ad statistics',
-        variant: 'destructive',
-      });
+      // Silent fail
     } finally {
       setLoading(false);
     }
@@ -69,20 +64,13 @@ export const WatchAds: React.FC = () => {
 
   const handleRewardEarned = async (reward: { type: string; amount: number }) => {
     if (!profile) {
-      console.error('❌ No profile found');
-      toast({
-        title: 'Error',
-        description: 'Profile not loaded. Please refresh the page.',
-        variant: 'destructive',
-      });
       return;
     }
 
     // CRITICAL: Prevent duplicate submissions
     if (balanceUpdating) {
-      console.log('⏳ Already updating balance, skipping duplicate request...');
-      toast({
-        title: 'Please Wait',
+      return;
+    }
         description: 'Processing your previous reward...',
         variant: 'default',
       });
@@ -115,17 +103,8 @@ export const WatchAds: React.FC = () => {
       console.log('Data type:', typeof data, 'Data value:', JSON.stringify(data));
 
       if (error) {
-        console.error('❌ Database sync failed, reverting optimistic update', error);
-        // Revert optimistic update on error
         updateProfileOptimistic({ coin_balance: oldBalance });
-        toast({
-          title: 'Error',
-          description: 'Failed to record ad view. Please try again.',
-          variant: 'destructive',
-        });
       } else if (data && (data.success === true || data.success === 't')) {
-        console.log('✅ Database synced successfully');
-        console.log('Database returned balance:', data.new_balance);
         
         // Update UI with confirmed database values
         if (data.new_balance) {
@@ -153,27 +132,12 @@ export const WatchAds: React.FC = () => {
         await refreshProfile();
         await fetchStats();
       } else {
-        console.log('❌ Reward claim failed:', data?.error);
-        // Revert optimistic update on failure
         updateProfileOptimistic({ coin_balance: oldBalance });
-        toast({
-          title: 'Error',
-          description: data?.error || 'Failed to claim reward',
-          variant: 'destructive',
-        });
       }
       
       setBalanceUpdating(false);
-      console.log('=== ✅ Complete ===');
     } catch (err) {
-      console.error('❌ Error:', err);
-      // Revert optimistic update on exception
       updateProfileOptimistic({ coin_balance: oldBalance });
-      toast({
-        title: 'Error',
-        description: 'An unexpected error occurred',
-        variant: 'destructive',
-      });
       setBalanceUpdating(false);
     }
   };

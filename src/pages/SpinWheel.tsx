@@ -120,7 +120,6 @@ export const SpinWheel: React.FC = () => {
       
       return newSpins;
     } catch (error) {
-      console.error('Error loading spin data:', error);
       return spinsAvailable;
     }
   };
@@ -250,12 +249,7 @@ export const SpinWheel: React.FC = () => {
         }
       }
     } catch (error) {
-      console.error('Error claiming daily bonus:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to claim daily bonus',
-        variant: 'destructive',
-      });
+      // Silent fail
     }
   };
 
@@ -469,23 +463,6 @@ export const SpinWheel: React.FC = () => {
         }
       }, 6000);
     } catch (error) {
-      console.error('❌ Error deducting spin:', error);
-      
-      // Check if it's a duplicate error
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      if (errorMessage.includes('Please wait for the current spin')) {
-        toast({
-          title: 'Too Fast!',
-          description: 'Please wait for the current spin to complete.',
-          variant: 'default',
-        });
-      } else {
-        toast({
-          title: 'Please Try Again',
-          description: 'Something went wrong. Try spinning again!',
-          variant: 'default',
-        });
-      }
       setSpinning(false);
     }
   };
@@ -618,43 +595,17 @@ export const SpinWheel: React.FC = () => {
           await checkDailyAdCount();
         }
       } else {
-        console.error('❌ No data returned from RPC');
-        toast({
-          title: 'Please Try Again',
-          description: 'Something went wrong. Please watch another ad to earn spins!',
-          variant: 'default',
-        });
         setWatchingAd(false);
         setAdProgress(0);
         setAdCompleted(false);
       }
     } catch (error: any) {
-      console.error('❌ === AD CLAIM ERROR ===', error);
-      
-      // More friendly error messages
-      let errorTitle = 'Please Try Again';
-      let errorDescription = 'Watch another ad to earn your spins!';
-      
-      if (error.message && error.message.includes('limit')) {
-        errorTitle = 'Daily Limit Reached';
-        errorDescription = 'You\'ve watched all available ads today. Come back tomorrow!';
-      }
-      
-      toast({
-        title: errorTitle,
-        description: errorDescription,
-        variant: 'default',
-      });
-      
       setWatchingAd(false);
       setAdProgress(0);
       setAdCompleted(false);
-      
-      // Refresh counts to show accurate remaining ads
       await checkDailyAdCount();
     } finally {
       setClaimingReward(false);
-      console.log('✅ === AD CLAIM COMPLETE ===');
     }
   };
 
@@ -727,11 +678,7 @@ export const SpinWheel: React.FC = () => {
       }
     } catch (error: any) {
       console.error('Error purchasing spins:', error);
-      toast({
-        title: 'Please Try Again',
-        description: 'Something went wrong with your purchase. Try again!',
-        variant: 'default',
-      });
+      // Silent fail
     }
   };
 

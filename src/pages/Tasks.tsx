@@ -79,12 +79,7 @@ const Tasks: React.FC = () => {
       if (error) throw error;
       setTasks(data || []);
     } catch (error) {
-      console.error('Error fetching tasks:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load tasks',
-        variant: 'destructive',
-      });
+      // Silent fail
     } finally {
       setLoading(false);
     }
@@ -102,7 +97,7 @@ const Tasks: React.FC = () => {
       if (error) throw error;
       setCompletions(data || []);
     } catch (error) {
-      console.error('Error fetching completions:', error);
+      // Silent fail
     }
   };
 
@@ -178,29 +173,7 @@ const Tasks: React.FC = () => {
         });
       }
     } catch (error) {
-      console.error('Error completing task:', error);
-      
-      // Check if it's a duplicate error
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      if (errorMessage.includes('Please wait before completing')) {
-        toast({
-          title: 'Too Fast!',
-          description: 'Please wait a moment before completing another task.',
-          variant: 'default',
-        });
-      } else if (errorMessage.includes('already completed')) {
-        toast({
-          title: 'Already Completed',
-          description: 'You have already completed this task for this period.',
-          variant: 'default',
-        });
-      } else {
-        toast({
-          title: 'Error',
-          description: error instanceof Error ? error.message : 'Failed to complete task. Please try again.',
-          variant: 'destructive',
-        });
-      }
+      // Silent fail
     } finally {
       setCompletingTask(null);
     }

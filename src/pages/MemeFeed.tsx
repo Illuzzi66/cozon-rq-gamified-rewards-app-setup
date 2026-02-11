@@ -141,12 +141,7 @@ const MemeFeed: React.FC = () => {
 
       setMemes(memesWithStats);
     } catch (error) {
-      console.error('Error fetching memes:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load memes',
-        variant: 'destructive',
-      });
+      // Silent fail
     } finally {
       setLoading(false);
     }
@@ -178,7 +173,7 @@ const MemeFeed: React.FC = () => {
 
       setComments((prev) => ({ ...prev, [memeId]: formattedComments }));
     } catch (error) {
-      console.error('Error fetching comments:', error);
+      // Silent fail
     }
   };
 
@@ -250,23 +245,7 @@ const MemeFeed: React.FC = () => {
         }
       }
     } catch (error) {
-      console.error('Error liking meme:', error);
-      
-      // Check if it's a duplicate error
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      if (errorMessage.includes('Already liked')) {
-        toast({
-          title: 'Already Liked',
-          description: 'You have already liked this meme.',
-          variant: 'default',
-        });
-      } else {
-        toast({
-          title: 'Error',
-          description: 'Failed to like meme',
-          variant: 'destructive',
-        });
-      }
+      // Silent fail
     } finally {
       setProcessingLike(null);
     }
@@ -322,23 +301,7 @@ const MemeFeed: React.FC = () => {
         });
       }
     } catch (error) {
-      console.error('Error commenting:', error);
-      
-      // Check if it's a duplicate error
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      if (errorMessage.includes('Please wait before commenting')) {
-        toast({
-          title: 'Too Fast!',
-          description: 'Please wait a moment before commenting again.',
-          variant: 'default',
-        });
-      } else {
-        toast({
-          title: 'Error',
-          description: 'Failed to post comment',
-          variant: 'destructive',
-        });
-      }
+      // Silent fail
     } finally {
       setProcessingComment(null);
     }
