@@ -64,7 +64,7 @@ const Dashboard: React.FC = () => {
             await refreshProfile();
           }
         } catch (error) {
-          console.error('Error awarding daily bonus:', error);
+          // Silent fail - user can try again later
         }
       }
     };

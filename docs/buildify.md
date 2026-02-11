@@ -165,3 +165,4 @@ Cozon RQ is a gamified rewards app where users earn coins through various activi
   - [x] Revert optimistic updates on errors
   - [x] Add proper error handling and user feedback
   - [x] Ensure profile refresh after successful database sync
+- [x] Remove error alerts from Dashboard
