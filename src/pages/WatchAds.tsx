@@ -8,7 +8,6 @@ import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { RewardedVideoAd } from '@/components/ads/RewardedVideoAd';
 import { BannerAd } from '@/components/ads/BannerAd';
-import { RewardCelebration } from '@/components/ui/reward-celebration';
 import { 
   ArrowLeft, 
   Video, 
@@ -35,13 +34,7 @@ export const WatchAds: React.FC = () => {
   const [stats, setStats] = useState<AdStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [showRewardedAd, setShowRewardedAd] = useState(false);
-  const [showCelebration, setShowCelebration] = useState(false);
   const [balanceUpdating, setBalanceUpdating] = useState(false);
-  const [celebrationData, setCelebrationData] = useState<{
-    amount: number;
-    oldBalance: number;
-    newBalance: number;
-  } | null>(null);
 
   useEffect(() => {
     fetchStats();
@@ -121,21 +114,11 @@ export const WatchAds: React.FC = () => {
         });
       }
       
-      // Show celebration immediately
-      const { soundEffects } = await import('@/utils/soundEffects');
-      soundEffects.playWinSound();
-      
+      // Show success notification
       toast({
         title: '🎉 Reward Claimed!',
         description: `You earned ${expectedReward} coins! New balance: ${optimisticNewBalance}`,
       });
-      
-      setCelebrationData({
-        amount: expectedReward,
-        oldBalance: oldBalance,
-        newBalance: optimisticNewBalance,
-      });
-      setShowCelebration(true);
       
       console.log('✅ UI updated immediately');
       
@@ -406,18 +389,6 @@ export const WatchAds: React.FC = () => {
         rewardAmount={rewardAmount}
         rewardType="coins"
       />
-
-      {/* Reward Celebration Animation */}
-      {celebrationData && (
-        <RewardCelebration
-          isOpen={showCelebration}
-          rewardType="coins"
-          amount={celebrationData.amount}
-          oldBalance={celebrationData.oldBalance}
-          newBalance={celebrationData.newBalance}
-          onComplete={() => setShowCelebration(false)}
-        />
-      )}
     </div>
   );
 };
