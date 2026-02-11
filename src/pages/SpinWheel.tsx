@@ -20,6 +20,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { soundEffects } from '@/utils/soundEffects';
 
+// Spin wheel page with daily bonuses, ad rewards, and coin purchases
 interface WheelSegment {
   id: number;
   label: string;
