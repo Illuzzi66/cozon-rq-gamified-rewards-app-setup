@@ -102,28 +102,8 @@ export const WatchAds: React.FC = () => {
       
       setBalanceUpdating(true);
       
-      // IMMEDIATE UI UPDATE - Show changes right away
-      updateProfileOptimistic({ coin_balance: optimisticNewBalance });
-      
-      if (stats) {
-        setStats({
-          ...stats,
-          daily_count: stats.daily_count + 1,
-          daily_earnings: stats.daily_earnings + expectedReward,
-          remaining: Math.max(0, stats.remaining - 1),
-        });
-      }
-      
-      // Show success notification
-      toast({
-        title: '🎉 Reward Claimed!',
-        description: `You earned ${expectedReward} coins! New balance: ${optimisticNewBalance}`,
-      });
-      
-      console.log('✅ UI updated immediately');
-      
-      // Now sync with database in background
-      console.log('📞 Syncing with database...');
+      // Sync with database FIRST
+      console.log('📞 Recording ad view in database...');
       
       const { data, error } = await supabase.rpc('record_ad_view', {
         p_user_id: profile.user_id,
@@ -135,32 +115,66 @@ export const WatchAds: React.FC = () => {
       console.log('Data type:', typeof data, 'Data value:', JSON.stringify(data));
 
       if (error) {
-        console.error('❌ Database sync failed, but keeping optimistic update', error);
-        // Keep the optimistic update - don't revert
-        console.log('Keeping UI update despite error');
+        console.error('❌ Database sync failed, reverting optimistic update', error);
+        // Revert optimistic update on error
+        updateProfileOptimistic({ coin_balance: oldBalance });
+        toast({
+          title: 'Error',
+          description: 'Failed to record ad view. Please try again.',
+          variant: 'destructive',
+        });
       } else if (data && (data.success === true || data.success === 't')) {
         console.log('✅ Database synced successfully');
-        // Update with actual values from database if different
-        if (data.new_balance && data.new_balance !== optimisticNewBalance) {
-          console.log('🔄 Correcting balance:', data.new_balance);
+        console.log('Database returned balance:', data.new_balance);
+        
+        // Update UI with confirmed database values
+        if (data.new_balance) {
           updateProfileOptimistic({ coin_balance: data.new_balance });
         }
-        // Force refresh profile and stats to ensure sync
+        
+        if (stats) {
+          setStats({
+            ...stats,
+            daily_count: stats.daily_count + 1,
+            daily_earnings: stats.daily_earnings + expectedReward,
+            remaining: Math.max(0, stats.remaining - 1),
+          });
+        }
+        
+        // Show success notification AFTER database confirms
+        toast({
+          title: '🎉 Reward Claimed!',
+          description: `You earned ${expectedReward} coins! New balance: ${data.new_balance}`,
+        });
+        
+        // Wait a moment for database to fully commit
+        await new Promise(resolve => setTimeout(resolve, 500));
+        // Force refresh profile to ensure persistence
         await refreshProfile();
         await fetchStats();
       } else {
         console.log('❌ Reward claim failed:', data?.error);
-        // Keep optimistic update - don't revert
-        console.log('Keeping UI update despite claim failure');
+        // Revert optimistic update on failure
+        updateProfileOptimistic({ coin_balance: oldBalance });
+        toast({
+          title: 'Error',
+          description: data?.error || 'Failed to claim reward',
+          variant: 'destructive',
+        });
       }
       
       setBalanceUpdating(false);
       console.log('=== ✅ Complete ===');
     } catch (err) {
       console.error('❌ Error:', err);
-      // Keep optimistic update even on error
+      // Revert optimistic update on exception
+      updateProfileOptimistic({ coin_balance: oldBalance });
+      toast({
+        title: 'Error',
+        description: 'An unexpected error occurred',
+        variant: 'destructive',
+      });
       setBalanceUpdating(false);
-      console.log('Keeping UI update despite exception');
     }
   };
 
