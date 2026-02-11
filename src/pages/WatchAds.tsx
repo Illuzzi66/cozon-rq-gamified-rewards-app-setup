@@ -71,11 +71,6 @@ export const WatchAds: React.FC = () => {
     if (balanceUpdating) {
       return;
     }
-        description: 'Processing your previous reward...',
-        variant: 'default',
-      });
-      return;
-    }
 
     const baseReward = 5;
     const expectedReward = profile.is_premium ? Math.floor(baseReward * 2.5) : baseReward;
