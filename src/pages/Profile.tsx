@@ -130,7 +130,6 @@ export const Profile: React.FC = () => {
       }
     } catch (error: any) {
       // Silent fail
-    }
       setReferralStats({
         total_referrals: 0,
         total_earnings: 0,
