@@ -7,7 +7,6 @@ import { Card } from '@/components/ui/card';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { RewardedVideoAd } from '@/components/ads/RewardedVideoAd';
-import { RewardCelebration } from '@/components/ui/reward-celebration';
 import { ArrowLeft, Coins, Sparkles, Video, Play, CheckCircle, Clock, ShoppingCart } from 'lucide-react';
 import {
   Dialog,
@@ -66,13 +65,6 @@ export const SpinWheel: React.FC = () => {
   const [timeRemaining, setTimeRemaining] = useState<string>('');
   const [showPurchaseDialog, setShowPurchaseDialog] = useState(false);
   const [purchaseAmount, setPurchaseAmount] = useState(1);
-  const [showCelebration, setShowCelebration] = useState(false);
-  const [celebrationData, setCelebrationData] = useState<{
-    type: 'coins' | 'money' | 'spins';
-    amount: number;
-    oldBalance?: number;
-    newBalance?: number;
-  } | null>(null);
 
   useEffect(() => {
     loadSpinData();
@@ -230,12 +222,11 @@ export const SpinWheel: React.FC = () => {
         if (result.success) {
           const newSpinCount = (profile.spins_available || 0) + result.spins_awarded;
           
-          // Show celebration animation
-          setCelebrationData({
-            type: 'spins',
-            amount: result.spins_awarded,
+          // Show success notification
+          toast({
+            title: '🎉 Daily Bonus Claimed!',
+            description: `You earned ${result.spins_awarded} spins!`,
           });
-          setShowCelebration(true);
 
           // Set next claim time to 24 hours from now
           const nextTime = new Date();
@@ -447,22 +438,19 @@ export const SpinWheel: React.FC = () => {
           console.log('✅ Step 12: Profile and spin data refreshed');
           console.log('🎯 === SPIN TEST COMPLETE ===\n');
 
-          // Show celebration animation for wins
+          // Show notification for results
           if (reward.rewardType !== 'loss') {
-            const oldBalance = profile.coin_balance;
-            const newBalance = reward.rewardType === 'coins' 
-              ? oldBalance + reward.rewardAmount 
-              : oldBalance;
+            const rewardText = reward.rewardType === 'coins' 
+              ? `${reward.rewardAmount} coins`
+              : reward.rewardType === 'money'
+              ? `$${reward.moneyAmount}`
+              : `${reward.rewardAmount} spins`;
             
-            setCelebrationData({
-              type: reward.rewardType,
-              amount: reward.rewardType === 'money' ? (reward.moneyAmount || 0) : reward.rewardAmount,
-              oldBalance: reward.rewardType === 'coins' ? oldBalance : undefined,
-              newBalance: reward.rewardType === 'coins' ? newBalance : undefined,
+            toast({
+              title: '🎉 You Won!',
+              description: `You earned ${rewardText}!`,
             });
-            setShowCelebration(true);
           } else {
-            // Show toast for losses
             toast({
               title: '😢 Oh no!',
               description: 'Better luck next time!',
@@ -599,13 +587,6 @@ export const SpinWheel: React.FC = () => {
             title: '🎉 Spins Earned!',
             description: `You earned ${result.spins_awarded || 3} spins!`,
           });
-
-          // Show celebration animation
-          setCelebrationData({
-            type: 'spins',
-            amount: result.spins_awarded || 3,
-          });
-          setShowCelebration(true);
 
           // Reset ad UI state
           setWatchingAd(false);
@@ -1339,18 +1320,6 @@ export const SpinWheel: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Reward Celebration Animation */}
-      {celebrationData && (
-        <RewardCelebration
-          isOpen={showCelebration}
-          rewardType={celebrationData.type}
-          amount={celebrationData.amount}
-          oldBalance={celebrationData.oldBalance}
-          newBalance={celebrationData.newBalance}
-          onComplete={() => setShowCelebration(false)}
-        />
-      )}
     </div>
   );
 };
