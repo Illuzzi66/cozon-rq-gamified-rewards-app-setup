@@ -1,8 +1,8 @@
-
 import { ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Coins, ListTodo, Image, Video, Wallet, Crown, User, BarChart3, Trophy, Bell } from 'lucide-react';
+import { Home, ListTodo, Image, Video, Wallet, Crown, User, BarChart3, Trophy, Bell } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import logo from '@/assets/screenshot_20260209-204916.png';
 
 interface LayoutProps {
   children: ReactNode;
@@ -14,7 +14,7 @@ export default function Layout({ children }: LayoutProps) {
 
   const navItems = [
     { path: '/', icon: Home, label: 'Home' },
-    { path: '/spin', icon: Coins, label: 'Spin' },
+    { path: '/spin', icon: logo, label: 'Spin' },
     { path: '/tasks', icon: ListTodo, label: 'Tasks' },
     { path: '/memes', icon: Image, label: 'Memes' },
     { path: '/watch-ads', icon: Video, label: 'Ads' },
@@ -32,12 +32,12 @@ export default function Layout({ children }: LayoutProps) {
       <header className="sticky top-0 z-50 bg-card border-b border-border">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Coins className="w-8 h-8 text-gold" />
+            <img src={logo} alt="Cozon Logo" className="w-8 h-8 rounded-full" />
             <span className="text-xl font-bold text-foreground">Cozon</span>
           </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 bg-primary/10 px-3 py-1.5 rounded-full">
-              <Coins className="w-4 h-4 text-primary" />
+              <img src={logo} alt="Cozon Logo" className="w-4 h-4 text-primary" />
               <span className="font-semibold text-foreground">{profile?.coins || 0}</span>
             </div>
             {profile?.is_premium && (
