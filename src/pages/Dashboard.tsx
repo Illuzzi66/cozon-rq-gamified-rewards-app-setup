@@ -17,7 +17,7 @@ const Dashboard: React.FC = () => {
   const [showConfetti, setShowConfetti] = useState(false);
   const [showTimeAd, setShowTimeAd] = useState(false);
 
-  // Initialize session time on mount (non-blocking)
+  // Initialize session time on mount (non-blocking, no refresh needed)
   useEffect(() => {
     if (!profile || profile.session_start_time) return;
     
@@ -25,11 +25,7 @@ const Dashboard: React.FC = () => {
     supabase
       .from('profiles')
       .update({ session_start_time: new Date().toISOString() })
-      .eq('user_id', profile.user_id)
-      .then(() => {
-        // Silently refresh profile in background
-        refreshProfile();
-      });
+      .eq('user_id', profile.user_id);
   }, [profile?.user_id]);
 
   // Check time-based ad
@@ -42,7 +38,7 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     if (!profile) return;
     
-    // Check daily login bonus (non-blocking)
+    // Check daily login bonus (non-blocking, optimistic update)
     const today = new Date().toISOString().split('T')[0];
     const lastLogin = profile.last_daily_login?.split('T')[0];
     
@@ -53,7 +49,8 @@ const Dashboard: React.FC = () => {
         if (!error && data?.success) {
           setShowConfetti(true);
           setTimeout(() => setShowConfetti(false), 3000);
-          refreshProfile();
+          // Refresh in background without blocking
+          setTimeout(() => refreshProfile(), 100);
         }
       }).catch(() => {
         // Silent fail - user can try again later
