@@ -98,7 +98,13 @@ export const WatchAds: React.FC = () => {
       console.log('Data type:', typeof data, 'Data value:', JSON.stringify(data));
 
       if (error) {
+        console.error('❌ Database error:', error);
         updateProfileOptimistic({ coin_balance: oldBalance });
+        toast({
+          title: 'Error',
+          description: error.message || 'Failed to claim reward. Please try again.',
+          variant: 'destructive',
+        });
       } else if (data && (data.success === true || data.success === 't')) {
         
         // Update UI with confirmed database values
@@ -121,19 +127,34 @@ export const WatchAds: React.FC = () => {
           description: `You earned ${expectedReward} coins! New balance: ${data.new_balance}`,
         });
         
+        // Refresh stats immediately
+        await fetchStats();
+        
         // Wait a moment for database to fully commit
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
         // Force refresh profile to ensure persistence
         await refreshProfile();
-        await fetchStats();
       } else {
+        console.warn('⚠️ Unexpected response format:', data);
         updateProfileOptimistic({ coin_balance: oldBalance });
+        toast({
+          title: 'Unexpected Response',
+          description: 'Please try watching another ad.',
+          variant: 'default',
+        });
       }
       
       setBalanceUpdating(false);
     } catch (err) {
+      console.error('❌ Exception in handleRewardEarned:', err);
       updateProfileOptimistic({ coin_balance: oldBalance });
       setBalanceUpdating(false);
+      toast({
+        title: 'Error',
+        description: 'Something went wrong. Please try again.',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -163,17 +184,6 @@ export const WatchAds: React.FC = () => {
               <span className="font-bold text-gold">{profile.coin_balance.toLocaleString()}</span>
               {balanceUpdating && <span className="text-xs text-gold">Updating...</span>}
             </div>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={async () => {
-                console.log('Manual refresh triggered');
-                await refreshProfile();
-                console.log('Profile refreshed, new balance:', profile.coin_balance);
-              }}
-            >
-              🔄
-            </Button>
           </div>
         </div>
 

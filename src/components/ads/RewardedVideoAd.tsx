@@ -96,13 +96,13 @@ export function RewardedVideoAd({
       console.log('Ad shown recorded, calling onRewardEarned...');
       await onRewardEarned({ type: rewardType, amount: rewardAmount });
       console.log('Reward earned callback completed');
-      // Close immediately after reward is processed
-      setTimeout(() => {
-        onClose();
-      }, 1500); // Brief delay to show success state
+      // Keep dialog open briefly to show success state
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      onClose();
     } catch (error) {
       console.error('Error in handleAutoClaimReward:', error);
       setIsClaiming(false);
+      // Show error state but don't close dialog
     }
   };
 
