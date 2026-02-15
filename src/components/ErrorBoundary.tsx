@@ -58,19 +58,35 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     }
   }
 
-  triggerErrorOverlay(err) {
-    const ErrorOverlay = customElements.get("vite-error-overlay");
+  triggerErrorOverlay(err: Error | null) {
+    if (!err) return;
 
-    if (ErrorOverlay) {
-      const overlay = document.querySelector(
-        "vite-error-overlay"
-      ) as HTMLElement & { err: Error };
-      if (overlay) {
-        overlay.err = err;
-      } else {
-        const overlay = new ErrorOverlay(err);
-        document.body.appendChild(overlay);
+    try {
+      const ErrorOverlay = customElements.get("vite-error-overlay");
+
+      if (ErrorOverlay) {
+        const existingOverlay = document.querySelector(
+          "vite-error-overlay"
+        ) as HTMLElement & { err: Error };
+        
+        if (existingOverlay) {
+          existingOverlay.err = err;
+        } else {
+          // Ensure error has required properties for Vite overlay
+          const formattedError = {
+            message: err.message || 'Unknown error',
+            stack: err.stack || '',
+            frame: '', // Add frame property to prevent undefined error
+            plugin: '',
+            id: '',
+            loc: undefined
+          };
+          const overlay = new ErrorOverlay(formattedError);
+          document.body.appendChild(overlay);
+        }
       }
+    } catch (overlayError) {
+      console.error('Failed to create error overlay:', overlayError);
     }
   }
 
