@@ -58,41 +58,13 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     }
   }
 
-  triggerErrorOverlay(err: Error | null) {
-    if (!err) return;
-
-    try {
-      const ErrorOverlay = customElements.get("vite-error-overlay");
-
-      if (ErrorOverlay) {
-        const existingOverlay = document.querySelector(
-          "vite-error-overlay"
-        ) as HTMLElement & { err: Error };
-        
-        if (existingOverlay) {
-          existingOverlay.err = err;
-        } else {
-          // Ensure error has required properties for Vite overlay
-          const formattedError = {
-            message: err.message || 'Unknown error',
-            stack: err.stack || '',
-            frame: '', // Add frame property to prevent undefined error
-            plugin: '',
-            id: '',
-            loc: undefined
-          };
-          const overlay = new ErrorOverlay(formattedError);
-          document.body.appendChild(overlay);
-        }
-      }
-    } catch (overlayError) {
-      console.error('Failed to create error overlay:', overlayError);
-    }
-  }
-
   render(): ReactNode {
     if (this.state.hasError) {
-      this.triggerErrorOverlay(this.state.error);
+      // Log error to console for debugging
+      console.error('Application Error:', this.state.error);
+      console.error('Component Stack:', this.state.errorInfo?.componentStack);
+      
+      // Return empty fragment - let Buildify's error overlay handle display
       return <></>;
     }
 
