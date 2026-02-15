@@ -17,22 +17,19 @@ const Dashboard: React.FC = () => {
   const [showConfetti, setShowConfetti] = useState(false);
   const [showTimeAd, setShowTimeAd] = useState(false);
 
-  // Initialize session time on mount
+  // Initialize session time on mount (non-blocking)
   useEffect(() => {
-    const initSessionTime = async () => {
-      if (!profile) return;
-      
-      // Set session start time if not already set
-      if (!profile.session_start_time) {
-        await supabase
-          .from('profiles')
-          .update({ session_start_time: new Date().toISOString() })
-          .eq('user_id', profile.user_id);
-        await refreshProfile();
-      }
-    };
+    if (!profile || profile.session_start_time) return;
     
-    initSessionTime();
+    // Update session start time asynchronously without blocking render
+    supabase
+      .from('profiles')
+      .update({ session_start_time: new Date().toISOString() })
+      .eq('user_id', profile.user_id)
+      .then(() => {
+        // Silently refresh profile in background
+        refreshProfile();
+      });
   }, [profile?.user_id]);
 
   // Check time-based ad
@@ -45,32 +42,24 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     if (!profile) return;
     
-    // Check daily login bonus
-    const checkDailyBonus = async () => {
-      const today = new Date().toISOString().split('T')[0];
-      const lastLogin = profile.last_daily_login?.split('T')[0];
-      
-      if (lastLogin !== today) {
-        try {
-          const { data, error } = await supabase.rpc('award_daily_login_bonus', {
-            p_user_id: profile.user_id,
-          });
-
-          if (error) throw error;
-
-          if (data.success) {
-            setShowConfetti(true);
-            setTimeout(() => setShowConfetti(false), 3000);
-            await refreshProfile();
-          }
-        } catch (error) {
-          // Silent fail - user can try again later
-        }
-      }
-    };
+    // Check daily login bonus (non-blocking)
+    const today = new Date().toISOString().split('T')[0];
+    const lastLogin = profile.last_daily_login?.split('T')[0];
     
-    checkDailyBonus();
-  }, [profile]);
+    if (lastLogin !== today) {
+      supabase.rpc('award_daily_login_bonus', {
+        p_user_id: profile.user_id,
+      }).then(({ data, error }) => {
+        if (!error && data?.success) {
+          setShowConfetti(true);
+          setTimeout(() => setShowConfetti(false), 3000);
+          refreshProfile();
+        }
+      }).catch(() => {
+        // Silent fail - user can try again later
+      });
+    }
+  }, [profile?.user_id]);
 
   if (!profile) return null;
 
