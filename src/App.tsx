@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -20,6 +19,8 @@ import Leaderboard from './pages/Leaderboard';
 import Notifications from './pages/Notifications';
 import TestSpinWheel from './pages/TestSpinWheel';
 import Layout from './components/Layout';
+
+// App component
 
 const queryClient = new QueryClient();
 
