@@ -38,6 +38,7 @@ interface AuthContextType {
   user: User | null;
   profile: Profile | null;
   loading: boolean;
+  signIn: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<Profile | null>;
   deviceId: string;
@@ -103,6 +104,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
+  const signIn = async (email: string, password: string, rememberMe: boolean = false) => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+      options: {
+        persistSession: rememberMe,
+      },
+    });
+
+    if (error) throw error;
+
+    if (data.user) {
+      // Check if user is banned
+      const profileData = await fetchProfile(data.user.id);
+      if (profileData?.is_banned) {
+        await supabase.auth.signOut();
+        throw new Error('Your account has been suspended. Please contact support.');
+      }
+    }
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
     setUser(null);
@@ -122,7 +144,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const deviceId = getDeviceId();
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signOut, refreshProfile, deviceId }}>
+    <AuthContext.Provider value={{ user, profile, loading, signIn, signOut, refreshProfile, deviceId }}>
       {children}
     </AuthContext.Provider>
   );
