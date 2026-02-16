@@ -141,6 +141,9 @@ Cozon RQ is a gamified rewards app where users earn coins through various activi
     - [x] Add payment status tracking and error handling
     - [x] Add webhook handler for Paystack transfer status updates
     - [x] Implement retry mechanism for failed payments
+    - [ ] Configure webhook URL in Paystack dashboard
+    - [ ] Monitor failed payments and retry success rates
+    - [ ] Add email notifications for payment status updates
 - [x] Leaderboard system
   - [x] Create leaderboard database views
   - [x] Build leaderboard UI (daily/weekly/all-time)

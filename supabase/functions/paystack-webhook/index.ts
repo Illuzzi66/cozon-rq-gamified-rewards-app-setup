@@ -55,204 +55,92 @@ function verifyPaystackSignature(payload: string, signature: string): boolean {
   return hash === signature;
 }
 
-serve(async (req) => {
-  // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
-  }
-
+async function sendEmailNotification(
+  supabase: any,
+  userEmail: string,
+  subject: string,
+  html: string
+) {
   try {
-    // Verify webhook signature
-    const signature = req.headers.get('x-paystack-signature');
-    const payload = await req.text();
-    
-    if (!signature || !verifyPaystackSignature(payload, signature)) {
-      console.error('Invalid webhook signature');
-      return new Response(
-        JSON.stringify({ success: false, error: 'Invalid signature' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    const { data, error } = await supabase.functions.invoke('send-email-notification', {
+      body: {
+        to: userEmail,
+        subject,
+        html,
+      },
+    });
+
+    if (error) {
+      console.error('Failed to send email:', error);
+    } else {
+      console.log('Email sent successfully:', data);
     }
-
-    const event: PaystackWebhookEvent = JSON.parse(payload);
-    console.log('Received webhook event:', event.event);
-
-    // Only process transfer events
-    if (!event.event.startsWith('transfer.')) {
-      return new Response(
-        JSON.stringify({ success: true, message: 'Event ignored' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Initialize Supabase client
-    const supabase = createClient(
-      SUPABASE_URL || '',
-      SUPABASE_SERVICE_ROLE_KEY || ''
-    );
-
-    // Extract withdrawal ID from reference (format: WD-{withdrawalId}-{timestamp})
-    const reference = event.data.reference;
-    const withdrawalId = reference.split('-')[1];
-
-    if (!withdrawalId) {
-      console.error('Invalid reference format:', reference);
-      return new Response(
-        JSON.stringify({ success: false, error: 'Invalid reference format' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Fetch withdrawal record
-    const { data: withdrawal, error: fetchError } = await supabase
-      .from('withdrawals')
-      .select('*, user:profiles(username, email)')
-      .eq('id', withdrawalId)
-      .single();
-
-    if (fetchError || !withdrawal) {
-      console.error('Withdrawal not found:', withdrawalId);
-      return new Response(
-        JSON.stringify({ success: false, error: 'Withdrawal not found' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Handle different transfer events
-    switch (event.event) {
-      case 'transfer.success':
-        // Update withdrawal to completed
-        await supabase
-          .from('withdrawals')
-          .update({
-            status: 'completed',
-            processed_at: event.data.transferred_at || new Date().toISOString(),
-            payment_details: {
-              ...withdrawal.payment_details,
-              paystack_status: 'success',
-              paystack_message: event.data.message,
-              gateway_response: event.data.gateway_response,
-              transferred_at: event.data.transferred_at,
-            },
-          })
-          .eq('id', withdrawalId);
-
-        // Send success notification
-        await supabase.from('notifications').insert({
-          user_id: withdrawal.user_id,
-          type: 'withdrawal_completed',
-          title: '✅ Payment Sent!',
-          message: `Your withdrawal of $${(event.data.amount / 100).toFixed(2)} has been successfully transferred to your account.`,
-          data: {
-            withdrawal_id: withdrawalId,
-            amount: event.data.amount / 100,
-            reference: reference,
-            transfer_code: event.data.transfer_code,
-          },
-        });
-        break;
-
-      case 'transfer.failed':
-        // Update withdrawal to failed and prepare for retry
-        const retryCount = (withdrawal.payment_details?.retry_count || 0) + 1;
-        const maxRetries = 3;
-
-        await supabase
-          .from('withdrawals')
-          .update({
-            status: retryCount >= maxRetries ? 'failed' : 'retry_pending',
-            payment_details: {
-              ...withdrawal.payment_details,
-              paystack_status: 'failed',
-              paystack_message: event.data.message,
-              gateway_response: event.data.gateway_response,
-              failures: event.data.failures,
-              retry_count: retryCount,
-              last_retry_at: new Date().toISOString(),
-            },
-            admin_note: retryCount >= maxRetries 
-              ? `Payment failed after ${maxRetries} attempts: ${event.data.message || 'Unknown error'}`
-              : `Payment failed (attempt ${retryCount}/${maxRetries}): ${event.data.message || 'Unknown error'}. Retry pending.`,
-          })
-          .eq('id', withdrawalId);
-
-        // Send notification
-        if (retryCount >= maxRetries) {
-          await supabase.from('notifications').insert({
-            user_id: withdrawal.user_id,
-            type: 'withdrawal_failed',
-            title: '❌ Payment Failed',
-            message: `Your withdrawal of $${(event.data.amount / 100).toFixed(2)} could not be processed. Please contact support.`,
-            data: {
-              withdrawal_id: withdrawalId,
-              amount: event.data.amount / 100,
-              reason: event.data.message || 'Unknown error',
-            },
-          });
-        } else {
-          await supabase.from('notifications').insert({
-            user_id: withdrawal.user_id,
-            type: 'withdrawal_retry',
-            title: '⏳ Payment Retry',
-            message: `Your withdrawal is being retried. Attempt ${retryCount} of ${maxRetries}.`,
-            data: {
-              withdrawal_id: withdrawalId,
-              amount: event.data.amount / 100,
-              retry_count: retryCount,
-            },
-          });
-        }
-        break;
-
-      case 'transfer.reversed':
-        // Handle reversal - return coins to user
-        await supabase
-          .from('withdrawals')
-          .update({
-            status: 'reversed',
-            payment_details: {
-              ...withdrawal.payment_details,
-              paystack_status: 'reversed',
-              paystack_message: event.data.message,
-              gateway_response: event.data.gateway_response,
-            },
-            admin_note: `Payment reversed: ${event.data.message || 'Unknown reason'}`,
-          })
-          .eq('id', withdrawalId);
-
-        // Return coins to user
-        await supabase.rpc('unlock_coins', {
-          p_user_id: withdrawal.user_id,
-          p_amount: withdrawal.amount_coins,
-        });
-
-        // Send notification
-        await supabase.from('notifications').insert({
-          user_id: withdrawal.user_id,
-          type: 'withdrawal_reversed',
-          title: '🔄 Payment Reversed',
-          message: `Your withdrawal of $${(event.data.amount / 100).toFixed(2)} was reversed. Coins have been returned to your account.`,
-          data: {
-            withdrawal_id: withdrawalId,
-            amount: event.data.amount / 100,
-            coins_returned: withdrawal.amount_coins,
-          },
-        });
-        break;
-    }
-
-    return new Response(
-      JSON.stringify({ success: true, message: 'Webhook processed' }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
   } catch (error) {
-    console.error('Error processing webhook:', error);
-    return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: error.message || 'Failed to process webhook'
-      }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    console.error('Error invoking email function:', error);
   }
-});
+}
+
+function getEmailTemplate(type: 'success' | 'failed' | 'reversed', amount: string, reference: string, reason?: string): string {
+  const baseStyle = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9fafb;">
+      <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+        <h1 style="color: white; margin: 0; font-size: 28px;">Cozon RQ</h1>
+      </div>
+      <div style="background-color: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+  `;
+
+  const footer = `
+      </div>
+      <div style="text-align: center; margin-top: 20px; color: #6b7280; font-size: 12px;">
+        <p>© 2026 Cozon RQ. All rights reserved.</p>
+        <p>This is an automated message. Please do not reply to this email.</p>
+      </div>
+    </div>
+  `;
+
+  if (type === 'success') {
+    return `${baseStyle}
+        <div style="text-align: center; margin-bottom: 20px;">
+          <div style="background-color: #10b981; width: 60px; height: 60px; border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center;">
+            <span style="color: white; font-size: 30px;">✓</span>
+          </div>
+        </div>
+        <h2 style="color: #1f2937; text-align: center; margin-bottom: 20px;">Payment Successful!</h2>
+        <p style="color: #4b5563; font-size: 16px; line-height: 1.6;">
+          Great news! Your withdrawal of <strong style="color: #10b981;">${amount}</strong> has been successfully processed and sent to your account.
+        </p>
+        <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <p style="margin: 5px 0; color: #6b7280; font-size: 14px;"><strong>Reference:</strong> ${reference}</p>
+        </div>
+        <p style="color: #6b7280; font-size: 14px;">
+          The funds should appear in your account within a few minutes to 24 hours depending on your bank.
+        </p>
+      ${footer}`;
+  } else if (type === 'failed') {
+    return `${baseStyle}
+        <div style="text-align: center; margin-bottom: 20px;">
+          <div style="background-color: #ef4444; width: 60px; height: 60px; border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center;">
+            <span style="color: white; font-size: 30px;">✕</span>
+          </div>
+        </div>
+        <h2 style="color: #1f2937; text-align: center; margin-bottom: 20px;">Payment Failed</h2>
+        <p style="color: #4b5563; font-size: 16px; line-height: 1.6;">
+          Unfortunately, your withdrawal of <strong>${amount}</strong> could not be processed at this time.
+        </p>
+        <div style="background-color: #fef2f2; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ef4444;">
+          <p style="margin: 5px 0; color: #6b7280; font-size: 14px;"><strong>Reference:</strong> ${reference}</p>
+          ${reason ? `<p style="margin: 5px 0; color: #991b1b; font-size: 14px;"><strong>Reason:</strong> ${reason}</p>` : ''}
+        </div>
+        <p style="color: #6b7280; font-size: 14px;">
+          Don't worry! We're automatically retrying the payment. Your coins have been returned to your wallet. If the issue persists, please contact support.
+        </p>
+      ${footer}`;
+  } else {
+    return `${baseStyle}
+        <div style="text-align: center; margin-bottom: 20px;">
+          <div style="background-color: #f59e0b; width: 60px; height: 60px; border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center;">
+            <span style="color: white; font-size: 30px;">↻</span>
+          </div>
+        </div>
+        <h2 style="color: #1f2937; text-align: center; margin-bottom: 20px;">Payment Reversed</h2>
+        <p style="color: #4b5563; font-
