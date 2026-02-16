@@ -14,6 +14,7 @@ interface EmailRequest {
   subject: string;
   html: string;
   from?: string;
+  replyTo?: string;
 }
 
 serve(async (req) => {
@@ -26,11 +27,26 @@ serve(async (req) => {
       throw new Error('RESEND_API_KEY not configured');
     }
 
-    const { to, subject, html, from = 'Cozon RQ <noreply@cozonrq.com>' }: EmailRequest = await req.json();
+    const { 
+      to, 
+      subject, 
+      html, 
+      from = 'Cozon RQ <noreply@cozonrq.com>',
+      replyTo = 'support@cozonrq.com'
+    }: EmailRequest = await req.json();
 
     if (!to || !subject || !html) {
       return new Response(
         JSON.stringify({ error: 'Missing required fields: to, subject, html' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(to)) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid email address format' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -47,6 +63,7 @@ serve(async (req) => {
         to,
         subject,
         html,
+        reply_to: replyTo,
       }),
     });
 
@@ -54,11 +71,33 @@ serve(async (req) => {
 
     if (!response.ok) {
       console.error('Resend API error:', data);
+      
+      // Handle specific Resend errors
+      if (data.name === 'validation_error') {
+        return new Response(
+          JSON.stringify({ error: 'Email validation failed', details: data.message }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      if (data.name === 'missing_required_fields') {
+        return new Response(
+          JSON.stringify({ error: 'Missing required email fields', details: data.message }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
       throw new Error(data.message || 'Failed to send email');
     }
 
+    console.log('Email sent successfully:', { id: data.id, to });
+
     return new Response(
-      JSON.stringify({ success: true, id: data.id }),
+      JSON.stringify({ 
+        success: true, 
+        id: data.id,
+        message: 'Email sent successfully' 
+      }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
