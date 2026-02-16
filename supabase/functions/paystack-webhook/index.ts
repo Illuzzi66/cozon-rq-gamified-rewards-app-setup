@@ -143,4 +143,132 @@ function getEmailTemplate(type: 'success' | 'failed' | 'reversed', amount: strin
           </div>
         </div>
         <h2 style="color: #1f2937; text-align: center; margin-bottom: 20px;">Payment Reversed</h2>
-        <p style="color: #4b5563; font-
+        <p style="color: #4b5563; font-size: 16px; line-height: 1.6;">
+          Your withdrawal of <strong>${amount}</strong> was reversed by the payment processor.
+        </p>
+        <div style="background-color: #fef3c7; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;">
+          <p style="margin: 5px 0; color: #6b7280; font-size: 14px;"><strong>Reference:</strong> ${reference}</p>
+          ${reason ? `<p style="margin: 5px 0; color: #92400e; font-size: 14px;"><strong>Reason:</strong> ${reason}</p>` : ''}
+        </div>
+        <p style="color: #6b7280; font-size: 14px;">
+          The funds have been returned to your wallet. Please contact support if you have questions.
+        </p>
+      ${footer}`;
+  }
+}
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
+  }
+
+  try {
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+      throw new Error('Missing Supabase configuration');
+    }
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    
+    // Verify Paystack signature
+    const signature = req.headers.get('x-paystack-signature');
+    const body = await req.text();
+    
+    if (!signature || !verifyPaystackSignature(body, signature)) {
+      console.error('Invalid webhook signature');
+      return new Response(
+        JSON.stringify({ error: 'Invalid signature' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const event: PaystackWebhookEvent = JSON.parse(body);
+    console.log('Received webhook event:', event.event, event.data.reference);
+
+    // Handle transfer events
+    if (event.event === 'transfer.success' || event.event === 'transfer.failed' || event.event === 'transfer.reversed') {
+      const { reference, status, amount, reason } = event.data;
+      
+      // Find withdrawal by reference
+      const { data: withdrawal, error: fetchError } = await supabase
+        .from('withdrawals')
+        .select('*, profiles!inner(email, username)')
+        .eq('paystack_reference', reference)
+        .single();
+
+      if (fetchError || !withdrawal) {
+        console.error('Withdrawal not found:', reference);
+        return new Response(
+          JSON.stringify({ error: 'Withdrawal not found' }),
+          { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      let newStatus = withdrawal.status;
+      let emailType: 'success' | 'failed' | 'reversed' = 'success';
+      let emailSubject = '';
+
+      if (event.event === 'transfer.success') {
+        newStatus = 'completed';
+        emailType = 'success';
+        emailSubject = '✅ Withdrawal Successful - Cozon RQ';
+      } else if (event.event === 'transfer.failed') {
+        newStatus = 'failed';
+        emailType = 'failed';
+        emailSubject = '❌ Withdrawal Failed - Cozon RQ';
+      } else if (event.event === 'transfer.reversed') {
+        newStatus = 'failed';
+        emailType = 'reversed';
+        emailSubject = '↻ Withdrawal Reversed - Cozon RQ';
+      }
+
+      // Update withdrawal status
+      const { error: updateError } = await supabase
+        .from('withdrawals')
+        .update({
+          status: newStatus,
+          payment_status: status,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', withdrawal.id);
+
+      if (updateError) {
+        console.error('Failed to update withdrawal:', updateError);
+      }
+
+      // Send email notification
+      const amountFormatted = `$${(amount / 100).toFixed(2)}`;
+      const emailHtml = getEmailTemplate(emailType, amountFormatted, reference, reason);
+      
+      await sendEmailNotification(
+        supabase,
+        withdrawal.profiles.email,
+        emailSubject,
+        emailHtml
+      );
+
+      // Create in-app notification
+      await supabase.from('notifications').insert({
+        user_id: withdrawal.user_id,
+        title: emailSubject,
+        message: emailType === 'success' 
+          ? `Your withdrawal of ${amountFormatted} has been completed successfully.`
+          : `Your withdrawal of ${amountFormatted} ${emailType === 'failed' ? 'failed' : 'was reversed'}. ${reason || ''}`,
+        type: 'withdrawal',
+        read: false,
+      });
+
+      console.log(`Processed ${event.event} for withdrawal ${withdrawal.id}`);
+    }
+
+    return new Response(
+      JSON.stringify({ success: true }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  } catch (error) {
+    console.error('Webhook error:', error);
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+});
