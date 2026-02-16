@@ -188,7 +188,7 @@ Cozon RQ is a gamified rewards app where users earn coins through various activi
   - [x] Adjust rarity indicators (750 coins = rare, 3000 coins = ultra rare)
   - [x] Update spin history display to show dollar values
   - [x] Ensure backend still awards correct coin amounts (750 and 3000)
-- [ ] Reduce daily ad limit for spins from 5 to 3
-  - [ ] Update database constraint for daily ad limit
-  - [ ] Update frontend display to show 3/3 instead of 5/5
-  - [ ] Update ad tracking logic
+- [x] Reduce daily ad limit for spins from 5 to 3
+  - [x] Update database constraint for daily ad limit
+  - [x] Update frontend display to show 3/3 instead of 5/5
+  - [x] Update ad tracking logic

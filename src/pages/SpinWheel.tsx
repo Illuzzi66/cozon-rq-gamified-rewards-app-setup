@@ -62,7 +62,7 @@ export const SpinWheel: React.FC = () => {
   const [adCompleted, setAdCompleted] = useState(false);
   const [claimingReward, setClaimingReward] = useState(false);
   const [adsWatchedToday, setAdsWatchedToday] = useState(0);
-  const [adsRemaining, setAdsRemaining] = useState(5);
+  const [adsRemaining, setAdsRemaining] = useState(3);
   const [dailyBonusAvailable, setDailyBonusAvailable] = useState(false);
   const [nextClaimTime, setNextClaimTime] = useState<Date | null>(null);
   const [timeRemaining, setTimeRemaining] = useState<string>('');
@@ -944,7 +944,7 @@ export const SpinWheel: React.FC = () => {
                       disabled={adsRemaining <= 0}
                     >
                       <Video className="w-5 h-5 mr-2" />
-                      Watch Ad ({adsRemaining}/5)
+                      Watch Ad ({adsRemaining}/3)
                     </Button>
                     <Button
                       onClick={() => setShowPurchaseDialog(true)}
