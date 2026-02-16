@@ -38,7 +38,7 @@ export default function Layout({ children }: LayoutProps) {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 bg-primary/10 px-3 py-1.5 rounded-full">
               <Coins className="w-4 h-4 text-primary" />
-              <span className="font-semibold text-foreground">{profile?.coins || 0}</span>
+              <span className="font-semibold text-foreground">{profile?.coin_balance || 0}</span>
             </div>
             {profile?.is_premium && (
               <Crown className="w-5 h-5 text-yellow-500" />
