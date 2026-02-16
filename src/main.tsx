@@ -32,14 +32,16 @@ if (import.meta.hot) {
     console.error('Vite error (suppressed):', err);
   });
   
-  // Remove any error overlays that slip through
+  // Remove any error overlays that slip through (one-time cleanup)
   const removeOverlays = () => {
     document.querySelectorAll('vite-error-overlay').forEach(el => el.remove());
   };
   
   import.meta.hot.on('vite:beforeUpdate', removeOverlays);
   import.meta.hot.on('vite:afterUpdate', removeOverlays);
-  setInterval(removeOverlays, 100);
+  
+  // One-time cleanup on initialization
+  removeOverlays();
 }
 
 createRoot(document.getElementById("root")!).render(
