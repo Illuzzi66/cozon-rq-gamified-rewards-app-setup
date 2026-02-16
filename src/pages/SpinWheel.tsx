@@ -38,12 +38,12 @@ const wheelSegments: WheelSegment[] = [
   { id: 1, label: '$0.50', rewardType: 'money', rewardAmount: 0, moneyAmount: 0.50, color: 'hsl(142 76% 36%)', probability: 15, icon: '💵' },
   { id: 2, label: '25 Coins', rewardType: 'coins', rewardAmount: 25, color: 'hsl(217 91% 60%)', probability: 18, icon: '🪙' },
   { id: 3, label: 'Try Again', rewardType: 'loss', rewardAmount: 0, rewardSubtype: 'try_again', color: 'hsl(0 84% 60%)', probability: 15, icon: '😢' },
-  { id: 4, label: '+2 Spins', rewardType: 'spins', rewardAmount: 2, rewardSubtype: 'extra_spins', color: 'hsl(280 100% 70%)', probability: 10, icon: '🎰' },
-  { id: 5, label: '$2.00', rewardType: 'money', rewardAmount: 0, moneyAmount: 2.00, color: 'hsl(45 93% 47%)', probability: 0.5, icon: '💰' },
-  { id: 6, label: '50 Coins', rewardType: 'coins', rewardAmount: 50, color: 'hsl(38 92% 50%)', probability: 8, icon: '🪙' },
-  { id: 7, label: '100 Coins', rewardType: 'coins', rewardAmount: 100, color: 'hsl(280 65% 60%)', probability: 5, icon: '💎' },
-  { id: 8, label: '500 Coins', rewardType: 'coins', rewardAmount: 500, color: 'hsl(45 100% 51%)', probability: 1.5, icon: '👑' },
-  { id: 9, label: 'Better Luck', rewardType: 'loss', rewardAmount: 0, rewardSubtype: 'better_luck', color: 'hsl(0 72% 51%)', probability: 5, icon: '💔' },
+  { id: 4, label: '100 Coins', rewardType: 'coins', rewardAmount: 100, color: 'hsl(280 65% 60%)', probability: 5, icon: '💎' },
+  { id: 5, label: '+2 Spins', rewardType: 'spins', rewardAmount: 2, rewardSubtype: 'extra_spins', color: 'hsl(280 100% 70%)', probability: 10, icon: '🎰' },
+  { id: 6, label: '$2.00', rewardType: 'money', rewardAmount: 0, moneyAmount: 2.00, color: 'hsl(45 93% 47%)', probability: 0.5, icon: '💰' },
+  { id: 7, label: '50 Coins', rewardType: 'coins', rewardAmount: 50, color: 'hsl(38 92% 50%)', probability: 8, icon: '🪙' },
+  { id: 8, label: 'Better Luck', rewardType: 'loss', rewardAmount: 0, rewardSubtype: 'better_luck', color: 'hsl(0 72% 51%)', probability: 5, icon: '💔' },
+  { id: 9, label: '500 Coins', rewardType: 'coins', rewardAmount: 500, color: 'hsl(45 100% 51%)', probability: 1.5, icon: '👑' },
 ];
 
 export const SpinWheel: React.FC = () => {
@@ -349,7 +349,9 @@ export const SpinWheel: React.FC = () => {
       const segmentAngle = 360 / wheelSegments.length;
       
       // Calculate rotation to align winning segment with top pointer
-      const segmentCenterAngle = reward.id * segmentAngle;
+      // The pointer is at the top (0 degrees), so we need to rotate the wheel
+      // so that the CENTER of the winning segment aligns with the pointer
+      const segmentCenterAngle = reward.id * segmentAngle + (segmentAngle / 2);
       
       // Add multiple full rotations for dramatic effect (5-8 full spins)
       const fullRotations = 5 + Math.floor(Math.random() * 3);
@@ -844,7 +846,8 @@ export const SpinWheel: React.FC = () => {
                 >
                   {wheelSegments.map((segment, index) => {
                     const segmentAngle = 360 / wheelSegments.length;
-                    const startAngle = index * segmentAngle - 90;
+                    // Start from -90 degrees (top) and offset by half segment to center align
+                    const startAngle = index * segmentAngle - 90 - (segmentAngle / 2);
                     const endAngle = startAngle + segmentAngle;
                     
                     const startRad = (startAngle * Math.PI) / 180;
@@ -861,8 +864,14 @@ export const SpinWheel: React.FC = () => {
                     
                     const textAngle = startAngle + segmentAngle / 2;
                     const textRad = (textAngle * Math.PI) / 180;
-                    const textX = 200 + 130 * Math.cos(textRad);
-                    const textY = 200 + 130 * Math.sin(textRad);
+                    
+                    // Position emoji closer to edge
+                    const emojiX = 200 + 145 * Math.cos(textRad);
+                    const emojiY = 200 + 145 * Math.sin(textRad);
+                    
+                    // Position text closer to center
+                    const textX = 200 + 110 * Math.cos(textRad);
+                    const textY = 200 + 110 * Math.sin(textRad);
                     
                     return (
                       <g key={segment.id}>
@@ -872,27 +881,29 @@ export const SpinWheel: React.FC = () => {
                           stroke="white"
                           strokeWidth="2"
                         />
+                        {/* Emoji */}
+                        <text
+                          x={emojiX}
+                          y={emojiY}
+                          textAnchor="middle"
+                          dominantBaseline="middle"
+                          fill="white"
+                          fontSize="26"
+                          fontWeight="bold"
+                          transform={`rotate(${textAngle + 90}, ${emojiX}, ${emojiY})`}
+                        >
+                          {segment.icon}
+                        </text>
+                        {/* Label */}
                         <text
                           x={textX}
                           y={textY}
                           textAnchor="middle"
                           dominantBaseline="middle"
                           fill="white"
-                          fontSize="28"
-                          fontWeight="bold"
-                          transform={`rotate(${textAngle + 90}, ${textX}, ${textY})`}
-                        >
-                          {segment.icon}
-                        </text>
-                        <text
-                          x={textX}
-                          y={textY + 20}
-                          textAnchor="middle"
-                          dominantBaseline="middle"
-                          fill="white"
                           fontSize="11"
                           fontWeight="bold"
-                          transform={`rotate(${textAngle + 90}, ${textX}, ${textY + 20})`}
+                          transform={`rotate(${textAngle + 90}, ${textX}, ${textY})`}
                         >
                           {segment.label}
                         </text>
