@@ -3,7 +3,7 @@ import App from './App.tsx'
 import './index.css'
 import ErrorBoundary from './components/ErrorBoundary.tsx';
 
-// Main entry point
+// Main entry point - Application bootstrap
 createRoot(document.getElementById("root")!).render(
     <ErrorBoundary>
         <App />
