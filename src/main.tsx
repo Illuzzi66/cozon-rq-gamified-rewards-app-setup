@@ -3,25 +3,18 @@ import App from './App.tsx'
 import './index.css'
 import ErrorBoundary from './components/ErrorBoundary.tsx';
 
-// Main entry point - Application bootstrap v5
-// Completely disable Vite error overlay to prevent frame access errors
-if (import.meta.hot) {
-  // Suppress all Vite errors
-  import.meta.hot.on('vite:error', (err) => {
-    console.error('Vite error:', err);
-  });
-  
-  // Remove error overlays immediately
-  const removeOverlays = () => {
-    document.querySelectorAll('vite-error-overlay').forEach(el => el.remove());
-  };
-  
-  import.meta.hot.on('vite:beforeUpdate', removeOverlays);
-  import.meta.hot.on('vite:afterUpdate', removeOverlays);
-  
-  // Continuously monitor and remove overlays
-  setInterval(removeOverlays, 100);
-}
+// Main entry point - Application bootstrap v6
+// Aggressively prevent Vite error overlay frame access errors
+
+// Override customElements.define to block error overlay registration
+const originalDefine = customElements.define.bind(customElements);
+customElements.define = function(name: string, constructor: any, options?: any) {
+  if (name === 'vite-error-overlay') {
+    console.warn('Blocked vite-error-overlay registration');
+    return;
+  }
+  return originalDefine(name, constructor, options);
+};
 
 // Prevent error overlay creation at the document level
 const originalCreateElement = document.createElement.bind(document);
@@ -32,6 +25,22 @@ document.createElement = function(tagName: string, options?: any) {
   }
   return originalCreateElement(tagName, options);
 };
+
+// Suppress Vite HMR errors
+if (import.meta.hot) {
+  import.meta.hot.on('vite:error', (err) => {
+    console.error('Vite error (suppressed):', err);
+  });
+  
+  // Remove any error overlays that slip through
+  const removeOverlays = () => {
+    document.querySelectorAll('vite-error-overlay').forEach(el => el.remove());
+  };
+  
+  import.meta.hot.on('vite:beforeUpdate', removeOverlays);
+  import.meta.hot.on('vite:afterUpdate', removeOverlays);
+  setInterval(removeOverlays, 100);
+}
 
 createRoot(document.getElementById("root")!).render(
     <ErrorBoundary>
