@@ -35,12 +35,12 @@ interface WheelSegment {
 
 const wheelSegments: WheelSegment[] = [
   { id: 0, label: '10 Coins', rewardType: 'coins', rewardAmount: 10, color: 'hsl(262 83% 58%)', probability: 22, icon: '🪙' },
-  { id: 1, label: '750 Coins', rewardType: 'money', rewardAmount: 0, moneyAmount: 0.50, color: 'hsl(142 76% 36%)', probability: 15, icon: '💵' },
+  { id: 1, label: '$0.50', rewardType: 'money', rewardAmount: 750, moneyAmount: 0.50, color: 'hsl(142 76% 36%)', probability: 15, icon: '💵' },
   { id: 2, label: '25 Coins', rewardType: 'coins', rewardAmount: 25, color: 'hsl(217 91% 60%)', probability: 18, icon: '🪙' },
   { id: 3, label: 'Try Again', rewardType: 'loss', rewardAmount: 0, rewardSubtype: 'try_again', color: 'hsl(0 84% 60%)', probability: 15, icon: '😢' },
   { id: 4, label: '100 Coins', rewardType: 'coins', rewardAmount: 100, color: 'hsl(280 65% 60%)', probability: 5, icon: '💎' },
   { id: 5, label: '+2 Spins', rewardType: 'spins', rewardAmount: 2, rewardSubtype: 'extra_spins', color: 'hsl(280 100% 70%)', probability: 10, icon: '🎰' },
-  { id: 6, label: '3000 Coins', rewardType: 'money', rewardAmount: 0, moneyAmount: 2.00, color: 'hsl(45 93% 47%)', probability: 0.5, icon: '💰' },
+  { id: 6, label: '$2', rewardType: 'money', rewardAmount: 3000, moneyAmount: 2.00, color: 'hsl(45 93% 47%)', probability: 0.5, icon: '💰' },
   { id: 7, label: '50 Coins', rewardType: 'coins', rewardAmount: 50, color: 'hsl(38 92% 50%)', probability: 8, icon: '🪙' },
   { id: 8, label: 'Better Luck', rewardType: 'loss', rewardAmount: 0, rewardSubtype: 'better_luck', color: 'hsl(0 72% 51%)', probability: 5, icon: '💔' },
   { id: 9, label: '500 Coins', rewardType: 'coins', rewardAmount: 500, color: 'hsl(45 100% 51%)', probability: 1.5, icon: '👑' },
@@ -430,9 +430,8 @@ export const SpinWheel: React.FC = () => {
             if (reward.rewardType === 'coins') {
               rewardText = `${reward.rewardAmount} coins`;
             } else if (reward.rewardType === 'money') {
-              const coinEquivalent = Math.round(reward.moneyAmount! * 1500);
               const premiumBonus = profile.is_premium ? ' (2.5x premium bonus!)' : '';
-              rewardText = `${coinEquivalent} coins ($${reward.moneyAmount})${premiumBonus}`;
+              rewardText = `$${reward.moneyAmount?.toFixed(2)}${premiumBonus}`;
             } else {
               rewardText = `${reward.rewardAmount} spins`;
             }
@@ -1066,7 +1065,7 @@ export const SpinWheel: React.FC = () => {
               </h2>
               <p className={`text-3xl font-bold ${lastReward.rewardType === 'loss' ? 'text-destructive' : 'text-gold'}`}>
                 {lastReward.rewardType === 'coins' && `${lastReward.rewardAmount} Coins`}
-                {lastReward.rewardType === 'money' && `${Math.round(lastReward.moneyAmount! * 1500)} Coins ($${lastReward.moneyAmount?.toFixed(2)})`}
+                {lastReward.rewardType === 'money' && `$${lastReward.moneyAmount?.toFixed(2)}`}
                 {lastReward.rewardType === 'spins' && `+${lastReward.rewardAmount} Spins`}
                 {lastReward.rewardType === 'loss' && lastReward.label}
               </p>
@@ -1097,7 +1096,7 @@ export const SpinWheel: React.FC = () => {
                     <div>
                       <p className="font-semibold">
                         {spin.reward_type === 'coins' && `${spin.reward_amount} Coins`}
-                        {spin.reward_type === 'money' && `${Math.round(spin.money_amount * 1500)} Coins ($${spin.money_amount.toFixed(2)})`}
+                        {spin.reward_type === 'money' && `$${spin.money_amount.toFixed(2)}`}
                         {spin.reward_type === 'spins' && `+${spin.reward_amount} Spins`}
                         {spin.reward_type === 'loss' && 'No Win'}
                       </p>
