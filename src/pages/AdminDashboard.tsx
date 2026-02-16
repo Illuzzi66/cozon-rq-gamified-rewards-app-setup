@@ -57,6 +57,7 @@ import {
   Wallet,
   Clock,
   Settings,
+  RefreshCw,
 } from 'lucide-react';
 
 interface ReportedMeme {
