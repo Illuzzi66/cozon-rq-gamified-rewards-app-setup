@@ -104,14 +104,25 @@ export const WatchAds: React.FC = () => {
       // Sync with database FIRST
       console.log('📞 Recording ad view in database...');
       
-      const { data, error } = await supabase.rpc('record_ad_view', {
+      const { data: rawData, error } = await supabase.rpc('record_ad_view', {
         p_user_id: profile.user_id,
         p_ad_type: 'video',
         p_view_duration: 15,
       });
 
-      console.log('📥 Database response:', { data, error });
-      console.log('Data type:', typeof data, 'Data value:', JSON.stringify(data));
+      console.log('📥 Database response:', { rawData, error });
+      console.log('Data type:', typeof rawData, 'Data value:', JSON.stringify(rawData));
+
+      // Parse response - Supabase RPC returns JSON directly
+      let data = rawData;
+      if (typeof rawData === 'string') {
+        try {
+          data = JSON.parse(rawData);
+          console.log('📦 Parsed JSON data:', data);
+        } catch (e) {
+          console.error('Failed to parse response:', e);
+        }
+      }
 
       if (error) {
         console.error('❌ Database error:', error);
@@ -121,18 +132,22 @@ export const WatchAds: React.FC = () => {
           description: error.message || 'Failed to claim reward. Please try again.',
           variant: 'destructive',
         });
-      } else if (data && data.success === true) {
+      } else if (data && (data.success === true || data.success === 'true' || data.success === 't')) {
+        console.log('✅ Success! Coins earned:', data.coins_earned, 'New balance:', data.new_balance);
         
         // Update UI with confirmed database values
-        if (data.new_balance) {
-          updateProfileOptimistic({ coin_balance: data.new_balance });
+        if (data.new_balance !== undefined && data.new_balance !== null) {
+          const newBalance = typeof data.new_balance === 'string' ? parseFloat(data.new_balance) : data.new_balance;
+          updateProfileOptimistic({ coin_balance: newBalance });
+          console.log('💰 Updated balance to:', newBalance);
         }
         
         if (stats) {
+          const coinsEarned = typeof data.coins_earned === 'string' ? parseInt(data.coins_earned) : data.coins_earned;
           setStats({
             ...stats,
             daily_count: stats.daily_count + 1,
-            daily_earnings: stats.daily_earnings + expectedReward,
+            daily_earnings: stats.daily_earnings + coinsEarned,
             remaining: Math.max(0, stats.remaining - 1),
           });
         }
@@ -140,7 +155,7 @@ export const WatchAds: React.FC = () => {
         // Show success notification AFTER database confirms
         toast({
           title: '🎉 Reward Claimed!',
-          description: `You earned ${expectedReward} coins! New balance: ${data.new_balance}`,
+          description: `You earned ${data.coins_earned || expectedReward} coins! New balance: ${data.new_balance}`,
         });
         
         // Refresh stats immediately
@@ -151,8 +166,11 @@ export const WatchAds: React.FC = () => {
         
         // Force refresh profile to ensure persistence
         await refreshProfile();
+        
+        console.log('🔄 Profile refreshed');
       } else {
         console.warn('⚠️ Unexpected response format:', data);
+        console.log('Success value:', data?.success, 'Type:', typeof data?.success);
         console.log('Error message:', data?.error);
         updateProfileOptimistic({ coin_balance: oldBalance });
         toast({
