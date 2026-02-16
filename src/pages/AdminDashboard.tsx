@@ -390,31 +390,54 @@ const AdminDashboard: React.FC = () => {
       const withdrawal = withdrawals.find(w => w.id === withdrawalId);
       if (!withdrawal) return;
 
-      const { error } = await supabase
-        .from('withdrawals')
-        .update({
-          status,
-          admin_id: profile?.user_id,
-          reviewed_at: new Date().toISOString(),
-          processed_at: new Date().toISOString(),
-        })
-        .eq('id', withdrawalId);
-
-      if (error) throw error;
-
-      // Create notification for user
       if (status === 'completed') {
-        await supabase.from('notifications').insert({
-          user_id: withdrawal.user_id,
-          type: 'withdrawal_approved',
-          title: '🎉 Withdrawal Approved!',
-          message: `Your withdrawal of $${withdrawal.amount.toFixed(2)} has been approved and will be processed shortly.`,
-          data: {
-            withdrawal_id: withdrawalId,
-            amount: withdrawal.amount,
-          },
+        // Call Paystack edge function to process payment
+        toast({
+          title: 'Processing Payment',
+          description: 'Initiating payment via Paystack...',
+        });
+
+        const { data: session } = await supabase.auth.getSession();
+        const response = await fetch(
+          'https://dhzgnxfhcgjzlzmfdfid.supabase.co/functions/v1/process-withdrawal',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session.session?.access_token}`,
+            },
+            body: JSON.stringify({
+              withdrawalId,
+              adminId: profile?.user_id,
+            }),
+          }
+        );
+
+        const result = await response.json();
+
+        if (!result.success) {
+          throw new Error(result.error || 'Payment processing failed');
+        }
+
+        toast({
+          title: 'Payment Processed',
+          description: `Payment of $${withdrawal.amount.toFixed(2)} has been sent via Paystack.`,
         });
       } else {
+        // Handle rejection
+        const { error } = await supabase
+          .from('withdrawals')
+          .update({
+            status: 'rejected',
+            admin_id: profile?.user_id,
+            reviewed_at: new Date().toISOString(),
+            admin_note: 'Rejected by admin',
+          })
+          .eq('id', withdrawalId);
+
+        if (error) throw error;
+
+        // Create notification for user
         await supabase.from('notifications').insert({
           user_id: withdrawal.user_id,
           type: 'withdrawal_rejected',
@@ -425,14 +448,12 @@ const AdminDashboard: React.FC = () => {
             amount: withdrawal.amount,
           },
         });
-      }
 
-      toast({
-        title: status === 'completed' ? 'Withdrawal Approved' : 'Withdrawal Rejected',
-        description: status === 'completed'
-          ? 'The withdrawal has been approved and user will be notified.'
-          : 'The withdrawal has been rejected and user will be notified.',
-      });
+        toast({
+          title: 'Withdrawal Rejected',
+          description: 'The withdrawal has been rejected and user will be notified.',
+        });
+      }
 
       await fetchWithdrawals();
       await fetchStats();
@@ -440,7 +461,7 @@ const AdminDashboard: React.FC = () => {
       console.error('Error processing withdrawal:', error);
       toast({
         title: 'Error',
-        description: 'Failed to process withdrawal',
+        description: error instanceof Error ? error.message : 'Failed to process withdrawal',
         variant: 'destructive',
       });
     } finally {
