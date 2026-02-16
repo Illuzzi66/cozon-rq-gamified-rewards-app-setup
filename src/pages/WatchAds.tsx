@@ -247,19 +247,12 @@ export const WatchAds: React.FC = () => {
           <Button
             size="lg"
             onClick={handleWatchAd}
-            disabled={loading || (stats && stats.remaining <= 0)}
+            disabled={loading}
             className="w-full"
           >
             <Play className="w-5 h-5 mr-2" />
-            {stats && stats.remaining <= 0 ? 'Daily Limit Reached' : 'Start Watching'}
+            Start Watching
           </Button>
-
-          {stats && stats.remaining <= 0 && (
-            <div className="flex items-center justify-center gap-2 text-warning">
-              <AlertCircle className="w-5 h-5" />
-              <span className="text-sm">Come back tomorrow for more ads!</span>
-            </div>
-          )}
         </Card>
 
         {/* Banner Ad */}
@@ -296,9 +289,9 @@ export const WatchAds: React.FC = () => {
                 <span className="text-sm font-bold text-accent">3</span>
               </div>
               <div>
-                <p className="font-semibold">Daily Limit</p>
+                <p className="font-semibold">Unlimited Earning</p>
                 <p className="text-sm text-muted-foreground">
-                  Watch up to 20 ads per day to maximize earnings
+                  Watch as many ads as you want - no daily limits!
                 </p>
               </div>
             </div>
