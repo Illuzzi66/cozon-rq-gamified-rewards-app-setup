@@ -2,10 +2,9 @@
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Play, Gift, X, Clock } from 'lucide-react';
+import { Play, Gift, X } from 'lucide-react';
 import { ADMOB_CONFIG, trackAdImpression, trackAdReward, simulateAdLoad } from '@/lib/admob';
 import { Progress } from '@/components/ui/progress';
-import { useAdFrequency } from '@/hooks/useAdFrequency';
 
 interface RewardedVideoAdProps {
   isOpen: boolean;
@@ -27,15 +26,12 @@ export function RewardedVideoAd({
   const [progress, setProgress] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
   const [isClaiming, setIsClaiming] = useState(false);
-  const { canShowAd, timeUntilNextAd, recordAdShown } = useAdFrequency();
 
   const VIDEO_DURATION = 15; // 15 seconds
 
   useEffect(() => {
     if (isOpen) {
-      if (canShowAd) {
-        loadAd();
-      }
+      loadAd();
     } else {
       // Reset state when dialog closes
       setIsLoading(true);
@@ -44,7 +40,7 @@ export function RewardedVideoAd({
       setIsCompleted(false);
       setIsClaiming(false);
     }
-  }, [isOpen, canShowAd]);
+  }, [isOpen]);
 
   useEffect(() => {
     if (isPlaying && progress < 100) {
@@ -92,8 +88,7 @@ export function RewardedVideoAd({
     console.log('Auto-claiming reward after video completion...');
     setIsClaiming(true);
     try {
-      await recordAdShown();
-      console.log('Ad shown recorded, calling onRewardEarned...');
+      console.log('Calling onRewardEarned...');
       await onRewardEarned({ type: rewardType, amount: rewardAmount });
       console.log('Reward earned callback completed');
       // Keep dialog open briefly to show success state
@@ -115,8 +110,7 @@ export function RewardedVideoAd({
     console.log('Starting reward claim process...');
     setIsClaiming(true);
     try {
-      await recordAdShown();
-      console.log('Ad shown recorded, calling onRewardEarned...');
+      console.log('Calling onRewardEarned...');
       await onRewardEarned({ type: rewardType, amount: rewardAmount });
       console.log('Reward earned callback completed');
       // Close immediately after reward is processed
@@ -145,22 +139,7 @@ export function RewardedVideoAd({
           </DialogTitle>
         </DialogHeader>
 
-        {!canShowAd ? (
-          <div className="py-8 flex flex-col items-center justify-center space-y-4">
-            <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center">
-              <Clock className="w-10 h-10 text-muted-foreground" />
-            </div>
-            <h3 className="text-xl font-bold">Ad Limit Reached</h3>
-            <p className="text-center text-muted-foreground">
-              {timeUntilNextAd > 0
-                ? `Please wait ${timeUntilNextAd} seconds before watching another ad.`
-                : 'You\'ve reached your daily ad limit. Try again tomorrow!'}
-            </p>
-            <Button onClick={onClose} variant="outline" className="w-full">
-              Close
-            </Button>
-          </div>
-        ) : isLoading ? (
+        {isLoading ? (
           <div className="py-8 flex flex-col items-center justify-center space-y-4">
             <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin" />
             <p className="text-sm text-muted-foreground">Loading video ad...</p>
