@@ -658,7 +658,9 @@ const AdminDashboard: React.FC = () => {
   );
 
   const pendingWithdrawals = withdrawals.filter((w) => w.status === 'pending');
+  const processingWithdrawals = withdrawals.filter((w) => w.status === 'processing');
   const completedWithdrawals = withdrawals.filter((w) => w.status === 'completed');
+  const failedWithdrawals = withdrawals.filter((w) => ['failed', 'retry_pending'].includes(w.status));
   const rejectedWithdrawals = withdrawals.filter((w) => w.status === 'rejected');
 
   return (
@@ -908,6 +910,8 @@ const AdminDashboard: React.FC = () => {
             <Tabs defaultValue="pending" className="space-y-4">
               <TabsList>
                 <TabsTrigger value="pending">Pending ({pendingWithdrawals.length})</TabsTrigger>
+                <TabsTrigger value="processing">Processing ({processingWithdrawals.length})</TabsTrigger>
+                <TabsTrigger value="failed">Failed ({failedWithdrawals.length})</TabsTrigger>
                 <TabsTrigger value="completed">Completed ({completedWithdrawals.length})</TabsTrigger>
                 <TabsTrigger value="rejected">Rejected ({rejectedWithdrawals.length})</TabsTrigger>
               </TabsList>
@@ -974,6 +978,128 @@ const AdminDashboard: React.FC = () => {
                             <XCircle className="w-4 h-4 mr-2" />
                             Reject
                           </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  ))
+                )}
+              </TabsContent>
+
+              <TabsContent value="processing" className="space-y-4">
+                {processingWithdrawals.length === 0 ? (
+                  <Card className="p-12 text-center">
+                    <Clock className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">No processing withdrawals</p>
+                  </Card>
+                ) : (
+                  processingWithdrawals.map((withdrawal) => (
+                    <Card key={withdrawal.id} className="p-6">
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-2 flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold">@{withdrawal.user.username}</span>
+                            <Badge variant="outline" className="text-blue-600 border-blue-600">Processing</Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground">{withdrawal.user.email}</p>
+                          <div className="text-2xl font-bold text-success">
+                            ${(withdrawal.amount / 100).toFixed(2)}
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Requested: {new Date(withdrawal.created_at).toLocaleString()}
+                          </p>
+                          {withdrawal.payment_details?.paystack_reference && (
+                            <div className="mt-2 p-3 bg-muted rounded-lg text-sm space-y-1">
+                              <p className="font-semibold mb-1">Payment Details:</p>
+                              <p className="text-xs">
+                                <span className="font-medium">Reference:</span> {withdrawal.payment_details.paystack_reference}
+                              </p>
+                              {withdrawal.payment_details.paystack_transfer_code && (
+                                <p className="text-xs">
+                                  <span className="font-medium">Transfer Code:</span> {withdrawal.payment_details.paystack_transfer_code}
+                                </p>
+                              )}
+                              {withdrawal.payment_details.retry_count > 0 && (
+                                <p className="text-xs">
+                                  <span className="font-medium">Retry Attempt:</span> {withdrawal.payment_details.retry_count}
+                                </p>
+                              )}
+                            </div>
+                          )}
+                          {withdrawal.admin_note && (
+                            <div className="mt-2 p-2 bg-blue-50 rounded text-xs">
+                              <span className="font-semibold">Note:</span> {withdrawal.admin_note}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </Card>
+                  ))
+                )}
+              </TabsContent>
+
+              <TabsContent value="failed" className="space-y-4">
+                {failedWithdrawals.length === 0 ? (
+                  <Card className="p-12 text-center">
+                    <CheckCircle className="w-12 h-12 text-success mx-auto mb-4" />
+                    <p className="text-muted-foreground">No failed withdrawals</p>
+                  </Card>
+                ) : (
+                  failedWithdrawals.map((withdrawal) => (
+                    <Card key={withdrawal.id} className="p-6 border-destructive/50">
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-2 flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold">@{withdrawal.user.username}</span>
+                            <Badge variant="destructive">
+                              {withdrawal.status === 'retry_pending' ? 'Retry Pending' : 'Failed'}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground">{withdrawal.user.email}</p>
+                          <div className="text-2xl font-bold text-destructive">
+                            ${(withdrawal.amount / 100).toFixed(2)}
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Requested: {new Date(withdrawal.created_at).toLocaleString()}
+                          </p>
+                          {withdrawal.payment_details && (
+                            <div className="mt-2 p-3 bg-destructive/10 rounded-lg text-sm space-y-1">
+                              <p className="font-semibold mb-1">Failure Details:</p>
+                              {withdrawal.payment_details.retry_count && (
+                                <p className="text-xs">
+                                  <span className="font-medium">Retry Attempts:</span> {withdrawal.payment_details.retry_count} / 3
+                                </p>
+                              )}
+                              {withdrawal.payment_details.last_error && (
+                                <p className="text-xs">
+                                  <span className="font-medium">Error:</span> {withdrawal.payment_details.last_error}
+                                </p>
+                              )}
+                              {withdrawal.payment_details.paystack_reference && (
+                                <p className="text-xs">
+                                  <span className="font-medium">Reference:</span> {withdrawal.payment_details.paystack_reference}
+                                </p>
+                              )}
+                            </div>
+                          )}
+                          {withdrawal.admin_note && (
+                            <div className="mt-2 p-2 bg-destructive/10 rounded text-xs">
+                              <span className="font-semibold">Note:</span> {withdrawal.admin_note}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          {withdrawal.status === 'retry_pending' && (withdrawal.payment_details?.retry_count || 0) < 3 && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleRetryWithdrawal(withdrawal.id)}
+                              disabled={processingWithdrawal === withdrawal.id}
+                              className="text-blue-600 border-blue-600 hover:bg-blue-50"
+                            >
+                              <RefreshCw className="w-4 h-4 mr-2" />
+                              Retry Payment
+                            </Button>
+                          )}
                         </div>
                       </div>
                     </Card>

@@ -73,7 +73,7 @@ export type Database = {
           user_id: string;
           amount_coins: number;
           amount_usd: number;
-          status: 'pending' | 'approved' | 'rejected';
+          status: 'pending' | 'processing' | 'completed' | 'failed' | 'rejected' | 'retry_pending' | 'reversed';
           created_at: string;
           processed_at: string | null;
         };
