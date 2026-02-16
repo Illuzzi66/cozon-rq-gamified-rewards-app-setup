@@ -125,7 +125,7 @@ function getEmailTemplate(type: 'success' | 'failed' | 'reversed', amount: strin
         </div>
         <h2 style="color: #1f2937; text-align: center; margin-bottom: 20px;">Payment Failed</h2>
         <p style="color: #4b5563; font-size: 16px; line-height: 1.6;">
-          Unfortunately, your withdrawal of <strong>${amount}</strong> could not be processed at this time.
+          Your withdrawal of <strong>${amount}</strong> has been reversed and returned to your wallet.
         </p>
         <div style="background-color: #fef2f2; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ef4444;">
           <p style="margin: 5px 0; color: #6b7280; font-size: 14px;"><strong>Reference:</strong> ${reference}</p>
