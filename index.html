@@ -24,37 +24,6 @@
   <body>
     <div id="root"></div>
     <div id="buildify-script-container"></div>
-    <script>
-      // Prevent Vite error overlay frame access errors - must run before any modules
-      (function() {
-        // Block error overlay registration
-        const originalDefine = customElements.define.bind(customElements);
-        customElements.define = function(name, constructor, options) {
-          if (name === 'vite-error-overlay') {
-            console.warn('[Cozon] Blocked vite-error-overlay registration');
-            return;
-          }
-          return originalDefine(name, constructor, options);
-        };
-        
-        // Block error overlay creation
-        const originalCreateElement = document.createElement.bind(document);
-        document.createElement = function(tagName, options) {
-          if (tagName === 'vite-error-overlay') {
-            console.warn('[Cozon] Blocked vite-error-overlay creation');
-            return originalCreateElement('div', options);
-          }
-          return originalCreateElement(tagName, options);
-        };
-        
-        // Remove any overlays that appear
-        setInterval(function() {
-          document.querySelectorAll('vite-error-overlay').forEach(function(el) {
-            el.remove();
-          });
-        }, 50);
-      })();
-    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
