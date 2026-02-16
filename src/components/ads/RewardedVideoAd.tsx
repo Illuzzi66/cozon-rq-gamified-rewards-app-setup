@@ -153,7 +153,7 @@ export function RewardedVideoAd({
             <h3 className="text-xl font-bold">Ad Limit Reached</h3>
             <p className="text-center text-muted-foreground">
               {timeUntilNextAd > 0
-                ? `Please wait ${Math.floor(timeUntilNextAd / 60)} minutes before watching another ad.`
+                ? `Please wait ${timeUntilNextAd} seconds before watching another ad.`
                 : 'You\'ve reached your daily ad limit. Try again tomorrow!'}
             </p>
             <Button onClick={onClose} variant="outline" className="w-full">
