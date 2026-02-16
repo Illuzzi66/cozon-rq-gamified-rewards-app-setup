@@ -49,11 +49,25 @@ export const WatchAds: React.FC = () => {
         p_user_id: profile.user_id,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching ad stats:', error);
+        throw error;
+      }
+      
+      console.log('Ad stats data:', data);
       // RPC returns array, get first item
-      setStats(Array.isArray(data) ? data[0] : data);
+      const statsData = Array.isArray(data) ? data[0] : data;
+      console.log('Processed stats:', statsData);
+      setStats(statsData);
     } catch (error) {
-      // Silent fail
+      console.error('Failed to fetch stats:', error);
+      // Set default stats on error
+      setStats({
+        daily_count: 0,
+        daily_earnings: 0,
+        daily_limit: 10,
+        remaining: 10,
+      });
     } finally {
       setLoading(false);
     }
