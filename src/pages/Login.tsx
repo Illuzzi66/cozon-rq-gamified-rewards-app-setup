@@ -40,7 +40,7 @@ const Login: React.FC = () => {
 
     try {
       await signIn(formData.email, formData.password, formData.rememberMe);
-      navigate('/dashboard');
+      navigate('/');
     } catch (err: any) {
       setError(err.message || 'Login failed');
     } finally {
