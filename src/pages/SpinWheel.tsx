@@ -35,7 +35,7 @@ interface WheelSegment {
 
 const wheelSegments: WheelSegment[] = [
   { id: 0, label: '10 Coins', rewardType: 'coins', rewardAmount: 10, color: 'hsl(262 83% 58%)', probability: 22, icon: '🪙' },
-  { id: 1, label: '$0.50', rewardType: 'money', rewardAmount: 750, moneyAmount: 0.50, color: 'hsl(142 76% 36%)', probability: 15, icon: '💵' },
+  { id: 1, label: '$0.50', rewardType: 'money', rewardAmount: 750, moneyAmount: 0.50, color: 'hsl(142 76% 36%)', probability: 5, icon: '💵' },
   { id: 2, label: '25 Coins', rewardType: 'coins', rewardAmount: 25, color: 'hsl(217 91% 60%)', probability: 18, icon: '🪙' },
   { id: 3, label: 'Try Again', rewardType: 'loss', rewardAmount: 0, rewardSubtype: 'try_again', color: 'hsl(0 84% 60%)', probability: 15, icon: '😢' },
   { id: 4, label: '100 Coins', rewardType: 'coins', rewardAmount: 100, color: 'hsl(280 65% 60%)', probability: 5, icon: '💎' },
