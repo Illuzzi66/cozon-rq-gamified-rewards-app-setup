@@ -20,7 +20,7 @@ import Notifications from './pages/Notifications';
 import TestSpinWheel from './pages/TestSpinWheel';
 import Layout from './components/Layout';
 
-// App component - Main application router v2
+// App component - Main application router v3
 
 const queryClient = new QueryClient();
 
