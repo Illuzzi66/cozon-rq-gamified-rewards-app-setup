@@ -1,6 +1,6 @@
 import { Component, ErrorInfo, ReactNode } from "react";
 
-// Error boundary component for catching React errors
+// Error boundary component for catching React errors - v2
 interface ErrorBoundaryProps {
   children: ReactNode;
 }
