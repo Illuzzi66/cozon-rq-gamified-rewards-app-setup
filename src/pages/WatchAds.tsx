@@ -311,7 +311,7 @@ export const WatchAds: React.FC = () => {
               <div>
                 <p className="font-semibold">Watch the Video</p>
                 <p className="text-sm text-muted-foreground">
-                  Watch the entire 30-second ad without skipping
+                  Watch the entire 15-second ad without skipping
                 </p>
               </div>
             </div>
