@@ -470,6 +470,59 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
+  const handleRetryWithdrawal = async (withdrawalId: string) => {
+    setProcessingWithdrawal(withdrawalId);
+
+    try {
+      const withdrawal = withdrawals.find(w => w.id === withdrawalId);
+      if (!withdrawal) return;
+
+      toast({
+        title: 'Retrying Payment',
+        description: 'Attempting to process payment again...',
+      });
+
+      const { data: session } = await supabase.auth.getSession();
+      const response = await fetch(
+        'https://dhzgnxfhcgjzlzmfdfid.supabase.co/functions/v1/retry-failed-withdrawal',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.session?.access_token}`,
+          },
+          body: JSON.stringify({
+            withdrawalId,
+            adminId: profile?.user_id,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || 'Payment retry failed');
+      }
+
+      toast({
+        title: 'Retry Initiated',
+        description: `Payment retry ${result.data.retry_count} has been initiated.`,
+      });
+
+      await fetchWithdrawals();
+      await fetchStats();
+    } catch (error) {
+      console.error('Error retrying withdrawal:', error);
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to retry withdrawal',
+        variant: 'destructive',
+      });
+    } finally {
+      setProcessingWithdrawal(null);
+    }
+  };
+
   const handleBanUser = async () => {
     if (!selectedUser || !banReason.trim()) {
       toast({
