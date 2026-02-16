@@ -1,47 +1,45 @@
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
+import { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
-import type { User } from '@supabase/supabase-js';
 
-interface Profile {
-  id: string;
+export interface Profile {
   user_id: string;
-  full_name: string;
   username: string;
   email: string;
-  is_premium: boolean;
-  is_admin: boolean;
-  coin_balance: number;
-  locked_coins: number;
-  referral_code: string | null;
-  avatar_url?: string;
-  last_daily_login?: string;
+  coins: number;
   spins_available: number;
+  is_premium: boolean;
+  premium_expires_at: string | null;
+  last_spin: string | null;
+  last_ad_watch: string | null;
+  last_ad_watch_spins: string | null;
+  daily_ad_count: number;
+  hourly_ad_count: number;
+  last_ad_hour_reset: string | null;
+  last_ad_day_reset: string | null;
+  created_at: string;
+  avatar_url: string | null;
+  referral_code: string;
+  referred_by: string | null;
+  is_admin: boolean;
+  is_banned: boolean;
+  ban_reason: string | null;
+  ban_expires_at: string | null;
+  last_daily_bonus: string | null;
   comment_count: number;
-  session_start_time: string | null;
-  last_ad_shown_at: string | null;
-  ads_shown_today: number;
-  ads_shown_this_hour: number;
-  ad_hour_reset_at: string | null;
+  last_comment_ad: string | null;
+  session_start: string | null;
+  last_time_ad: string | null;
+  deviceId: string;
 }
 
 interface AuthContextType {
   user: User | null;
   profile: Profile | null;
   loading: boolean;
-  signUp: (data: SignUpData) => Promise<void>;
-  signIn: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<Profile | null>;
-  updateProfileOptimistic: (updates: Partial<Profile>) => void;
-}
-
-interface SignUpData {
-  fullName: string;
-  username: string;
-  email: string;
-  password: string;
-  referralCode?: string;
   deviceId: string;
 }
 
@@ -85,8 +83,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(session?.user ?? null);
       if (session?.user) {
         fetchProfile(session.user.id).then(setProfile);
-        // Log user login (non-blocking)
-        supabase.rpc('log_user_login', { p_user_id: session.user.id }).catch(() => {});
+        // Log user login (non-blocking) - add .then() before .catch()
+        supabase.rpc('log_user_login', { p_user_id: session.user.id }).then(() => {}).catch(() => {});
       }
       setLoading(false);
     });
@@ -95,8 +93,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(session?.user ?? null);
       if (session?.user) {
         fetchProfile(session.user.id).then(setProfile);
-        // Log user login (non-blocking)
-        supabase.rpc('log_user_login', { p_user_id: session.user.id }).catch(() => {});
+        // Log user login (non-blocking) - add .then() before .catch()
+        supabase.rpc('log_user_login', { p_user_id: session.user.id }).then(() => {}).catch(() => {});
       } else {
         setProfile(null);
       }
@@ -105,96 +103,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (data: SignUpData) => {
-    // Check device ID
-    const { data: existingDevice } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('device_id', data.deviceId)
-      .single();
-
-    if (existingDevice) {
-      throw new Error('Only one account allowed per device');
-    }
-
-    // Check username uniqueness
-    const { data: existingUsername } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('username', data.username)
-      .single();
-
-    if (existingUsername) {
-      throw new Error('Username already taken');
-    }
-
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email: data.email,
-      password: data.password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/login`,
-      },
-    });
-
-    if (authError) throw authError;
-    if (!authData.user) throw new Error('Signup failed');
-
-    // Check if profile already exists for this user
-    const { data: existingProfile } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('user_id', authData.user.id)
-      .single();
-
-    // Only create profile if it doesn't exist
-    if (!existingProfile) {
-      // Generate unique referral code
-      const referralCode = `REF${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-
-      const { error: profileError } = await supabase.from('profiles').insert({
-        user_id: authData.user.id,
-        full_name: data.fullName,
-        username: data.username,
-        email: data.email,
-        device_id: data.deviceId,
-        referral_code: referralCode,
-        referred_by: data.referralCode || null,
-        is_premium: false,
-        coin_balance: 0,
-        locked_coins: 0,
-        spins_available: 0,
-        last_daily_login: null,
-      });
-
-      if (profileError) throw profileError;
-    }
-  };
-
-  const signIn = async (email: string, password: string, rememberMe: boolean = false) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-      options: {
-        // If rememberMe is true, session persists; otherwise it's temporary
-        persistSession: rememberMe,
-      },
-    });
-    if (error) throw error;
-  };
-
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    await supabase.auth.signOut();
+    setUser(null);
+    setProfile(null);
   };
 
-  const updateProfileOptimistic = (updates: Partial<Profile>) => {
-    if (profile) {
-      setProfile({ ...profile, ...updates });
+  // Get or create device ID
+  const getDeviceId = () => {
+    let deviceId = localStorage.getItem('deviceId');
+    if (!deviceId) {
+      deviceId = `device_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      localStorage.setItem('deviceId', deviceId);
     }
+    return deviceId;
   };
+
+  const deviceId = getDeviceId();
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signUp, signIn, signOut, refreshProfile, updateProfileOptimistic }}>
+    <AuthContext.Provider value={{ user, profile, loading, signOut, refreshProfile, deviceId }}>
       {children}
     </AuthContext.Provider>
   );
