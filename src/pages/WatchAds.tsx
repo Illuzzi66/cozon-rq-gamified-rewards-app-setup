@@ -50,7 +50,8 @@ export const WatchAds: React.FC = () => {
       });
 
       if (error) throw error;
-      setStats(data);
+      // RPC returns array, get first item
+      setStats(Array.isArray(data) ? data[0] : data);
     } catch (error) {
       // Silent fail
     } finally {
