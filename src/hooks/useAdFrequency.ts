@@ -14,7 +14,7 @@ export function useAdFrequency() {
   const [settings, setSettings] = useState<AdFrequencySettings>({
     max_ads_per_hour: 6,
     max_ads_per_day: 50,
-    min_seconds_between_ads: 10,
+    min_seconds_between_ads: 0,
   });
   const [canShowAd, setCanShowAd] = useState(true);
   const [timeUntilNextAd, setTimeUntilNextAd] = useState(0);
