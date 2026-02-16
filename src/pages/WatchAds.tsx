@@ -97,6 +97,7 @@ export const WatchAds: React.FC = () => {
       console.log('User ID:', profile.user_id);
       console.log('Expected reward:', expectedReward);
       console.log('Old balance:', oldBalance);
+      console.log('Is Premium:', profile.is_premium);
       
       setBalanceUpdating(true);
       
@@ -120,7 +121,7 @@ export const WatchAds: React.FC = () => {
           description: error.message || 'Failed to claim reward. Please try again.',
           variant: 'destructive',
         });
-      } else if (data && (data.success === true || data.success === 't')) {
+      } else if (data && data.success === true) {
         
         // Update UI with confirmed database values
         if (data.new_balance) {
@@ -152,9 +153,10 @@ export const WatchAds: React.FC = () => {
         await refreshProfile();
       } else {
         console.warn('⚠️ Unexpected response format:', data);
+        console.log('Error message:', data?.error);
         updateProfileOptimistic({ coin_balance: oldBalance });
         toast({
-          title: 'Unexpected Response',
+          title: data?.error || 'Unable to claim reward',
           description: 'Please try watching another ad.',
           variant: 'default',
         });
