@@ -1066,10 +1066,7 @@ export const SpinWheel: React.FC = () => {
               </h2>
               <p className={`text-3xl font-bold ${lastReward.rewardType === 'loss' ? 'text-destructive' : 'text-gold'}`}>
                 {lastReward.rewardType === 'coins' && `${lastReward.rewardAmount} Coins`}
-                {lastReward.rewardType === 'money' && (() => {
-                  const coinEquivalent = Math.round(lastReward.moneyAmount! * 1500);
-                  return `${coinEquivalent} Coins ($${lastReward.moneyAmount?.toFixed(2)})`;
-                })()}
+                {lastReward.rewardType === 'money' && `${Math.round(lastReward.moneyAmount! * 1500)} Coins ($${lastReward.moneyAmount?.toFixed(2)})`}
                 {lastReward.rewardType === 'spins' && `+${lastReward.rewardAmount} Spins`}
                 {lastReward.rewardType === 'loss' && lastReward.label}
               </p>
@@ -1100,10 +1097,7 @@ export const SpinWheel: React.FC = () => {
                     <div>
                       <p className="font-semibold">
                         {spin.reward_type === 'coins' && `${spin.reward_amount} Coins`}
-                        {spin.reward_type === 'money' && (() => {
-                          const coinEquivalent = Math.round(spin.money_amount * 1500);
-                          return `${coinEquivalent} Coins ($${spin.money_amount.toFixed(2)})`;
-                        })()}
+                        {spin.reward_type === 'money' && `${Math.round(spin.money_amount * 1500)} Coins ($${spin.money_amount.toFixed(2)})`}
                         {spin.reward_type === 'spins' && `+${spin.reward_amount} Spins`}
                         {spin.reward_type === 'loss' && 'No Win'}
                       </p>
