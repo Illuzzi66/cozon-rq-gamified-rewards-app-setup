@@ -881,9 +881,23 @@ const AdminDashboard: React.FC = () => {
                             Requested: {new Date(withdrawal.created_at).toLocaleString()}
                           </p>
                           {withdrawal.payment_details && (
-                            <div className="mt-2 p-3 bg-muted rounded-lg text-sm">
+                            <div className="mt-2 p-3 bg-muted rounded-lg text-sm space-y-1">
                               <p className="font-semibold mb-1">Payment Details:</p>
-                              <pre className="text-xs">{JSON.stringify(withdrawal.payment_details, null, 2)}</pre>
+                              {withdrawal.payment_details.account_number && (
+                                <p className="text-xs">
+                                  <span className="font-medium">Account:</span> {withdrawal.payment_details.account_number}
+                                </p>
+                              )}
+                              {withdrawal.payment_details.account_name && (
+                                <p className="text-xs">
+                                  <span className="font-medium">Name:</span> {withdrawal.payment_details.account_name}
+                                </p>
+                              )}
+                              {withdrawal.payment_details.bank_name && (
+                                <p className="text-xs">
+                                  <span className="font-medium">Bank:</span> {withdrawal.payment_details.bank_name}
+                                </p>
+                              )}
                             </div>
                           )}
                         </div>
@@ -917,18 +931,30 @@ const AdminDashboard: React.FC = () => {
                 {completedWithdrawals.map((withdrawal) => (
                   <Card key={withdrawal.id} className="p-4">
                     <div className="flex items-start justify-between">
-                      <div className="space-y-1">
+                      <div className="space-y-1 flex-1">
                         <p className="font-semibold">@{withdrawal.user.username}</p>
                         <p className="text-sm text-muted-foreground">
                           ${(withdrawal.amount / 100).toFixed(2)} • {new Date(withdrawal.processed_at!).toLocaleDateString()}
                         </p>
+                        {withdrawal.payment_details?.paystack_reference && (
+                          <div className="mt-2 p-2 bg-muted rounded text-xs space-y-1">
+                            <p>
+                              <span className="font-semibold">Reference:</span> {withdrawal.payment_details.paystack_reference}
+                            </p>
+                            {withdrawal.payment_details.paystack_transfer_code && (
+                              <p>
+                                <span className="font-semibold">Transfer Code:</span> {withdrawal.payment_details.paystack_transfer_code}
+                              </p>
+                            )}
+                          </div>
+                        )}
                         {withdrawal.admin_note && (
                           <div className="mt-2 p-2 bg-muted rounded text-xs">
                             <span className="font-semibold">Admin Note:</span> {withdrawal.admin_note}
                           </div>
                         )}
                       </div>
-                      <Badge variant="outline" className="text-success border-success">Approved</Badge>
+                      <Badge variant="outline" className="text-success border-success">Completed</Badge>
                     </div>
                   </Card>
                 ))}
@@ -938,13 +964,13 @@ const AdminDashboard: React.FC = () => {
                 {rejectedWithdrawals.map((withdrawal) => (
                   <Card key={withdrawal.id} className="p-4">
                     <div className="flex items-start justify-between">
-                      <div className="space-y-1">
+                      <div className="space-y-1 flex-1">
                         <p className="font-semibold">@{withdrawal.user.username}</p>
                         <p className="text-sm text-muted-foreground">
-                          ${(withdrawal.amount / 100).toFixed(2)} • {new Date(withdrawal.processed_at!).toLocaleDateString()}
+                          ${(withdrawal.amount / 100).toFixed(2)} • {withdrawal.reviewed_at ? new Date(withdrawal.reviewed_at).toLocaleDateString() : 'N/A'}
                         </p>
                         {withdrawal.admin_note && (
-                          <div className="mt-2 p-2 bg-muted rounded text-xs">
+                          <div className="mt-2 p-2 bg-destructive/10 rounded text-xs">
                             <span className="font-semibold">Reason:</span> {withdrawal.admin_note}
                           </div>
                         )}

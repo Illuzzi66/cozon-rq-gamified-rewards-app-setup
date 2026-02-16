@@ -134,11 +134,11 @@ Cozon RQ is a gamified rewards app where users earn coins through various activi
   - [x] Add approve/reject withdrawal actions
   - [x] Implement withdrawal status tracking
   - [x] Update wallet page to show withdrawal status
-  - [ ] Integrate Paystack for automatic payment processing
+  - [x] Integrate Paystack for automatic payment processing
     - [x] Store Paystack API key securely
     - [x] Create edge function for payment processing
-    - [ ] Update admin approval to trigger automatic payment
-    - [ ] Add payment status tracking and error handling
+    - [x] Update admin approval to trigger automatic payment
+    - [x] Add payment status tracking and error handling
 - [x] Leaderboard system
   - [x] Create leaderboard database views
   - [x] Build leaderboard UI (daily/weekly/all-time)
