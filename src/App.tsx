@@ -19,6 +19,7 @@ import Leaderboard from './pages/Leaderboard';
 import Notifications from './pages/Notifications';
 import TestSpinWheel from './pages/TestSpinWheel';
 import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsConditions from './pages/TermsConditions';
 import Layout from './components/Layout';
 
 // App component - Main application router v5
@@ -59,6 +60,7 @@ function AppRoutes() {
       <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
       <Route path="/signup" element={user ? <Navigate to="/" /> : <SignUp />} />
       <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+      <Route path="/terms-conditions" element={<TermsConditions />} />
       <Route
         path="/"
         element={

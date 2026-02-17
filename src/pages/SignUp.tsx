@@ -656,6 +656,10 @@ export const SignUp: React.FC = () => {
 
         <div className="mt-4 text-center text-xs text-muted-foreground">
           By signing up, you agree to our{' '}
+          <Link to="/terms-conditions" className="text-primary hover:underline">
+            Terms & Conditions
+          </Link>
+          {' '}and{' '}
           <Link to="/privacy-policy" className="text-primary hover:underline">
             Privacy Policy
           </Link>

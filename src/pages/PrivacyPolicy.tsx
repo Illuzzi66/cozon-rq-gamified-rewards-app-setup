@@ -204,6 +204,11 @@ export const PrivacyPolicy: React.FC = () => {
           </section>
 
           <div className="mt-8 pt-6 border-t border-border">
+            <div className="flex justify-center gap-4 mb-4">
+              <Link to="/terms-conditions" className="text-sm text-primary hover:underline">
+                Terms & Conditions
+              </Link>
+            </div>
             <p className="text-sm text-muted-foreground text-center">
               By using Cozon RQ, you acknowledge that you have read and understood this Privacy Policy.
             </p>
