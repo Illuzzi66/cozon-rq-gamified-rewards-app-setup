@@ -188,11 +188,12 @@ Cozon RQ is a gamified rewards app where users earn coins through various activi
   - [x] Post Meme page
   - [x] Premium page
   - [x] Profile page
-- [ ] Fix slow boot performance issue
+- [x] Fix slow boot performance issue
   - [x] Remove aggressive setInterval overlay removal (100ms polling)
-  - [ ] Simplify error overlay blocking logic
-  - [ ] Optimize AuthContext initialization
-  - [ ] Review and optimize initial data loading
+  - [x] Simplify error overlay blocking logic (removed customElements overrides)
+  - [x] Optimize AuthContext initialization (set loading false immediately)
+  - [x] Review and optimize initial data loading (defer non-critical operations)
+  - [x] Fix coin_balance reference in Layout component
 - [x] Update spin wheel reward display format
   - [x] Change 750 coins segment to display as "$0.50" (worth 750 coins)
   - [x] Change 3000 coins segment to display as "$2" (worth 3000 coins)

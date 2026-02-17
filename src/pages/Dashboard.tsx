@@ -17,16 +17,18 @@ const Dashboard: React.FC = () => {
   const [showConfetti, setShowConfetti] = useState(false);
   const [showTimeAd, setShowTimeAd] = useState(false);
 
-  // Initialize session time on mount (non-blocking, no refresh needed)
+  // Initialize session time on mount (non-blocking, no await)
   useEffect(() => {
-    if (!profile || profile.session_start_time) return;
+    if (!profile?.user_id || profile.session_start_time) return;
     
-    // Update session start time asynchronously without blocking render
+    // Update session start time asynchronously without blocking
     supabase
       .from('profiles')
       .update({ session_start_time: new Date().toISOString() })
-      .eq('user_id', profile.user_id);
-  }, [profile?.user_id]);
+      .eq('user_id', profile.user_id)
+      .then(() => {})
+      .catch(() => {});
+  }, [profile?.user_id, profile?.session_start_time]);
 
   // Check time-based ad
   useEffect(() => {
@@ -36,27 +38,28 @@ const Dashboard: React.FC = () => {
   }, [shouldShowTimeAd]);
 
   useEffect(() => {
-    if (!profile) return;
+    if (!profile?.user_id) return;
     
-    // Check daily login bonus (non-blocking, optimistic update)
+    // Check daily login bonus (fully async, no blocking)
     const today = new Date().toISOString().split('T')[0];
     const lastLogin = profile.last_daily_login?.split('T')[0];
     
     if (lastLogin !== today) {
+      // Award bonus in background without blocking UI
       supabase.rpc('award_daily_login_bonus', {
         p_user_id: profile.user_id,
       }).then(({ data, error }) => {
         if (!error && data?.success) {
           setShowConfetti(true);
           setTimeout(() => setShowConfetti(false), 3000);
-          // Refresh in background without blocking
-          setTimeout(() => refreshProfile(), 100);
+          // Refresh profile after a short delay
+          setTimeout(() => refreshProfile(), 500);
         }
       }).catch(() => {
         // Silent fail - user can try again later
       });
     }
-  }, [profile?.user_id]);
+  }, [profile?.user_id, profile?.last_daily_login]);
 
   if (!profile) {
     return (

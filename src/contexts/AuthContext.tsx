@@ -80,22 +80,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
+    // Fast initial session check
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
+      setLoading(false); // Set loading false immediately
+      
+      // Fetch profile and log login in background (non-blocking)
       if (session?.user) {
         fetchProfile(session.user.id).then(setProfile);
-        // Log user login (non-blocking) - add .then() before .catch()
-        supabase.rpc('log_user_login', { p_user_id: session.user.id }).then(() => {}).catch(() => {});
+        // Log user login asynchronously without awaiting
+        supabase.rpc('log_user_login', { p_user_id: session.user.id }).catch(() => {});
       }
-      setLoading(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) {
         fetchProfile(session.user.id).then(setProfile);
-        // Log user login (non-blocking) - add .then() before .catch()
-        supabase.rpc('log_user_login', { p_user_id: session.user.id }).then(() => {}).catch(() => {});
+        // Log user login asynchronously without awaiting
+        supabase.rpc('log_user_login', { p_user_id: session.user.id }).catch(() => {});
       } else {
         setProfile(null);
       }
