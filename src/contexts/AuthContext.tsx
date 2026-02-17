@@ -89,7 +89,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (session?.user) {
         fetchProfile(session.user.id).then(setProfile);
         // Log user login asynchronously without awaiting
-        supabase.rpc('log_user_login', { p_user_id: session.user.id }).catch(() => {});
+        supabase.rpc('log_user_login', { p_user_id: session.user.id }).then(() => {}).catch(() => {});
       }
     });
 
@@ -98,7 +98,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (session?.user) {
         fetchProfile(session.user.id).then(setProfile);
         // Log user login asynchronously without awaiting
-        supabase.rpc('log_user_login', { p_user_id: session.user.id }).catch(() => {});
+        supabase.rpc('log_user_login', { p_user_id: session.user.id }).then(() => {}).catch(() => {});
       } else {
         setProfile(null);
       }
