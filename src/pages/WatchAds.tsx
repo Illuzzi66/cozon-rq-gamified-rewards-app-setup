@@ -65,8 +65,8 @@ export const WatchAds: React.FC = () => {
       setStats({
         daily_count: 0,
         daily_earnings: 0,
-        daily_limit: 10,
-        remaining: 10,
+        daily_limit: 5,
+        remaining: 5,
       });
     } finally {
       setLoading(false);

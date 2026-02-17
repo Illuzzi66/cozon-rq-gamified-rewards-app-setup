@@ -9,7 +9,7 @@
 ### Functions
 1. **record_ad_view(p_user_id, p_ad_type, p_view_duration)**
    - Uses row-level locking (FOR UPDATE) to prevent race conditions
-   - Checks daily limit (20 ads per day)
+   - Checks daily limit (5 ads per day)
    - Calculates coins based on premium status (5 coins base, 12 coins for premium)
    - Returns JSON with success status, coins earned, old/new balance
    - Protected by duplicate prevention trigger
