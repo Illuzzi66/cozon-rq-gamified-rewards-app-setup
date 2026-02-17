@@ -18,6 +18,7 @@ import Analytics from './pages/Analytics';
 import Leaderboard from './pages/Leaderboard';
 import Notifications from './pages/Notifications';
 import TestSpinWheel from './pages/TestSpinWheel';
+import TestFeatures from './pages/TestFeatures';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsConditions from './pages/TermsConditions';
 import Layout from './components/Layout';
@@ -197,6 +198,16 @@ function AppRoutes() {
           <ProtectedRoute>
             <Layout>
               <TestSpinWheel />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/test-features"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <TestFeatures />
             </Layout>
           </ProtectedRoute>
         }

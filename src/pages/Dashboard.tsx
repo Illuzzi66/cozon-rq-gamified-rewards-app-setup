@@ -8,7 +8,7 @@ import { supabase } from '@/lib/supabase';
 import { BannerAd } from '@/components/ads/BannerAd';
 import { InterstitialAd } from '@/components/ads/InterstitialAd';
 import { useAdTiming } from '@/hooks/useAdTiming';
-import { Coins, Gift, Image, Video, Wallet, Crown, User as UserIcon, Trophy, Bell } from 'lucide-react';
+import { Coins, Gift, Image, Video, Wallet, Crown, User as UserIcon, Trophy, Bell, FlaskConical } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -197,6 +197,17 @@ const Dashboard: React.FC = () => {
           >
             <Bell className="w-8 h-8 text-primary" />
             <span>Notifications</span>
+          </Button>
+
+          {/* Test Features Button - For Development/Testing */}
+          <Button
+            onClick={() => navigate('/test-features')}
+            variant="outline"
+            className="h-32 flex-col gap-3 text-lg bg-purple-500/5 hover:bg-purple-500/10 border-purple-500/20"
+          >
+            <FlaskConical className="w-8 h-8 text-purple-500" />
+            <span>Test Features</span>
+            <span className="text-xs text-muted-foreground">Dev Tools</span>
           </Button>
 
           {!profile.is_premium && (
