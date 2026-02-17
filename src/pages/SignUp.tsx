@@ -653,6 +653,13 @@ export const SignUp: React.FC = () => {
             Login
           </Link>
         </div>
+
+        <div className="mt-4 text-center text-xs text-muted-foreground">
+          By signing up, you agree to our{' '}
+          <Link to="/privacy-policy" className="text-primary hover:underline">
+            Privacy Policy
+          </Link>
+        </div>
       </div>
 
       {/* Email Verification Dialog */}
