@@ -3,8 +3,9 @@ import App from './App.tsx'
 import './index.css'
 import ErrorBoundary from './components/ErrorBoundary.tsx';
 
-// Main entry point - Application bootstrap v8
+// Main entry point - Application bootstrap v9
 // Prevent Vite error overlay frame access errors
+// Force update to clear Vite cache
 
 // Block error overlay registration before it tries to access frame
 const originalDefine = customElements.define.bind(customElements);
