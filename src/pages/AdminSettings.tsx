@@ -59,14 +59,28 @@ export default function AdminSettings() {
   // Load settings
   useEffect(() => {
     const loadSettings = async () => {
-      if (!profile?.is_admin) return;
+      console.log('Loading settings, profile:', profile);
+      
+      if (!profile) {
+        console.log('No profile yet, waiting...');
+        return;
+      }
+      
+      if (!profile.is_admin) {
+        console.log('User is not admin, redirecting...');
+        setIsLoading(false);
+        return;
+      }
       
       try {
+        console.log('Fetching app settings...');
         const { data, error } = await supabase
           .from('app_settings')
           .select('setting_key, setting_value');
 
         if (error) throw error;
+
+        console.log('Settings data:', data);
 
         if (data) {
           data.forEach((setting) => {
@@ -91,10 +105,8 @@ export default function AdminSettings() {
       }
     };
 
-    if (!loading) {
-      loadSettings();
-    }
-  }, [profile, loading, toast]);
+    loadSettings();
+  }, [profile, toast]);
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -146,7 +158,8 @@ export default function AdminSettings() {
     }
   };
 
-  if (loading || isLoading) {
+  // Show loading while auth is loading or profile hasn't loaded yet
+  if (loading || !profile || isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -157,7 +170,9 @@ export default function AdminSettings() {
     );
   }
 
-  if (!profile?.is_admin) {
+  // Redirect non-admin users
+  if (!profile.is_admin) {
+    navigate('/');
     return null;
   }
 
