@@ -39,6 +39,14 @@ interface AuthContextType {
   profile: Profile | null;
   loading: boolean;
   signIn: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
+  signUp: (data: {
+    fullName: string;
+    username: string;
+    email: string;
+    password: string;
+    referralCode?: string;
+    deviceId: string;
+  }) => Promise<void>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<Profile | null>;
   deviceId: string;
@@ -128,6 +136,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const signUp = async (data: {
+    fullName: string;
+    username: string;
+    email: string;
+    password: string;
+    referralCode?: string;
+    deviceId: string;
+  }) => {
+    // Call the signup edge function
+    const { error } = await supabase.rpc('signup_user', {
+      p_full_name: data.fullName,
+      p_username: data.username,
+      p_email: data.email,
+      p_password: data.password,
+      p_referral_code: data.referralCode || null,
+      p_device_id: data.deviceId,
+    });
+
+    if (error) {
+      throw new Error(error.message || 'Signup failed');
+    }
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
     setUser(null);
@@ -147,7 +178,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const deviceId = getDeviceId();
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signIn, signOut, refreshProfile, deviceId }}>
+    <AuthContext.Provider value={{ user, profile, loading, signIn, signUp, signOut, refreshProfile, deviceId }}>
       {children}
     </AuthContext.Provider>
   );
