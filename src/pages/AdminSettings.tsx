@@ -86,28 +86,28 @@ export default function AdminSettings() {
           setting_key: 'ad_frequency',
           setting_value: adFrequency,
           updated_by: profile?.user_id,
+          updated_at: new Date().toISOString(),
         },
         {
           setting_key: 'ad_timing',
           setting_value: adTiming,
           updated_by: profile?.user_id,
+          updated_at: new Date().toISOString(),
         },
         {
           setting_key: 'coin_conversion',
           setting_value: coinConversion,
           updated_by: profile?.user_id,
+          updated_at: new Date().toISOString(),
         },
       ];
 
       for (const update of updates) {
         const { error } = await supabase
           .from('app_settings')
-          .update({
-            setting_value: update.setting_value,
-            updated_by: update.updated_by,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('setting_key', update.setting_key);
+          .upsert(update, {
+            onConflict: 'setting_key',
+          });
 
         if (error) throw error;
       }
