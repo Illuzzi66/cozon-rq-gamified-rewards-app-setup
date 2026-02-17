@@ -27,10 +27,11 @@ interface CoinConversionSettings {
 }
 
 export default function AdminSettings() {
-  const { profile } = useAuth();
+  const { profile, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const [adFrequency, setAdFrequency] = useState<AdFrequencySettings>({
     max_ads_per_hour: 6,
@@ -50,33 +51,50 @@ export default function AdminSettings() {
 
   // Redirect if not admin
   useEffect(() => {
-    if (profile && !profile.is_admin) {
+    if (!loading && profile && !profile.is_admin) {
       navigate('/');
     }
-  }, [profile, navigate]);
+  }, [profile, loading, navigate]);
 
   // Load settings
   useEffect(() => {
     const loadSettings = async () => {
-      const { data } = await supabase
-        .from('app_settings')
-        .select('setting_key, setting_value');
+      if (!profile?.is_admin) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('app_settings')
+          .select('setting_key, setting_value');
 
-      if (data) {
-        data.forEach((setting) => {
-          if (setting.setting_key === 'ad_frequency') {
-            setAdFrequency(setting.setting_value as AdFrequencySettings);
-          } else if (setting.setting_key === 'ad_timing') {
-            setAdTiming(setting.setting_value as AdTimingSettings);
-          } else if (setting.setting_key === 'coin_conversion') {
-            setCoinConversion(setting.setting_value as CoinConversionSettings);
-          }
+        if (error) throw error;
+
+        if (data) {
+          data.forEach((setting) => {
+            if (setting.setting_key === 'ad_frequency') {
+              setAdFrequency(setting.setting_value as AdFrequencySettings);
+            } else if (setting.setting_key === 'ad_timing') {
+              setAdTiming(setting.setting_value as AdTimingSettings);
+            } else if (setting.setting_key === 'coin_conversion') {
+              setCoinConversion(setting.setting_value as CoinConversionSettings);
+            }
+          });
+        }
+      } catch (error) {
+        console.error('Error loading settings:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to load settings.',
+          variant: 'destructive',
         });
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    loadSettings();
-  }, []);
+    if (!loading) {
+      loadSettings();
+    }
+  }, [profile, loading, toast]);
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -127,6 +145,17 @@ export default function AdminSettings() {
       setIsSaving(false);
     }
   };
+
+  if (loading || isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading settings...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!profile?.is_admin) {
     return null;
