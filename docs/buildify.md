@@ -212,3 +212,21 @@ Cozon RQ is a gamified rewards app where users earn coins through various activi
   - [x] Update frontend default stats to show 5 limit
   - [x] Update documentation with new limit
   - [x] Create comprehensive testing guide for 5-ad limit verification
+
+### Testing & Analysis
+- [ ] Watch to Earn feature testing
+  - [ ] Test daily limit enforcement (5 ads max)
+  - [ ] Verify coin rewards (5 base, 12 premium with 2.5x)
+  - [ ] Test duplicate prevention system
+  - [ ] Verify database persistence after ad completion
+  - [ ] Test error handling and user feedback
+  - [ ] Verify stats refresh after each ad
+- [ ] Spin Wheel feature testing
+  - [ ] Test spin deduction and balance updates
+  - [ ] Verify reward distribution (coins, money, spins, loss)
+  - [ ] Test daily bonus claim (2 spins every 24 hours)
+  - [ ] Test watch ad for spins (3 ads max per day)
+  - [ ] Test spin purchase with coins (50 coins per spin, bulk discounts)
+  - [ ] Verify spin history tracking
+  - [ ] Test duplicate spin prevention
+  - [ ] Verify sound effects and animations
