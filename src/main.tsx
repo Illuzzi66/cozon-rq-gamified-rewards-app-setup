@@ -3,9 +3,14 @@ import App from './App.tsx'
 import './index.css'
 import ErrorBoundary from './components/ErrorBoundary.tsx';
 
-// Main entry point - Application bootstrap v12
+// Main entry point - Application bootstrap v13
 
-createRoot(document.getElementById("root")!).render(
+const rootElement = document.getElementById("root");
+if (!rootElement) {
+  throw new Error("Root element not found");
+}
+
+createRoot(rootElement).render(
     <ErrorBoundary>
         <App />
     </ErrorBoundary>
