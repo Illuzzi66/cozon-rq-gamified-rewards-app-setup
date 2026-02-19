@@ -49,6 +49,7 @@ interface AuthContextType {
   }) => Promise<void>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<Profile | null>;
+  updateProfileOptimistic: (updates: Partial<Profile>) => void;
   deviceId: string;
 }
 
@@ -85,6 +86,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     }
     return null;
+  };
+
+  const updateProfileOptimistic = (updates: Partial<Profile>) => {
+    if (profile) {
+      setProfile({ ...profile, ...updates });
+    }
   };
 
   useEffect(() => {
@@ -178,7 +185,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const deviceId = getDeviceId();
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signIn, signUp, signOut, refreshProfile, deviceId }}>
+    <AuthContext.Provider value={{ user, profile, loading, signIn, signUp, signOut, refreshProfile, updateProfileOptimistic, deviceId }}>
       {children}
     </AuthContext.Provider>
   );
