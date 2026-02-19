@@ -68,7 +68,6 @@ export const SpinWheel: React.FC = () => {
   const [timeRemaining, setTimeRemaining] = useState<string>('');
   const [showPurchaseDialog, setShowPurchaseDialog] = useState(false);
   const [purchaseAmount, setPurchaseAmount] = useState(1);
-  const [testingReward, setTestingReward] = useState(false);
 
   useEffect(() => {
     loadSpinData();
@@ -646,57 +645,6 @@ export const SpinWheel: React.FC = () => {
       setClaimingReward(false);
     }
   };
-
-  const runSpinAdTest = async () => {
-    if (!profile) return;
-    
-    setTestingReward(true);
-    console.log('🧪 Running spin ad reward test...');
-    
-    try {
-      const statsBefore = await getSpinAdStats(profile.user_id);
-      console.log('📊 Stats before test:', statsBefore);
-      
-      toast({
-        title: '🧪 Running Test',
-        description: 'Testing spin ad reward system...',
-      });
-
-      const result = await testSpinAdReward(profile.user_id);
-      console.log('🧪 Test result:', result);
-      
-      if (result.success) {
-        toast({
-          title: '✅ Test Passed!',
-          description: result.message,
-        });
-        
-        await refreshProfile();
-        await loadSpinData(true);
-        await checkDailyAdCount();
-      } else {
-        toast({
-          title: '❌ Test Failed',
-          description: result.message,
-          variant: 'destructive',
-        });
-      }
-      
-      const statsAfter = await getSpinAdStats(profile.user_id);
-      console.log('📊 Stats after test:', statsAfter);
-      
-    } catch (error) {
-      console.error('Test error:', error);
-      toast({
-        title: 'Test Error',
-        description: error instanceof Error ? error.message : 'Unknown error',
-        variant: 'destructive',
-      });
-    } finally {
-      setTestingReward(false);
-    }
-  };
-
   const handlePurchaseSpins = async () => {
     if (!profile || !purchaseAmount || purchaseAmount < 1) {
       toast({
@@ -1015,43 +963,23 @@ export const SpinWheel: React.FC = () => {
                 </Button>
 
                 {spinsAvailable < 1 && (
-                  <div className="space-y-3">
-                    <div className="grid grid-cols-2 gap-3">
-                      <Button
-                        onClick={handleWatchAdForSpin}
-                        variant="outline"
-                        className="h-12"
-                        disabled={adsRemaining <= 0}
-                      >
-                        <Video className="w-5 h-5 mr-2" />
-                        Watch Ad ({adsRemaining}/3)
-                      </Button>
-                      <Button
-                        onClick={() => setShowPurchaseDialog(true)}
-                        variant="outline"
-                        className="h-12"
-                      >
-                        <ShoppingCart className="w-5 h-5 mr-2" />
-                        Buy Spins
-                      </Button>
-                    </div>
-                    
-                    {/* Test Button */}
+                  <div className="grid grid-cols-2 gap-3">
                     <Button
-                      onClick={runSpinAdTest}
-                      variant="secondary"
-                      size="sm"
-                      disabled={testingReward || adsRemaining <= 0}
-                      className="w-full"
+                      onClick={handleWatchAdForSpin}
+                      variant="outline"
+                      className="h-12"
+                      disabled={adsRemaining <= 0}
                     >
-                      {testingReward ? (
-                        <>
-                          <div className="w-4 h-4 mr-2 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                          Testing...
-                        </>
-                      ) : (
-                        '🧪 Test Spin Reward System'
-                      )}
+                      <Video className="w-5 h-5 mr-2" />
+                      Watch Ad ({adsRemaining}/3)
+                    </Button>
+                    <Button
+                      onClick={() => setShowPurchaseDialog(true)}
+                      variant="outline"
+                      className="h-12"
+                    >
+                      <ShoppingCart className="w-5 h-5 mr-2" />
+                      Buy Spins
                     </Button>
                   </div>
                 )}
