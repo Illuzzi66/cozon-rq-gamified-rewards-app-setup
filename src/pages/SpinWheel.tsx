@@ -19,6 +19,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { soundEffects } from '@/utils/soundEffects';
+import { testSpinAdReward, getSpinAdStats } from '@/utils/spinAdTestHelper';
 
 // Spin wheel page with daily bonuses, ad rewards, and coin purchases
 interface WheelSegment {
@@ -68,6 +69,7 @@ export const SpinWheel: React.FC = () => {
   const [timeRemaining, setTimeRemaining] = useState<string>('');
   const [showPurchaseDialog, setShowPurchaseDialog] = useState(false);
   const [purchaseAmount, setPurchaseAmount] = useState(1);
+  const [testingReward, setTestingReward] = useState(false);
 
   useEffect(() => {
     loadSpinData();
@@ -550,6 +552,8 @@ export const SpinWheel: React.FC = () => {
         const result = data[0];
         console.log('✅ Claim Result:', result);
         console.log('Success value:', result.success, 'Type:', typeof result.success);
+        console.log('Spins awarded:', result.spins_awarded);
+        console.log('Current spins before update:', spinsAvailable);
         
         if (result.success === true || result.success === 't' || result.success === 'true') {
           // Play sound
@@ -568,6 +572,7 @@ export const SpinWheel: React.FC = () => {
 
           // Force refresh profile and spin data
           console.log('🔄 Refreshing profile and spin data...');
+          console.log('⏰ Timestamp before refresh:', new Date().toISOString());
           await refreshProfile();
           
           // Wait a moment for database to update
@@ -575,6 +580,8 @@ export const SpinWheel: React.FC = () => {
           
           const newSpins = await loadSpinData(true);
           console.log('✅ Spins after refresh:', newSpins);
+          console.log('📊 Spin increase:', newSpins - spinsAvailable);
+          console.log('⏰ Timestamp after refresh:', new Date().toISOString());
 
           // Refresh ad count
           await checkDailyAdCount();
@@ -615,6 +622,56 @@ export const SpinWheel: React.FC = () => {
       await checkDailyAdCount();
     } finally {
       setClaimingReward(false);
+    }
+  };
+
+  const runSpinAdTest = async () => {
+    if (!profile) return;
+    
+    setTestingReward(true);
+    console.log('🧪 Running spin ad reward test...');
+    
+    try {
+      const statsBefore = await getSpinAdStats(profile.user_id);
+      console.log('📊 Stats before test:', statsBefore);
+      
+      toast({
+        title: '🧪 Running Test',
+        description: 'Testing spin ad reward system...',
+      });
+
+      const result = await testSpinAdReward(profile.user_id);
+      console.log('🧪 Test result:', result);
+      
+      if (result.success) {
+        toast({
+          title: '✅ Test Passed!',
+          description: result.message,
+        });
+        
+        await refreshProfile();
+        await loadSpinData(true);
+        await checkDailyAdCount();
+      } else {
+        toast({
+          title: '❌ Test Failed',
+          description: result.message,
+          variant: 'destructive',
+        });
+      }
+      
+      const statsAfter = await getSpinAdStats(profile.user_id);
+      console.log('📊 Stats after test:', statsAfter);
+      
+    } catch (error) {
+      console.error('Test error:', error);
+      toast({
+        title: 'Test Error',
+        description: error instanceof Error ? error.message : 'Unknown error',
+        variant: 'destructive',
+      });
+    } finally {
+      setTestingReward(false);
     }
   };
 
