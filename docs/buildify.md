@@ -206,6 +206,7 @@ Cozon RQ is a gamified rewards app where users earn coins through various activi
   - [x] Update database constraint for daily ad limit
   - [x] Update frontend display to show 3/3 instead of 5/5
   - [x] Update ad tracking logic
+  - [x] Change spin ad reward to 1 spin per ad with automatic claiming
 - [x] Reduce watch to earn daily limit from 10 to 5
   - [x] Update get_daily_ad_stats function to use 5 ad limit
   - [x] Update record_ad_view function to use 5 ad limit

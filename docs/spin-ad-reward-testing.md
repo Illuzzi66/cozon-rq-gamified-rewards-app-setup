@@ -23,13 +23,13 @@ WHERE user_id = p_user_id;
 1. Click "Watch Ad for Spins" button
 2. Wait for 30-second ad simulation to complete
 3. Progress bar should reach 100%
-4. "Claim Reward" button should become enabled
-5. Click "Claim Reward" button
+4. Reward is automatically claimed (no manual button needed)
+5. Toast notification appears with "🎉 Spin Earned!"
 
 ### 3. Verify Spin Award
 **Expected Results:**
-- ✅ Toast notification: "🎉 Spins Earned! You earned 3 spins!"
-- ✅ Spin count increases by 3 immediately
+- ✅ Toast notification: "🎉 Spin Earned! You earned 1 spin!"
+- ✅ Spin count increases by 1 immediately (automatic claiming)
 - ✅ Ad counter updates (e.g., "1/3 ads watched today")
 - ✅ Success sound plays
 - ✅ Ad UI resets for next watch
@@ -106,7 +106,7 @@ The SpinWheel component includes detailed logging:
 **Check:** Verify loading state is set before async operation
 
 ## Success Criteria
-✅ Spins increase by 3 after each ad claim
+✅ Spins increase by 1 after each ad claim (automatic)
 ✅ Ad counter updates correctly (0/3 → 1/3 → 2/3 → 3/3)
 ✅ Daily limit enforced (max 3 ads per day)
 ✅ Cannot claim same ad twice

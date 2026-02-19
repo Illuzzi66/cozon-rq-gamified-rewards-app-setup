@@ -578,8 +578,8 @@ export const SpinWheel: React.FC = () => {
 
         // Show success toast
         toast({
-          title: '🎉 Spins Earned!',
-          description: `You earned ${result.spins_awarded || 3} spins!`,
+          title: '🎉 Spin Earned!',
+          description: `You earned ${result.spins_awarded || 1} spin!`,
         });
 
         // Reset ad UI state
