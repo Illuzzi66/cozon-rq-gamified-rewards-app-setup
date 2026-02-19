@@ -491,6 +491,10 @@ export const SpinWheel: React.FC = () => {
           clearInterval(interval);
           setAdCompleted(true);
           soundEffects.playBonusSound(); // Play sound when ad completes
+          // Auto-claim reward after ad completes
+          setTimeout(() => {
+            claimAdReward();
+          }, 500);
           return 100;
         }
         return prev + (100 / duration);
@@ -499,10 +503,9 @@ export const SpinWheel: React.FC = () => {
   };
 
   const claimAdReward = async () => {
-    if (!profile || !adCompleted || claimingReward) {
+    if (!profile || claimingReward) {
       console.log('❌ Cannot claim:', { 
         hasProfile: !!profile, 
-        adCompleted, 
         claimingReward 
       });
       return;
@@ -525,17 +528,17 @@ export const SpinWheel: React.FC = () => {
         data, 
         error,
         dataType: typeof data,
-        isArray: Array.isArray(data)
+        isArray: Array.isArray(data),
+        dataLength: Array.isArray(data) ? data.length : 0
       });
 
       if (error) {
         console.error('❌ RPC Error:', error);
         
-        // Show friendly message instead of throwing
         toast({
-          title: 'Please Try Again',
-          description: 'Watch another ad to earn your spins!',
-          variant: 'default',
+          title: 'Error Claiming Reward',
+          description: error.message || 'Please try watching another ad',
+          variant: 'destructive',
         });
         
         setWatchingAd(false);
@@ -548,74 +551,94 @@ export const SpinWheel: React.FC = () => {
       // record_spin_ad_view returns TABLE, so data is an array
       console.log('Data type:', typeof data, 'Is array:', Array.isArray(data));
       
-      if (data && Array.isArray(data) && data.length > 0) {
-        const result = data[0];
-        console.log('✅ Claim Result:', result);
-        console.log('Success value:', result.success, 'Type:', typeof result.success);
-        console.log('Spins awarded:', result.spins_awarded);
-        console.log('Current spins before update:', spinsAvailable);
+      if (!data || !Array.isArray(data) || data.length === 0) {
+        console.error('❌ Empty or invalid response from database');
+        toast({
+          title: 'Error Processing Reward',
+          description: 'No response from server. Please try again.',
+          variant: 'destructive',
+        });
         
-        if (result.success === true || result.success === 't' || result.success === 'true') {
-          // Play sound
-          soundEffects.playBonusSound();
-
-          // Show success toast
-          toast({
-            title: '🎉 Spins Earned!',
-            description: `You earned ${result.spins_awarded || 3} spins!`,
-          });
-
-          // Reset ad UI state
-          setWatchingAd(false);
-          setAdProgress(0);
-          setAdCompleted(false);
-
-          // Force refresh profile and spin data
-          console.log('🔄 Refreshing profile and spin data...');
-          console.log('⏰ Timestamp before refresh:', new Date().toISOString());
-          await refreshProfile();
-          
-          // Wait a moment for database to update
-          await new Promise(resolve => setTimeout(resolve, 300));
-          
-          const newSpins = await loadSpinData(true);
-          console.log('✅ Spins after refresh:', newSpins);
-          console.log('📊 Spin increase:', newSpins - spinsAvailable);
-          console.log('⏰ Timestamp after refresh:', new Date().toISOString());
-
-          // Refresh ad count
-          await checkDailyAdCount();
-        } else {
-          console.log('❌ Claim failed:', result.error);
-          
-          // Check if it's a limit error
-          if (result.error && result.error.includes('limit')) {
-            toast({
-              title: 'Daily Limit Reached',
-              description: 'You\'ve watched all available ads today. Come back tomorrow for more!',
-              variant: 'default',
-            });
-          } else {
-            toast({
-              title: 'Already Claimed',
-              description: 'You\'ve already claimed this reward. Watch another ad to earn more spins!',
-              variant: 'default',
-            });
-          }
-          
-          setWatchingAd(false);
-          setAdProgress(0);
-          setAdCompleted(false);
-          
-          // Refresh counts
-          await checkDailyAdCount();
-        }
-      } else {
         setWatchingAd(false);
         setAdProgress(0);
         setAdCompleted(false);
+        setClaimingReward(false);
+        return;
+      }
+
+      const result = data[0];
+      console.log('✅ Claim Result:', result);
+      console.log('Success value:', result.success, 'Type:', typeof result.success);
+      console.log('Spins awarded:', result.spins_awarded);
+      console.log('Error message:', result.error);
+      
+      if (result.success === true || result.success === 't' || result.success === 'true') {
+        // Play sound
+        soundEffects.playBonusSound();
+
+        // Show success toast
+        toast({
+          title: '🎉 Spins Earned!',
+          description: `You earned ${result.spins_awarded || 3} spins!`,
+        });
+
+        // Reset ad UI state
+        setWatchingAd(false);
+        setAdProgress(0);
+        setAdCompleted(false);
+
+        // Force refresh profile and spin data
+        console.log('🔄 Refreshing profile and spin data...');
+        await refreshProfile();
+        
+        // Wait for database to update
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        const newSpins = await loadSpinData(true);
+        console.log('✅ Spins after refresh:', newSpins);
+        console.log('📊 Spin increase:', newSpins - spinsAvailable);
+
+        // Refresh ad count
+        await checkDailyAdCount();
+      } else {
+        console.log('❌ Claim failed:', result.error);
+        
+        // Check if it's a limit error
+        if (result.error && result.error.toLowerCase().includes('limit')) {
+          toast({
+            title: 'Daily Limit Reached',
+            description: 'You\'ve watched all 3 ads today. Come back tomorrow for more!',
+            variant: 'default',
+          });
+        } else if (result.error && result.error.toLowerCase().includes('already')) {
+          toast({
+            title: 'Already Claimed',
+            description: 'This reward was already claimed. Watch another ad!',
+            variant: 'default',
+          });
+        } else {
+          toast({
+            title: 'Cannot Claim Reward',
+            description: result.error || 'Please try again later',
+            variant: 'destructive',
+          });
+        }
+        
+        setWatchingAd(false);
+        setAdProgress(0);
+        setAdCompleted(false);
+        
+        // Refresh counts
+        await checkDailyAdCount();
       }
     } catch (error: any) {
+      console.error('❌ Exception in claimAdReward:', error);
+      toast({
+        title: 'Unexpected Error',
+        description: error.message || 'Something went wrong. Please try again.',
+        variant: 'destructive',
+      });
+      
       setWatchingAd(false);
       setAdProgress(0);
       setAdCompleted(false);
@@ -1083,26 +1106,12 @@ export const SpinWheel: React.FC = () => {
                 </div>
               </div>
 
-              {/* Claim Button */}
-              {adCompleted ? (
-                <Button
-                  size="lg"
-                  onClick={claimAdReward}
-                  disabled={claimingReward}
-                  className="w-full bg-gradient-to-r from-success to-accent"
-                >
-                  {claimingReward ? (
-                    <>
-                      <div className="w-5 h-5 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      Claiming...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-5 h-5 mr-2" />
-                      Claim 3 Spins
-                    </>
-                  )}
-                </Button>
+              {/* Status Display */}
+              {adCompleted || claimingReward ? (
+                <div className="flex items-center justify-center gap-2 py-4">
+                  <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  <span className="text-sm font-medium">Processing your reward...</span>
+                </div>
               ) : (
                 <div className="flex items-center justify-center gap-2 text-muted-foreground py-3">
                   <Clock className="w-5 h-5" />
