@@ -19,7 +19,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { soundEffects } from '@/utils/soundEffects';
-import { testSpinAdReward, getSpinAdStats } from '@/utils/spinAdTestHelper';
 
 // Spin wheel page with daily bonuses, ad rewards, and coin purchases
 interface WheelSegment {
